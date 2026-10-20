@@ -17,18 +17,18 @@
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/assets/index-hci7haAm.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BHQQSOJP.css">
-  
-  <!-- Supabase JS Client CDN & Config -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
-    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  </script>
-</head>
-
+    <!-- Exact lowercase filenames to prevent Vercel 404 errors -->
+    <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css">
+    
+    <!-- Supabase Client CDN & Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
+      window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+  </head>
   <body>
     <div class="grid-bg" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
@@ -54,21 +54,6 @@
           <a class="btn btn-accent" data-qr-download>Download</a>
         </div>
       </div>
-    </div>
-
-    <div id="reset-modal" class="modal">
-      <form class="modal-box">
-        <h2>Set a new password</h2>
-        <div class="field">
-          <input
-            type="password"
-            autocomplete="new-password"
-            placeholder="8+ characters"
-          />
-        </div>
-        <p class="form-msg bad"></p>
-        <button class="btn btn-accent wide" type="submit">Save password</button>
-      </form>
     </div>
 
     <div id="toast" class="toast" role="status"></div>
