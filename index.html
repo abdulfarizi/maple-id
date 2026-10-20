@@ -20,113 +20,67 @@
     <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css">
     
-    <!-- Supabase Client CDN & Config -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-      const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
-      const SUPABASE_ANON_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
-      window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    </script>
-
-    <!-- Universal Supabase API Bridge -->
+    <!-- Direct REST Supabase Bridge (Zero SDK parsing issues) -->
     
 <script>
   window.addEventListener('load', () => {
-    if (!window.supabaseClient) return;
-    const client = window.supabaseClient;
+    const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
     const originalFetch = window.fetch;
-    let isInternalCall = false;
 
     window.fetch = async function(url, options = {}) {
-      if (isInternalCall) {
-        return originalFetch.apply(this, arguments);
-      }
-
       if (typeof url === 'string') {
+        
         // 1. Slug availability check
         if (url.startsWith('/api/slugs/')) {
           const slug = url.split('/api/slugs/')[1];
           try {
-            isInternalCall = true;
-            const { data } = await client.from('profiles').select('slug').eq('slug', slug).maybeSingle();
-            isInternalCall = false;
-            return new Response(JSON.stringify({ available: !data, reason: data ? 'Already claimed' : null }), {
+            const res = await originalFetch(`${SUPABASE_URL}/rest/v1/profiles?select=slug&slug=eq.${encodeURIComponent(slug)}`, {
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            });
+            const data = await res.json();
+            const exists = Array.isArray(data) && data.length > 0;
+            return new Response(JSON.stringify({ available: !exists, reason: exists ? 'Already claimed' : null }), {
               status: 200, headers: { 'Content-Type': 'application/json' }
             });
           } catch (err) {
-            isInternalCall = false;
-            return new Response(JSON.stringify({ available: false, reason: err.message }), { status: 500 });
+            return new Response(JSON.stringify({ available: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
           }
         }
 
-        // 2. Public profile fetch: /api/profiles/:slug
-        if (url.startsWith('/api/profiles/') && !url.includes('/like') && !url.includes('/react')) {
-          const parts = url.split('/');
-          const slug = parts[3];
-          try {
-            isInternalCall = true;
-            let { data } = await client.from('profiles').select('*').eq('slug', slug).maybeSingle();
-            isInternalCall = false;
-            if (!data && slug === 'maple') {
-              data = {
-                slug: 'maple',
-                name: 'ᴍᴀᴘʟᴇ☆',
-                role: 'Digital Creator',
-                city: 'Masai',
-                country: 'Malaysia',
-                visits: 1384,
-                likes: 217,
-                reactions: { fire: 12, hundred: 8, rocket: 15, star: 20 },
-                theme: 'flame',
-                timezone: 'Asia/Kuala_Lumpur',
-                gaming: [{ platform: 'Roblox', value: 'wzii_' }, { platform: 'Mobile Legends', value: '37704847' }],
-                channels: [{ platform: 'YouTube', value: '@w._zii' }, { platform: 'WhatsApp', value: 'wzii1' }]
-              };
-            }
-            if (!data) return new Response(JSON.stringify({ error: 'Profile not found' }), { status: 404 });
-            return new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          } catch (err) {
-            isInternalCall = false;
-            return new Response(JSON.stringify({ error: err.message }), { status: 500 });
-          }
-        }
-
-        // 3. Profile likes / reactions
-        if (url.includes('/like') || url.includes('/react')) {
-          return new Response(JSON.stringify({ likes: 218, reactions: { fire: 13, hundred: 8, rocket: 15, star: 20 } }), {
-            status: 200, headers: { 'Content-Type': 'application/json' }
-          });
-        }
-
-        // 4. Signup / Auth
+        // 2. Signup / Auth
         if (url.includes('/.netlify/identity/signup') || url.includes('/signup')) {
           try {
             let body = {};
             try { body = JSON.parse(options.body || '{}'); } catch {}
             const { email, password, data: meta } = body;
             
-            isInternalCall = true;
-            const { data, error } = await client.auth.signUp({ email, password, options: { data: meta || {} } });
-            isInternalCall = false;
-            if (error) throw error;
+            const res = await originalFetch(`${SUPABASE_URL}/auth/v1/signup`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+              body: JSON.stringify({ email, password, data: meta || {} })
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.msg || json.error_description || 'Signup failed');
 
-            if (meta?.digital_slug && data.user) {
-              isInternalCall = true;
-              await client.from('profiles').upsert({ id: data.user.id, slug: meta.digital_slug, name: meta.full_name || 'Creator' });
-              isInternalCall = false;
+            if (meta?.digital_slug && json.user) {
+              await originalFetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'resolution=merge-duplicates' },
+                body: JSON.stringify({ id: json.user.id, slug: meta.digital_slug, name: meta.full_name || 'Creator' })
+              });
             }
 
             return new Response(JSON.stringify({
-              id: data.user?.id, email: data.user?.email, confirmed_at: new Date().toISOString(),
-              access_token: data.session?.access_token || 'dummy_token', refresh_token: data.session?.refresh_token || 'dummy_refresh'
+              id: json.user?.id, email: json.user?.email, confirmed_at: new Date().toISOString(),
+              access_token: json.access_token || 'token', refresh_token: json.refresh_token || 'refresh'
             }), { status: 200, headers: { 'Content-Type': 'application/json' } });
           } catch (err) {
-            isInternalCall = false;
             return new Response(JSON.stringify({ msg: err.message }), { status: 422, headers: { 'Content-Type': 'application/json' } });
           }
         }
 
-        // 5. Login / Token
+        // 3. Login / Token
         if (url.includes('/.netlify/identity/token') || url.includes('/token')) {
           try {
             let email = '', password = '';
@@ -138,45 +92,61 @@
               email = body.email; password = body.password;
             }
 
-            isInternalCall = true;
-            const { data, error } = await client.auth.signInWithPassword({ email, password });
-            isInternalCall = false;
-            if (error) throw error;
+            const res = await originalFetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+              body: JSON.stringify({ email, password })
+            });
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.error_description || json.msg || 'Login failed');
 
             return new Response(JSON.stringify({
-              access_token: data.session.access_token, refresh_token: data.session.refresh_token,
-              token_type: 'bearer', expires_in: data.session.expires_in
+              access_token: json.access_token, refresh_token: json.refresh_token,
+              token_type: 'bearer', expires_in: json.expires_in
             }), { status: 200, headers: { 'Content-Type': 'application/json' } });
           } catch (err) {
-            isInternalCall = false;
             return new Response(JSON.stringify({ error: 'invalid_grant', error_description: err.message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
           }
         }
 
-        // 6. Current User Profile (/api/me)
+        // 4. Current User Profile (/api/me)
         if (url === '/api/me' || url.includes('/.netlify/identity/user')) {
+          const authHeader = options.headers?.Authorization || options.headers?.authorization || '';
+          const token = authHeader.replace('Bearer ', '');
           try {
-            isInternalCall = true;
-            const { data: { user } } = await client.auth.getUser();
-            isInternalCall = false;
-            if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+            const userRes = await originalFetch(`${SUPABASE_URL}/auth/v1/user`, {
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` }
+            });
+            const user = await userRes.json();
+            if (!userRes.ok || !user.id) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
             if (options.method === 'PUT') {
               const body = JSON.parse(options.body || '{}');
-              isInternalCall = true;
-              const { data, error } = await client.from('profiles').upsert({ id: user.id, ...body }).select().single();
-              isInternalCall = false;
-              if (error) throw error;
-              return new Response(JSON.stringify({ profile: data }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+              const profileRes = await originalFetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+                body: JSON.stringify({ id: user.id, ...body })
+              });
+              const profileJson = await profileRes.json();
+              return new Response(JSON.stringify({ profile: Array.isArray(profileJson) ? profileJson[0] : profileJson }), { status: 200, headers: { 'Content-Type': 'application/json' } });
             }
 
-            isInternalCall = true;
-            const { data: profile } = await client.from('profiles').select('*').eq('id', user.id).maybeSingle();
-            isInternalCall = false;
+            const profRes = await originalFetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            });
+            const profs = await profRes.json();
+            const profile = Array.isArray(profs) ? profs[0] : null;
 
-            return new Response(JSON.stringify({ profile: profile || { slug: user.user_metadata?.digital_slug, name: user.user_metadata?.full_name } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            if (url === '/api/me') {
+              return new Response(JSON.stringify({ profile: profile || { slug: user.user_metadata?.digital_slug, name: user.user_metadata?.full_name } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            } else {
+              return new Response(JSON.stringify({
+                id: user.id, email: user.email,
+                user_metadata: { ...user.user_metadata, digital_slug: profile?.slug },
+                app_metadata: user.app_metadata
+              }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            }
           } catch (err) {
-            isInternalCall = false;
             return new Response(JSON.stringify({ error: err.message }), { status: 500 });
           }
         }
