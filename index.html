@@ -28,24 +28,32 @@
       window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
 
-    <!-- Supabase Auth & DB Bridge -->
+    <!-- Supabase Safe Bridge with Recursion Guard -->
     
 <script>
   window.addEventListener('load', () => {
     if (!window.supabaseClient) return;
     const client = window.supabaseClient;
     const originalFetch = window.fetch;
+    let isInternalCall = false;
 
     window.fetch = async function(url, options = {}) {
+      if (isInternalCall) {
+        return originalFetch.apply(this, arguments);
+      }
+
       if (typeof url === 'string') {
         if (url.startsWith('/api/slugs/')) {
           const slug = url.split('/api/slugs/')[1];
           try {
+            isInternalCall = true;
             const { data } = await client.from('profiles').select('slug').eq('slug', slug).maybeSingle();
+            isInternalCall = false;
             return new Response(JSON.stringify({ available: !data, reason: data ? 'Already claimed' : null }), {
               status: 200, headers: { 'Content-Type': 'application/json' }
             });
           } catch (err) {
+            isInternalCall = false;
             return new Response(JSON.stringify({ available: false, reason: err.message }), { status: 500 });
           }
         }
@@ -56,30 +64,35 @@
             try { body = JSON.parse(options.body || '{}'); } catch {}
             const { email, password, data: meta } = body;
             
+            isInternalCall = true;
             const { data, error } = await client.auth.signUp({
               email,
               password,
               options: { data: meta || {} }
             });
+            isInternalCall = false;
             if (error) throw error;
 
             if (meta?.digital_slug && data.user) {
+              isInternalCall = true;
               await client.from('profiles').upsert({
                 id: data.user.id,
                 slug: meta.digital_slug,
                 name: meta.full_name || 'Creator'
               });
+              isInternalCall = false;
             }
 
             return new Response(JSON.stringify({
               id: data.user?.id,
               email: data.user?.email,
-              confirmed_at: data.session ? new Date().toISOString() : new Date().toISOString(),
+              confirmed_at: new Date().toISOString(),
               access_token: data.session?.access_token || 'dummy_token',
               refresh_token: data.session?.refresh_token || 'dummy_refresh',
               user_metadata: data.user?.user_metadata || meta
             }), { status: 200, headers: { 'Content-Type': 'application/json' } });
           } catch (err) {
+            isInternalCall = false;
             return new Response(JSON.stringify({ msg: err.message }), { status: 422, headers: { 'Content-Type': 'application/json' } });
           }
         }
@@ -97,7 +110,9 @@
               password = body.password;
             }
 
+            isInternalCall = true;
             const { data, error } = await client.auth.signInWithPassword({ email, password });
+            isInternalCall = false;
             if (error) throw error;
 
             return new Response(JSON.stringify({
@@ -107,13 +122,16 @@
               expires_in: data.session.expires_in
             }), { status: 200, headers: { 'Content-Type': 'application/json' } });
           } catch (err) {
+            isInternalCall = false;
             return new Response(JSON.stringify({ error: 'invalid_grant', error_description: err.message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
           }
         }
 
         if (url === '/api/me' || url.includes('/.netlify/identity/user')) {
           try {
+            isInternalCall = true;
             const { data: { user } } = await client.auth.getUser();
+            isInternalCall = false;
             if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
             if (options.method === 'PUT') {
@@ -135,12 +153,17 @@
                 sociabuzzEnabled: body.sociabuzzEnabled,
                 sociabuzz: body.sociabuzz
               };
+              isInternalCall = true;
               const { data, error } = await client.from('profiles').upsert(profileData).select().single();
+              isInternalCall = false;
               if (error) throw error;
               return new Response(JSON.stringify({ profile: data }), { status: 200, headers: { 'Content-Type': 'application/json' } });
             }
 
+            isInternalCall = true;
             const { data: profile } = await client.from('profiles').select('*').eq('id', user.id).maybeSingle();
+            isInternalCall = false;
+
             if (url === '/api/me') {
               return new Response(JSON.stringify({ profile: profile || { slug: user.user_metadata?.digital_slug, name: user.user_metadata?.full_name } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
             } else {
@@ -152,6 +175,7 @@
               }), { status: 200, headers: { 'Content-Type': 'application/json' } });
             }
           } catch (err) {
+            isInternalCall = false;
             return new Response(JSON.stringify({ error: err.message }), { status: 500 });
           }
         }
