@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en" data-theme="flame">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b0a0f" />
+    <title>Digital ID</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="/assets/index-hci7haAm.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BHQQSOJP.css">
+  
+  <!-- Supabase JS Client CDN & Config -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
+    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
+</head>
+
+  <body>
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <a href="/" data-link class="brand"
+        ><i class="fa-solid fa-id-card-clip"></i> Digital<b>ID</b></a
+      >
+      <nav id="nav-actions"></nav>
+    </header>
+    <main id="app"></main>
+    <footer class="foot"><span>Tap · Scan · Connect</span></footer>
+
+    <div id="qr-modal" class="modal">
+      <div class="modal-box">
+        <button type="button" class="modal-x" data-qr-close aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <img alt="QR code" width="240" height="240" />
+        <h2 data-qr-name></h2>
+        <p class="mono" data-qr-url></p>
+        <div class="two">
+          <button type="button" class="btn" data-qr-share>Share</button>
+          <a class="btn btn-accent" data-qr-download>Download</a>
+        </div>
+      </div>
+    </div>
+
+    <div id="reset-modal" class="modal">
+      <form class="modal-box">
+        <h2>Set a new password</h2>
+        <div class="field">
+          <input
+            type="password"
+            autocomplete="new-password"
+            placeholder="8+ characters"
+          />
+        </div>
+        <p class="form-msg bad"></p>
+        <button class="btn btn-accent wide" type="submit">Save password</button>
+      </form>
+    </div>
+
+    <div id="toast" class="toast" role="status"></div>
+  </body>
+</html>
