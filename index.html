@@ -28,47 +28,136 @@
       window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
 
-    <!-- Supabase API Bridge for Static Hosting -->
+    <!-- Comprehensive Supabase Auth & DB Bridge -->
     
 <script>
-  // Supabase Fetch Interceptor Bridge for Vercel Static Hosting
+  // Comprehensive Supabase Bridge for Vercel Static Hosting (Replaces Netlify Identity with Supabase)
   window.addEventListener('load', () => {
     if (!window.supabaseClient) return;
+    const client = window.supabaseClient;
     const originalFetch = window.fetch;
+
     window.fetch = async function(url, options = {}) {
-      if (typeof url === 'string' && url.startsWith('/api/')) {
-        const client = window.supabaseClient;
+      if (typeof url === 'string') {
         
-        // 1. Slug check: /api/slugs/:slug
+        // 1. Slug availability checking: /api/slugs/:slug
         if (url.startsWith('/api/slugs/')) {
           const slug = url.split('/api/slugs/')[1];
           try {
-            const { data, error } = await client.from('profiles').select('slug').eq('slug', slug).maybeSingle();
+            const { data } = await client.from('profiles').select('slug').eq('slug', slug).maybeSingle();
             return new Response(JSON.stringify({ available: !data, reason: data ? 'Already claimed' : null }), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' }
+              status: 200, headers: { 'Content-Type': 'application/json' }
             });
           } catch (err) {
             return new Response(JSON.stringify({ available: false, reason: err.message }), { status: 500 });
           }
         }
-        
-        // 2. Current user profile: /api/me
-        if (url === '/api/me') {
+
+        // 2. Netlify Identity signup endpoint redirection to Supabase Auth
+        if (url.includes('/.netlify/identity/signup') || url.includes('/signup')) {
+          try {
+            let body = {};
+            try { body = JSON.parse(options.body || '{}'); } catch {}
+            const { email, password, data: meta } = body;
+            
+            const { data, error } = await client.auth.signUp({
+              email,
+              password,
+              options: { data: meta || {} }
+            });
+            if (error) throw error;
+
+            // Also create initial profile row if slug provided
+            if (meta?.digital_slug && data.user) {
+              await client.from('profiles').upsert({
+                id: data.user.id,
+                slug: meta.digital_slug,
+                name: meta.full_name || 'Creator'
+              });
+            }
+
+            return new Response(JSON.stringify({
+              id: data.user?.id,
+              email: data.user?.email,
+              confirmed_at: data.session ? new Date().toISOString() : null,
+              access_token: data.session?.access_token,
+              refresh_token: data.session?.refresh_token,
+              user_metadata: data.user?.user_metadata
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          } catch (err) {
+            return new Response(JSON.stringify({ msg: err.message }), { status: 422, headers: { 'Content-Type': 'application/json' } });
+          }
+        }
+
+        // 3. Netlify Identity token / login endpoint redirection to Supabase Auth
+        if (url.includes('/.netlify/identity/token') || url.includes('/token')) {
+          try {
+            let email = '', password = '';
+            if (typeof options.body === 'string' && options.body.includes('grant_type=password')) {
+              const params = new URLSearchParams(options.body);
+              email = params.get('username');
+              password = params.get('password');
+            } else {
+              const body = JSON.parse(options.body || '{}');
+              email = body.email;
+              password = body.password;
+            }
+
+            const { data, error } = await client.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+
+            return new Response(JSON.stringify({
+              access_token: data.session.access_token,
+              refresh_token: data.session.refresh_token,
+              token_type: 'bearer',
+              expires_in: data.session.expires_in
+            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          } catch (err) {
+            return new Response(JSON.stringify({ error: 'invalid_grant', error_description: err.message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+          }
+        }
+
+        // 4. Netlify Identity user data endpoint: /api/me or /.netlify/identity/user
+        if (url === '/api/me' || url.includes('/.netlify/identity/user')) {
           try {
             const { data: { user } } = await client.auth.getUser();
             if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-            
+
             if (options.method === 'PUT') {
               const body = JSON.parse(options.body || '{}');
-              const profileData = { id: user.id, slug: body.slug, name: body.name, timezone: body.timezone, bio: body.bio, theme: body.theme, country: body.country, city: body.city, avatar: body.avatar, banner: body.banner, role: body.role };
+              const profileData = {
+                id: user.id,
+                slug: body.slug,
+                name: body.name,
+                timezone: body.timezone,
+                bio: body.bio,
+                theme: body.theme,
+                country: body.country,
+                city: body.city,
+                avatar: body.avatar,
+                banner: body.banner,
+                role: body.role,
+                gaming: body.gaming,
+                channels: body.channels,
+                sociabuzzEnabled: body.sociabuzzEnabled,
+                sociabuzz: body.sociabuzz
+              };
               const { data, error } = await client.from('profiles').upsert(profileData).select().single();
               if (error) throw error;
               return new Response(JSON.stringify({ profile: data }), { status: 200, headers: { 'Content-Type': 'application/json' } });
             }
-            
+
             const { data: profile } = await client.from('profiles').select('*').eq('id', user.id).maybeSingle();
-            return new Response(JSON.stringify({ profile: profile || { slug: user.user_metadata?.digital_slug, name: user.user_metadata?.full_name } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            if (url === '/api/me') {
+              return new Response(JSON.stringify({ profile: profile || { slug: user.user_metadata?.digital_slug, name: user.user_metadata?.full_name } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            } else {
+              return new Response(JSON.stringify({
+                id: user.id,
+                email: user.email,
+                user_metadata: { ...user.user_metadata, digital_slug: profile?.slug },
+                app_metadata: user.app_metadata
+              }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            }
           } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500 });
           }
