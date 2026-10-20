@@ -17,7 +17,6 @@
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <!-- Exact lowercase filenames to prevent Vercel 404 errors -->
     <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css">
     
@@ -28,6 +27,58 @@
       const SUPABASE_ANON_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
       window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     </script>
+
+    <!-- Supabase API Bridge for Static Hosting -->
+    
+<script>
+  // Supabase Fetch Interceptor Bridge for Vercel Static Hosting
+  window.addEventListener('load', () => {
+    if (!window.supabaseClient) return;
+    const originalFetch = window.fetch;
+    window.fetch = async function(url, options = {}) {
+      if (typeof url === 'string' && url.startsWith('/api/')) {
+        const client = window.supabaseClient;
+        
+        // 1. Slug check: /api/slugs/:slug
+        if (url.startsWith('/api/slugs/')) {
+          const slug = url.split('/api/slugs/')[1];
+          try {
+            const { data, error } = await client.from('profiles').select('slug').eq('slug', slug).maybeSingle();
+            return new Response(JSON.stringify({ available: !data, reason: data ? 'Already claimed' : null }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          } catch (err) {
+            return new Response(JSON.stringify({ available: false, reason: err.message }), { status: 500 });
+          }
+        }
+        
+        // 2. Current user profile: /api/me
+        if (url === '/api/me') {
+          try {
+            const { data: { user } } = await client.auth.getUser();
+            if (!user) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+            
+            if (options.method === 'PUT') {
+              const body = JSON.parse(options.body || '{}');
+              const profileData = { id: user.id, slug: body.slug, name: body.name, timezone: body.timezone, bio: body.bio, theme: body.theme, country: body.country, city: body.city, avatar: body.avatar, banner: body.banner, role: body.role };
+              const { data, error } = await client.from('profiles').upsert(profileData).select().single();
+              if (error) throw error;
+              return new Response(JSON.stringify({ profile: data }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            }
+            
+            const { data: profile } = await client.from('profiles').select('*').eq('id', user.id).maybeSingle();
+            return new Response(JSON.stringify({ profile: profile || { slug: user.user_metadata?.digital_slug, name: user.user_metadata?.full_name } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+          }
+        }
+      }
+      return originalFetch.apply(this, arguments);
+    };
+  });
+</script>
+
   </head>
   <body>
     <div class="grid-bg" aria-hidden="true"></div>
