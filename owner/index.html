@@ -346,10 +346,12 @@
     }
     loadOwnerProfile();
 
-    // Show Studio button ONLY if logged in as verified owner
+    // Show Studio button ONLY if logged in (real Supabase session) as the owner.
+    // This is just for the button – the database itself enforces who may edit.
     try {
-        const auth = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
-        if (auth && auth.email === OWNER_EMAIL) {
+        const jwt = (document.cookie.match(/(?:^|; )nf_jwt=([^;]*)/) || [])[1];
+        const claims = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(jwt).split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))));
+        if (String(claims.email || '').toLowerCase() === OWNER_EMAIL && claims.exp * 1000 > Date.now()) {
             document.getElementById('owner-studio-btn').style.display = 'inline-flex';
         }
     } catch {}
