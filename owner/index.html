@@ -26,11 +26,10 @@
 
         *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
         html { background:var(--bg); scroll-behavior:smooth; }
-        body { font-family:var(--sans); color:var(--text); min-height:100vh; min-height:100dvh; display:flex; justify-content:center; padding:max(22px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom)); -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+        body { font-family:var(--sans); color:var(--text); min-height:100vh; min-height:100dvh; display:flex; justify-content:center; padding:max(22px,env(safe-area-inset-top)) 16px max(90px,env(safe-area-inset-bottom)); -webkit-font-smoothing:antialiased; overflow-x:hidden; }
         a { color:inherit; text-decoration:none; }
         button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; text-align:left; }
 
-        /* Cinematic Star Opening Screen */
         #intro-overlay {
             position: fixed; inset: 0; z-index: 9999; background: #000;
             display: grid; place-items: center; overflow: hidden;
@@ -85,7 +84,6 @@
         .lang button[aria-pressed="true"] { background:var(--accent); color:#fff; }
 
         @property --spin { syntax:'<angle>'; initial-value:0deg; inherits:false; }
-        #wrapperFloatingBtn { display:none !important; }
         .support { margin-top:14px; width:100%; display:flex; flex-direction:column; gap:15px; padding:18px; border-radius:22px; border:1px solid transparent; background:linear-gradient(140deg,var(--accent-soft),rgba(10,10,13,0.96) 62%) padding-box,conic-gradient(from var(--spin),var(--accent),transparent 30%,var(--accent-2) 50%,transparent 70%,var(--accent)) border-box; animation:border-spin 6s linear infinite; }
         @keyframes border-spin { to { --spin:360deg; } }
         .support-top { display:flex; justify-content:space-between; align-items:center; }
@@ -129,15 +127,97 @@
         .name .star { color:var(--accent); display:inline-block; }
         .handle { margin-top:7px; font-family:var(--mono); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
         .owner-studio-badge { display:none; font-family:var(--mono); font-size:10px; padding:5px 10px; border-radius:999px; background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); align-items:center; gap:5px; }
+
+        .digitalid-create-cta {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 999999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(12, 12, 18, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            padding: 10px 18px;
+            border-radius: 999px;
+            color: #ffffff;
+            font-family: var(--sans);
+            font-size: 13.5px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+        }
+        .digitalid-create-cta a {
+            background: var(--accent);
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 999px;
+            white-space: nowrap;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        .digitalid-create-cta a:hover {
+            transform: translateY(-1px);
+            opacity: 0.92;
+        }
+
+        /* Full Customization Drawer for Owner Page */
+        .drawer {
+            position: fixed; top: 0; right: -420px; width: 380px; max-width: 95vw; height: 100vh;
+            background: #121216; border-left: 1px solid rgba(255,255,255,0.12);
+            padding: 72px 22px 32px; overflow-y: auto; z-index: 1000;
+            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -16px 0 40px rgba(0,0,0,0.7); color: #f4f4f5; font-family: var(--sans);
+        }
+        .drawer.open { right: 0; }
+        .drawer h3 { font-size: 18px; margin-bottom: 16px; border-bottom: 1px solid #27272a; padding-bottom: 10px; }
+        .field-group { margin-bottom: 14px; }
+        .field-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
+        .field-group input, .field-group textarea, .field-group select {
+            width: 100%; padding: 9px 12px; background: #18181b; border: 1px solid #27272a; border-radius: 8px; color: #fff; font-size: 13.5px;
+        }
+        .customize-toggle {
+            position: fixed; top: 20px; right: 20px; background: rgba(24, 24, 27, 0.9);
+            color: #fff; border: 1px solid rgba(255, 255, 255, 0.18); padding: 8px 14px;
+            border-radius: 12px; font-weight: 600; cursor: pointer; z-index: 1001; backdrop-filter: blur(10px);
+        }
+        .customize-toggle:hover { background: var(--accent); }
     </style>
 </head>
 <body>
-<!-- Cinematic Star Opening Screen using ☆ -->
 <div id="intro-overlay">
     <div class="intro-star-mask">
         <span class="spinning-star-svg">☆</span>
     </div>
 </div>
+
+<button class="customize-toggle" id="openCustomizer" style="display:none;">⚙️ Customize Page</button>
+
+<aside class="drawer" id="customizerDrawer">
+    <h3>Owner Page Studio</h3>
+    <div class="field-group">
+        <label>Display Name</label>
+        <input type="text" id="custName" />
+    </div>
+    <div class="field-group">
+        <label>Role / Bio Subtitle</label>
+        <input type="text" id="custRole" />
+    </div>
+    <div class="field-group">
+        <label>Bio</label>
+        <textarea id="custBio" rows="3"></textarea>
+    </div>
+    <div class="field-group">
+        <label>Profile Picture URL</label>
+        <input type="url" id="custAvatar" placeholder="https://..." />
+    </div>
+    <div class="field-group">
+        <label>Banner URL or Video</label>
+        <input type="url" id="custBanner" placeholder="https://..." />
+    </div>
+    <button class="btn btn-accent" id="saveCustBtn" style="width:100%; margin-top:10px; height:42px; border-radius:10px;">Save Changes</button>
+</aside>
 
 <div class="grid-bg"></div>
 <div class="halo"></div>
@@ -174,8 +254,8 @@
                     </div>
                 </div>
                 <div class="name-block">
-                    <h1 class="name">ᴍᴀᴘʟᴇ<span class="star">☆</span></h1>
-                    <p class="handle" data-i18n="role">Digital Creator</p>
+                    <h1 class="name" id="display-name-el">ᴍᴀᴘʟᴇ<span class="star">☆</span></h1>
+                    <p class="handle" id="display-role-el" data-i18n="role">Digital Creator</p>
                 </div>
             </div>
         </div>
@@ -185,7 +265,6 @@
             <div style="padding:10px 6px; border-left:1px solid var(--line);"><dt style="font-family:var(--mono); font-size:8px; color:var(--dim); text-transform:uppercase;" data-i18n="localTime">Time</dt><dd style="margin-top:4px; font-family:var(--mono); font-size:10.5px; color:var(--accent-2);" id="local-clock">--:-- MYT</dd></div>
         </dl>
 
-        <!-- Minimalist Single-Line Chips -->
         <div style="margin-top:12px; padding:0 4px; display:flex; flex-wrap:nowrap; gap:5px; align-items:center; overflow-x:auto; white-space:nowrap; scrollbar-width:none;">
             <span style="font-family:var(--mono); font-size:9px; padding:4px 8px; border-radius:999px; background:rgba(255,255,255,0.03); border:1px solid var(--line); color:var(--muted); flex-shrink:0;"><i class="fa-solid fa-gamepad" style="color:var(--accent)"></i> Gaming</span>
             <button type="button" id="specs-btn" style="font-family:var(--mono); font-size:9px; padding:4px 8px; border-radius:999px; background:rgba(255,255,255,0.03); border:1px solid color-mix(in srgb,var(--accent) 40%,transparent); color:var(--text); cursor:pointer; flex-shrink:0;"><i class="fa-solid fa-microchip" style="color:var(--accent)"></i> Gear <i class="fa-solid fa-chevron-down" style="font-size:7px"></i></button>
@@ -208,9 +287,8 @@
             <i class="fa-solid fa-circle-dot" style="font-size:7px;"></i>
             <span>Status: Coding Roblox Studio mini-games &amp; Grinding MLBB</span>
         </div>
-        <p style="margin-top:10px; font-size:13.5px; line-height:1.62; color:var(--muted); font-weight:300; padding:0 6px;" data-i18n="bio">Assalamualaikum &amp; hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.</p>
+        <p id="display-bio-el" style="margin-top:10px; font-size:13.5px; line-height:1.62; color:var(--muted); font-weight:300; padding:0 6px;" data-i18n="bio">Assalamualaikum &amp; hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.</p>
         
-        <!-- Reaction Bar -->
         <div style="margin-top:12px; padding:0 4px; display:flex; gap:8px;">
             <button onclick="react(this, '🔥')" style="flex:1; padding:6px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid var(--line); font-size:12px; cursor:pointer; text-align:center;">🔥 <span id="r-fire">42</span></button>
             <button onclick="react(this, '💯')" style="flex:1; padding:6px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid var(--line); font-size:12px; cursor:pointer; text-align:center;">💯 <span id="r-hund">28</span></button>
@@ -261,7 +339,11 @@
     <footer style="display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); padding:0 6px;"><span data-i18n="footer">Tap · Scan · Connect</span><span>Johor, MY</span></footer>
 </div>
 
-<!-- Modals & Toasts -->
+<div class="digitalid-create-cta">
+    <span>✨ Do you want to create your own Digital ID?</span>
+    <a href="/?auth=signup">Press over here →</a>
+</div>
+
 <div id="qr-modal" style="position:fixed; inset:0; z-index:80; background:rgba(4,4,7,0.8); backdrop-filter:blur(10px); display:grid; place-items:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s;">
     <div style="width:100%; max-width:335px; border-radius:24px; padding:22px; background:var(--panel-solid); border:1px solid var(--line-strong); text-align:center;">
         <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:16px;"><span data-i18n="qrHead">Scan Digital Card</span><button type="button" onclick="closeQrModal()" style="width:30px; height:30px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,0.06); color:var(--text);"><i class="fa-solid fa-xmark"></i></button></div>
@@ -287,12 +369,23 @@
     const CONTACT = { name:'ᴍᴀᴘʟᴇ☆', title:'Digital Creator', city:'Masai', region:'Johor', country:'Malaysia', whatsapp:'https://wa.me/wzii1', discordId:'399869638093307904' };
     let sfxEnabled = true, audioCtx;
 
-    // ---- Owner profile (avatar / banner come from Studio) ----
     const SB_URL = 'https://qebbuxixnqsqjuprfpyv.supabase.co';
     const SB_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
 
     function applyOwnerProfile(p) {
         if (!p) return;
+        if (p.name) {
+            const nameEl = document.getElementById('display-name-el');
+            if (nameEl) nameEl.innerHTML = `${p.name}<span class="star">☆</span>`;
+        }
+        if (p.role) {
+            const roleEl = document.getElementById('display-role-el');
+            if (roleEl) roleEl.textContent = p.role;
+        }
+        if (p.bio) {
+            const bioEl = document.getElementById('display-bio-el');
+            if (bioEl) bioEl.textContent = p.bio;
+        }
         const img = document.getElementById('owner-avatar');
         const ini = document.getElementById('owner-initials');
         if (img && ini) {
@@ -346,15 +439,36 @@
     }
     loadOwnerProfile();
 
-    // Show Studio button ONLY if logged in (real Supabase session) as the owner.
-    // This is just for the button – the database itself enforces who may edit.
+    let isOwnerLoggedIn = false;
     try {
         const jwt = (document.cookie.match(/(?:^|; )nf_jwt=([^;]*)/) || [])[1];
         const claims = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(jwt).split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))));
         if (String(claims.email || '').toLowerCase() === OWNER_EMAIL && claims.exp * 1000 > Date.now()) {
+            isOwnerLoggedIn = true;
             document.getElementById('owner-studio-btn').style.display = 'inline-flex';
+            document.getElementById('openCustomizer').style.display = 'block';
         }
     } catch {}
+
+    const drawer = document.getElementById('customizerDrawer');
+    document.getElementById('openCustomizer').addEventListener('click', () => {
+        drawer.classList.toggle('open');
+        document.getElementById('custName').value = document.getElementById('display-name-el').textContent.replace('☆','').trim();
+        document.getElementById('custRole').value = document.getElementById('display-role-el').textContent;
+        document.getElementById('custBio').value = document.getElementById('display-bio-el').textContent;
+    });
+
+    document.getElementById('saveCustBtn').addEventListener('click', async () => {
+        const newName = document.getElementById('custName').value;
+        const newRole = document.getElementById('custRole').value;
+        const newBio = document.getElementById('custBio').value;
+        const newAvatar = document.getElementById('custAvatar').value;
+        const newBanner = document.getElementById('custBanner').value;
+
+        applyOwnerProfile({ name: newName, role: newRole, bio: newBio, avatar: newAvatar, banner: newBanner });
+        drawer.classList.remove('open');
+        showToast('Changes applied locally!');
+    });
 
     window.addEventListener('load', () => {
         setTimeout(() => {
@@ -393,7 +507,6 @@
     }
     function haptic(ms = 12) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch {} }
 
-    // Ambient Lofi Beats Generator
     let musicPlaying = false, musicInterval;
     document.getElementById('music-btn').addEventListener('click', function() {
         musicPlaying = !musicPlaying;
@@ -411,7 +524,6 @@
         }
     });
 
-    // Reactions counter
     function react(btn, emoji) {
         haptic(10);
         playTone(700, 0.04);
@@ -461,8 +573,8 @@
     });
 
     const I18N = {
-        en: { title:'ᴍᴀᴘʟᴇ☆ | Digital Card', card:'Digital Card', statusOnline:'Online', role:'Digital Creator', basedIn:'Based in', focus:'Focus', focusVal:'Content & Tech', localTime:'Local Time', chipGaming:'Gaming', chipRig:'Gear', copyAll:'Copy All', bio:'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.', save:'Save contact', copyLink:'Copy link', qrLabel:'Show QR Code', qrHead:'Scan Digital Card', qrSub:'Point your camera to open this card', shareBtn:'Share Card', supportAria:'Give support', supportTag:'Support · 00', supportTitle:'Give Support to', supportDesc:'Enjoy the content? Fuel the next one with a small tip.', supportVia:'via SociaBuzz · wzii_', supportCta:'Give Support', gaming:'Gaming', robloxSub:'Add me as a friend', add:'Add', mlbbAria:'Copy Mobile Legends ID 37704847 and open Mobile Legends', copyId:'Copy ID', copied:'Copied', channels:'Channels', subscribe:'Subscribe', messageMe:'Message me', chat:'Chat', follow:'Follow', footer:'Tap · Scan · Connect', waText:'Hi Maple! I just tapped your NFC card.', toastSaved:'Contact saved', toastLink:'Link copied', toastDiscord:'Discord ID copied', toastAll:'All handles copied!', toastLang:'Language: English', mlbbDesktop:(id)=>`ID ${id} copied · open MLBB on your phone`, mlbbOpening:(id)=>`ID ${id} copied · opening Mobile Legends`, mlbbId:(id)=>`MLBB ID: ${id}`, mlbbIdOpening:(id)=>`MLBB ID: ${id} · opening app` },
-        ms: { title:'ᴍᴀᴘʟᴇ☆ | Kad Digital', card:'Kad Digital', statusOnline:'Aktif', role:'Pencipta Digital', basedIn:'Berasal dari', localTime:'Waktu Tempatan', save:'Simpan kenalan', qrHead:'Imbas Kad Digital', qrSub:'Halakan kamera anda untuk membuka kad ini', shareBtn:'Kongsi Kad', supportAria:'Beri sokongan', supportTag:'Sokongan · 00', supportTitle:'Beri Sokongan kepada', supportDesc:'Suka kandungan ini? Sokong karya seterusnya dengan sedikit sumbangan.', supportVia:'melalui SociaBuzz · wzii_', supportCta:'Beri Sokongan', gaming:'Permainan', robloxSub:'Tambah saya sebagai rakan', add:'Tambah', copyId:'Salin ID', copied:'Disalin', channels:'Saluran', subscribe:'Langgan', messageMe:'Hantar mesej', chat:'Sembang', follow:'Ikuti', footer:'Ketik · Imbas · Hubung', toastSaved:'Kenalan disimpan', toastLink:'Pautan disalin', toastDiscord:'ID Discord disalin', toastAll:'Semua nama pengguna disalin!', toastLang:'Bahasa: Bahasa Melayu', mlbbDesktop:(id)=>`ID ${id} disalin · buka MLBB di telefon anda`, mlbbOpening:(id)=>`ID ${id} disalin · membuka Mobile Legends`, mlbbId:(id)=>`ID MLBB: ${id}`, mlbbIdOpening:(id)=>`ID MLBB: ${id} · membuka aplikasi` }
+        en: { title:'ᴍᴀᴘʟᴇ☆ | Digital Card', card:'Digital Card', statusOnline:'Online', role:'Digital Creator', basedIn:'Based in', localTime:'Local Time', save:'Save contact', copyLink:'Copy link', qrHead:'Scan Digital Card', qrSub:'Point your camera to open this card', shareBtn:'Share Card', supportTag:'Support · 00', supportTitle:'Give Support to', supportDesc:'Enjoy the content? Fuel the next one with a small tip.', supportVia:'via SociaBuzz · wzii_', supportCta:'Give Support', gaming:'Gaming', robloxSub:'Add me as a friend', add:'Add', copyId:'Copy ID', copied:'Copied', channels:'Channels', subscribe:'Subscribe', messageMe:'Message me', chat:'Chat', follow:'Follow', footer:'Tap · Scan · Connect', toastSaved:'Contact saved', toastLink:'Link copied', toastDiscord:'Discord ID copied', toastAll:'All handles copied!', toastLang:'Language: English', mlbbDesktop:(id)=>`ID ${id} copied · open MLBB on your phone`, mlbbOpening:(id)=>`ID ${id} copied · opening Mobile Legends`, mlbbId:(id)=>`MLBB ID: ${id}`, mlbbIdOpening:(id)=>`MLBB ID: ${id} · opening app` },
+        ms: { title:'ᴍᴀᴘʟᴇ☆ | Kad Digital', card:'Kad Digital', statusOnline:'Aktif', role:'Pencipta Digital', basedIn:'Berasal dari', localTime:'Waktu Tempatan', save:'Simpan kenalan', qrHead:'Imbas Kad Digital', qrSub:'Halakan kamera anda untuk membuka kad ini', shareBtn:'Kongsi Kad', supportTag:'Sokongan · 00', supportTitle:'Beri Sokongan kepada', supportDesc:'Suka kandungan ini? Sokong karya seterusnya dengan sedikit sumbangan.', supportVia:'melalui SociaBuzz · wzii_', supportCta:'Beri Sokongan', gaming:'Permainan', robloxSub:'Tambah saya sebagai rakan', add:'Tambah', copyId:'Salin ID', copied:'Disalin', channels:'Saluran', subscribe:'Langgan', messageMe:'Hantar mesej', chat:'Sembang', follow:'Ikuti', footer:'Ketik · Imbas · Hubung', toastSaved:'Kenalan disimpan', toastLink:'Pautan disalin', toastDiscord:'ID Discord disalin', toastAll:'Semua nama pengguna disalin!', toastLang:'Bahasa: Bahasa Melayu', mlbbDesktop:(id)=>`ID ${id} disalin · buka MLBB di telefon anda`, mlbbOpening:(id)=>`ID ${id} disalin · membuka Mobile Legends`, mlbbId:(id)=>`ID MLBB: ${id}`, mlbbIdOpening:(id)=>`ID MLBB: ${id} · membuka aplikasi` }
     };
     const LANG_KEY = 'maple-lang';
     let lang = (() => { try { const s = localStorage.getItem(LANG_KEY); if (I18N[s]) return s; } catch {} return /^(ms|id)\b/i.test(navigator.language || '') ? 'ms' : 'en'; })();
@@ -516,13 +628,7 @@
         copyCurrentUrl();
     }
 
-    const MLBB = { id:'37704847', androidPackage:'com.mobile.legends', iosScheme:'mobilelegends://', appStore:'https://apps.apple.com/app/id1160056295', playStore:'https://play.google.com/store/apps/details?id=com.mobile.legends' };
-    function detectPlatform() {
-        const ua = navigator.userAgent || '';
-        if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios';
-        if (/Android/i.test(ua)) return 'android';
-        return 'desktop';
-    }
+    const MLBB = { id:'37704847' };
     function copyText(text) {
         const fallback = () => {
             const i = document.createElement('textarea'); i.value = text; i.setAttribute('readonly',''); i.style.position = 'fixed'; i.style.opacity = '0';
@@ -533,11 +639,10 @@
         return Promise.resolve(fallback());
     }
     document.getElementById('mlbb-tile').addEventListener('click', function () {
-        haptic(15); const platform = detectPlatform(), cta = document.getElementById('mlbb-cta');
+        haptic(15); const cta = document.getElementById('mlbb-cta');
         copyText(MLBB.id).then((ok) => {
             cta.textContent = ok ? t('copied') : t('copyId');
             setTimeout(() => { cta.textContent = t('copyId'); }, 2000);
-            if (platform === 'desktop') { showToast(ok ? t('mlbbDesktop')(MLBB.id) : t('mlbbId')(MLBB.id)); return; }
             showToast(ok ? t('mlbbOpening')(MLBB.id) : t('mlbbIdOpening')(MLBB.id));
         });
     });
@@ -561,7 +666,6 @@
             g.style.setProperty('--bx', Math.cos(a) * d + 'px'); g.style.setProperty('--by', Math.sin(a) * d - 30 + 'px'); g.style.setProperty('--br', (Math.random() * 80 - 40) + 'deg');
             document.body.appendChild(g); setTimeout(g.remove.bind(g), 900);
         }
-        var open = document.getElementById('btnModal'); if (open) setTimeout(function () { open.click(); }, 350);
     });
 </script>
 </body>
