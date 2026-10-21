@@ -9,405 +9,395 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
     
-    <!-- Supabase Hybrid Bridge & Owner Card Router -->
+    <!-- Supabase bridge: real Supabase Auth sessions + database rules (see supabase_setup.sql) -->
     <script>
-      (function () {
-        const SUPABASE_URL = 'https://qebbuxixnqsqjuprfpyv.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
-        const OWNER_EMAIL = 'abdulfarizi15@gmail.com';
-        const originalFetch = window.fetch.bind(window);
+(function () {
+  const SUPABASE_URL = 'https://qebbuxixnqsqjuprfpyv.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
+  const OWNER_EMAIL = 'abdulfarizi15@gmail.com';
+  const IDENTITY = '/.netlify/identity';
+  const originalFetch = window.fetch.bind(window);
 
-        const DEFAULT_MAPLE = {
-          slug: 'maple',
-          name: 'ᴍᴀᴘʟᴇ☆',
-          role: 'Digital Creator',
-          bio: 'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.',
-          country: 'Malaysia',
-          city: 'Masai, Johor',
-          avatar: '',
-          banner: '',
-          theme: 'flame',
-          openTime: '00:00',
-          closeTime: '00:00',
-          timezone: 'Asia/Kuala_Lumpur',
-          sociabuzzEnabled: true,
-          sociabuzz: 'wzii_',
-          widgetEnabled: false,
-          widgetCode: '',
-          visits: 1384,
-          likes: 217,
-          reactions: { fire: 12, hundred: 8, rocket: 15, star: 20 },
-          gaming: [
-            { platform: 'Roblox', value: 'https://www.roblox.com/share?code=4adad911d156734abe482fec0cb93fc7&type=Profile&source=ProfileShare&stamp=1792399648738' },
-            { platform: 'Mobile Legends', value: '37704847' }
-          ],
-          channels: [
-            { platform: 'YouTube', value: 'https://youtube.com/@w._zii?sub_confirmation=1' },
-            { platform: 'WhatsApp', value: 'https://wa.me/wzii1?text=Hi%20Maple!%20I%20just%20tapped%20your%20NFC%20card.' },
-            { platform: 'Instagram', value: 'https://www.instagram.com/wziiii._?rpxt=MTBwZXdhZzI3bXI4OA==' },
-            { platform: 'TikTok', value: 'https://www.tiktok.com/@wzii._?' },
-            { platform: 'Discord', value: '399869638093307904' }
-          ]
-        };
+  const json = (data, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
+  const parse = (s) => { try { return JSON.parse(s || '{}') || {}; } catch { return {}; } };
 
-        // Resize + compress an uploaded image to a small data URL so it can live inside the profile row
-        async function shrinkImage(file, maxSide = 720, maxBytes = 140000) {
-          const src = await new Promise((resolve, reject) => {
-            const r = new FileReader();
-            r.onload = (e) => resolve(e.target.result);
-            r.onerror = reject;
-            r.readAsDataURL(file);
-          });
-          const img = await new Promise((resolve, reject) => {
-            const i = new Image();
-            i.onload = () => resolve(i);
-            i.onerror = reject;
-            i.src = src;
-          });
-          const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-          const w = Math.max(1, Math.round(img.width * scale));
-          const h = Math.max(1, Math.round(img.height * scale));
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          const ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#0b0a0f';
-          ctx.fillRect(0, 0, w, h);
-          ctx.drawImage(img, 0, 0, w, h);
-          let q = 0.85, out = canvas.toDataURL('image/jpeg', q);
-          while (out.length > maxBytes && q > 0.35) { q -= 0.1; out = canvas.toDataURL('image/jpeg', q); }
-          return out;
+  const RESERVED_SLUGS = ['owner','studio','admin','api','assets','login','signup','www','support','help','about','static','index','digitalid'];
+  const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$/;
+  const MEDIA_RE = /^(https?:\/\/\S+|data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+)$/i;
+  const EDITABLE = ['name','role','bio','country','city','avatar','banner','theme','openTime','closeTime','timezone',
+    'widgetEnabled','widgetCode','sociabuzzEnabled','sociabuzz','sociabuzzLabel','sociabuzzPosition',
+    'sociabuzzColor','sociabuzzTextColor','gaming','channels'];
+
+  const DEFAULT_MAPLE = {
+    name: 'ᴍᴀᴘʟᴇ☆', role: 'Digital Creator',
+    bio: 'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.',
+    country: 'Malaysia', city: 'Masai, Johor', avatar: '', banner: '', theme: 'flame',
+    openTime: '00:00', closeTime: '00:00', timezone: 'Asia/Kuala_Lumpur',
+    sociabuzzEnabled: true, sociabuzz: 'wzii_', widgetEnabled: false, widgetCode: '',
+    gaming: [
+      { platform: 'Roblox', value: 'https://www.roblox.com/share?code=4adad911d156734abe482fec0cb93fc7&type=Profile&source=ProfileShare&stamp=1792399648738' },
+      { platform: 'Mobile Legends', value: '37704847' }
+    ],
+    channels: [
+      { platform: 'YouTube', value: 'https://youtube.com/@w._zii?sub_confirmation=1' },
+      { platform: 'WhatsApp', value: 'https://wa.me/wzii1?text=Hi%20Maple!%20I%20just%20tapped%20your%20NFC%20card.' },
+      { platform: 'Instagram', value: 'https://www.instagram.com/wziiii._?rpxt=MTBwZXdhZzI3bXI4OA==' },
+      { platform: 'TikTok', value: 'https://www.tiktok.com/@wzii._?' },
+      { platform: 'Discord', value: '399869638093307904' }
+    ]
+  };
+  const defaultNew = () => ({
+    name: 'Creator', role: '', bio: '', country: 'Malaysia', city: '', avatar: '', banner: '',
+    theme: 'flame', openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
+    sociabuzzEnabled: false, sociabuzz: '', widgetEnabled: false, widgetCode: '',
+    gaming: [], channels: [], createdAt: new Date().toISOString().slice(0, 10)
+  });
+
+  // ---------- Supabase helpers ----------
+  async function sb(path, { method = 'GET', body, token, headers = {} } = {}) {
+    try {
+      return await originalFetch(SUPABASE_URL + path, {
+        method,
+        headers: {
+          apikey: SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: 'Bearer ' + token } : {}),
+          ...headers
+        },
+        body: body === undefined ? undefined : JSON.stringify(body)
+      });
+    } catch { return null; }
+  }
+  async function authError(res, fallback) {
+    if (!res) return json({ code: 503, msg: 'Could not reach the server. Check your connection and try again.' }, 503);
+    const d = await res.json().catch(() => ({}));
+    const msg = d.msg || d.error_description || d.message || (typeof d.error === 'string' ? d.error : '') || fallback;
+    return json({ code: res.status, msg }, res.status);
+  }
+
+  // ---------- session (real Supabase JWT) ----------
+  function readCookie(name) {
+    const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    if (!m) return null;
+    try { return decodeURIComponent(m[1]); } catch { return m[1]; }
+  }
+  function decodeJwt(t) {
+    try {
+      let p = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      p += '='.repeat((4 - (p.length % 4)) % 4);
+      return JSON.parse(decodeURIComponent(escape(atob(p))));
+    } catch { return null; }
+  }
+  function freshestToken() {
+    const cands = [];
+    const c = readCookie('nf_jwt');
+    if (c) cands.push(c);
+    try {
+      const g = JSON.parse(localStorage.getItem('gotrue.user') || 'null');
+      if (g && g.token && g.token.access_token) cands.push(g.token.access_token);
+    } catch {}
+    let best = null, bestClaims = null;
+    for (const t of cands) {
+      const claims = decodeJwt(t);
+      if (claims && claims.sub && (!bestClaims || claims.exp > bestClaims.exp)) { best = t; bestClaims = claims; }
+    }
+    return best ? { token: best, claims: bestClaims } : null;
+  }
+  async function authUser() {
+    let s = freshestToken();
+    if (!s) return null;
+    const stale = () => s && s.claims.exp * 1000 - Date.now() < 15000;
+    // the site's own refresh timer updates the token shortly after load; wait for it briefly
+    for (let i = 0; i < 25 && stale(); i++) {
+      await new Promise((r) => setTimeout(r, 160));
+      s = freshestToken() || s;
+    }
+    if (stale()) return null;
+    const email = String(s.claims.email || '').toLowerCase();
+    return { token: s.token, uid: s.claims.sub, email, isOwner: email === OWNER_EMAIL };
+  }
+  function bearerFrom(options) {
+    const h = options.headers;
+    if (!h) return null;
+    const v = typeof h.get === 'function' ? h.get('Authorization') : (h.Authorization || h.authorization);
+    return v ? String(v).replace(/^Bearer\s+/i, '') : null;
+  }
+  function normUser(u) {
+    if (!u) return u;
+    const out = { ...u };
+    if (!out.confirmed_at && out.email_confirmed_at) out.confirmed_at = out.email_confirmed_at;
+    out.app_metadata = { provider: 'email', ...(out.app_metadata || {}) };
+    if (String(out.email || '').toLowerCase() === OWNER_EMAIL) out.app_metadata.roles = ['owner'];
+    return out;
+  }
+
+  // ---------- profile helpers ----------
+  const normSlug = (s) => String(s || '').toLowerCase().trim();
+  function slugProblem(slug, isOwner) {
+    if (!slug) return 'Choose a link first.';
+    if (slug === 'maple') return isOwner ? null : 'Reserved for site owner.';
+    if (!SLUG_RE.test(slug) || slug.includes('--')) return 'Use a–z, 0–9 and single dashes only (3–30 characters).';
+    if (RESERVED_SLUGS.includes(slug)) return 'That link is reserved. Choose another.';
+    return null;
+  }
+  async function slugConflict(slug, myUid, isOwner) {
+    const problem = slugProblem(slug, isOwner);
+    if (problem) return problem;
+    const res = await sb(`/rest/v1/profiles?select=id&slug=eq.${encodeURIComponent(slug)}`);
+    if (!res || !res.ok) return null; // can't check; the database still enforces it
+    const rows = await res.json().catch(() => []);
+    if (!Array.isArray(rows) || !rows.length) return null;
+    return myUid && rows[0].id === myUid ? null : 'Already claimed. Choose another.';
+  }
+  function unpackRow(row) {
+    let extra = {};
+    let name = row.name || 'Creator';
+    if (typeof row.name === 'string' && row.name.startsWith('{"__dig":')) {
+      try { extra = JSON.parse(row.name); name = extra.name || 'Creator'; } catch {}
+    }
+    const { likes, visits, reactions, __dig, ...rest } = extra;
+    return { ...defaultNew(), ...rest, id: row.id, slug: row.slug, name,
+      gaming: rest.gaming || [], channels: rest.channels || [] };
+  }
+  function withStats(profile, stats) {
+    const ok = stats && typeof stats === 'object' && !Array.isArray(stats) && stats.slug;
+    return { ...profile, visits: ok ? stats.visits : 0, likes: ok ? stats.likes : 0, reactions: ok ? (stats.reactions || {}) : {} };
+  }
+  async function fetchStats(slug) {
+    const r = await sb(`/rest/v1/profile_stats?select=*&slug=eq.${encodeURIComponent(slug)}`);
+    if (r && r.ok) { const rows = await r.json().catch(() => []); return rows[0] || null; }
+    return null;
+  }
+  async function rpcStats(fn, args) {
+    const r = await sb(`/rest/v1/rpc/${fn}`, { method: 'POST', body: args });
+    if (!r || !r.ok) return null;
+    let d = await r.json().catch(() => null);
+    if (Array.isArray(d)) d = d[0];
+    return d && d.slug ? d : null;
+  }
+  async function getOwnRow(au) {
+    const r = await sb(`/rest/v1/profiles?select=*&id=eq.${au.uid}`, { token: au.token });
+    if (!r) return undefined;
+    if (!r.ok) return undefined;
+    const rows = await r.json().catch(() => []);
+    return rows[0] || null;
+  }
+
+  // ---------- image upload: resize + compress to a small data URL ----------
+  async function shrinkImage(file, maxSide = 720, maxBytes = 140000) {
+    const src = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = (e) => resolve(e.target.result);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = src;
+    });
+    const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0b0a0f';
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    let q = 0.85, out = canvas.toDataURL('image/jpeg', q);
+    while (out.length > maxBytes && q > 0.35) { q -= 0.1; out = canvas.toDataURL('image/jpeg', q); }
+    return out;
+  }
+
+  // ---------- fetch router ----------
+  window.fetch = async function (input, options = {}) {
+    const url = typeof input === 'string' ? input : ((input && input.url) || '');
+    const method = String(options.method || (input && input.method) || 'GET').toUpperCase();
+
+    // ===== Identity (real Supabase Auth) =====
+    const idAt = url.indexOf(IDENTITY + '/');
+    if (idAt !== -1) {
+      const sub = url.slice(idAt + IDENTITY.length + 1).split('?')[0].replace(/\/+$/, '');
+
+      if (sub === 'signup') {
+        const body = parse(options.body);
+        const email = String(body.email || '').trim().toLowerCase();
+        const meta = body.data || {};
+        const slug = email === OWNER_EMAIL ? 'maple' : normSlug(meta.digital_slug);
+        if (email !== OWNER_EMAIL) {
+          const conflict = await slugConflict(slug, null, false);
+          if (conflict) return json({ code: 400, msg: conflict }, 400);
         }
-
-        function getLocalProfiles() {
-          try {
-            const raw = localStorage.getItem('dig:profiles_db');
-            const db = raw ? JSON.parse(raw) : {};
-            if (!db.maple) db.maple = { ...DEFAULT_MAPLE };
-            return db;
-          } catch {
-            return { maple: { ...DEFAULT_MAPLE } };
-          }
+        const res = await sb(`/auth/v1/signup?redirect_to=${encodeURIComponent(location.origin)}`, {
+          method: 'POST',
+          body: { email, password: body.password, data: { full_name: meta.full_name || '', digital_slug: slug } }
+        });
+        if (!res || !res.ok) return authError(res, 'Sign-up failed. Please try again.');
+        const d = await res.json().catch(() => ({}));
+        if (d.access_token && d.user) { // email confirmation is switched off in Supabase
+          document.cookie = 'nf_jwt=' + encodeURIComponent(d.access_token) + '; path=/; secure; samesite=lax';
+          if (d.refresh_token) document.cookie = 'nf_refresh=' + encodeURIComponent(d.refresh_token) + '; path=/; secure; samesite=lax';
+          return json({ ...normUser(d.user), access_token: d.access_token, refresh_token: d.refresh_token, expires_in: d.expires_in, token_type: 'bearer' });
         }
-
-        function saveLocalProfile(profile) {
-          if (!profile || !profile.slug) return;
-          try {
-            const db = getLocalProfiles();
-            db[profile.slug] = { ...(db[profile.slug] || {}), ...profile };
-            localStorage.setItem('dig:profiles_db', JSON.stringify(db));
-          } catch {}
+        const user = normUser(d.user || d);
+        if (Array.isArray(user.identities) && user.identities.length === 0) {
+          return json({ code: 422, msg: 'That email is already registered. Log in instead.' }, 422);
         }
+        return json(user);
+      }
 
-        function makeFakeJwt(user) {
-          const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-          const payload = btoa(unescape(encodeURIComponent(JSON.stringify({
-            sub: user.id || 'user-1',
-            email: user.email,
-            exp: Math.floor(Date.now() / 1000) + 86400 * 30,
-            user_metadata: user.user_metadata || {}
-          }))));
-          return `${header}.${payload}.sig`;
-        }
-
-        async function sbFetch(path, opts = {}) {
-          try {
-            const res = await originalFetch(`${SUPABASE_URL}${path}`, {
-              ...opts,
-              headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json',
-                ...(opts.headers || {})
-              }
-            });
-            return res;
-          } catch {
-            return null;
-          }
-        }
-
-        function unpackProfile(row, slugFallback) {
-          const db = getLocalProfiles();
-          const base = slugFallback === 'maple' ? { ...DEFAULT_MAPLE, ...(db.maple || {}) } : (db[slugFallback] || {});
-          if (!row) return Object.keys(base).length ? base : null;
-          let extra = {};
-          let displayName = row.name || base.name || 'Creator';
-          if (typeof row.name === 'string' && row.name.startsWith('{"__dig":')) {
-            try {
-              extra = JSON.parse(row.name);
-              displayName = extra.name || 'Creator';
-            } catch {}
-          }
-          const merged = {
-            ...base,
-            ...extra,
-            ...row,
-            name: displayName,
-            slug: row.slug || slugFallback,
-            gaming: row.gaming || extra.gaming || base.gaming || [],
-            channels: row.channels || extra.channels || base.channels || [],
-            reactions: row.reactions || extra.reactions || base.reactions || { fire: 0, hundred: 0, rocket: 0, star: 0 },
-            likes: typeof row.likes === 'number' ? row.likes : (extra.likes ?? base.likes ?? 217),
-            visits: typeof row.visits === 'number' ? row.visits : (extra.visits ?? base.visits ?? 1384)
-          };
-          saveLocalProfile(merged);
-          return merged;
-        }
-
-        async function syncProfileToSupabase(profile) {
-          saveLocalProfile(profile);
-          const packedName = JSON.stringify({ __dig: 1, ...profile });
-          return await sbFetch('/rest/v1/profiles?on_conflict=slug', {
+      if (sub === 'token') {
+        const params = new URLSearchParams(typeof options.body === 'string' ? options.body : '');
+        let res;
+        if (params.get('grant_type') === 'refresh_token') {
+          res = await sb('/auth/v1/token?grant_type=refresh_token', { method: 'POST', body: { refresh_token: params.get('refresh_token') } });
+        } else {
+          res = await sb('/auth/v1/token?grant_type=password', {
             method: 'POST',
-            headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-            body: JSON.stringify({
-              id: profile.id || '00000000-0000-0000-0000-000000000001',
-              slug: profile.slug,
-              name: packedName
-            })
+            body: { email: (params.get('username') || '').trim().toLowerCase(), password: params.get('password') || '' }
           });
         }
+        if (!res || !res.ok) return authError(res, 'Login failed.');
+        return json(await res.json());
+      }
 
-        window.fetch = async function (input, options = {}) {
-          const url = typeof input === 'string' ? input : (input?.url || '');
+      if (sub === 'user') {
+        const bearer = bearerFrom(options);
+        if (!bearer) return json({ code: 401, msg: 'Unauthorized' }, 401);
+        const res = method === 'PUT'
+          ? await sb('/auth/v1/user', { method: 'PUT', token: bearer, body: parse(options.body) })
+          : await sb('/auth/v1/user', { token: bearer });
+        if (!res || !res.ok) return authError(res, 'Unauthorized');
+        return json(normUser(await res.json()));
+      }
 
-          if (url.includes('/api/uploads') && options.method === 'POST') {
-            try {
-              const dataUrl = await shrinkImage(options.body);
-              return new Response(JSON.stringify({ url: dataUrl }), {
-                status: 200, headers: { 'Content-Type': 'application/json' }
-              });
-            } catch {
-              return new Response(JSON.stringify({ error: 'Upload failed. Try a different image.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-            }
-          }
+      if (sub === 'logout') {
+        const bearer = bearerFrom(options);
+        if (bearer) await sb('/auth/v1/logout', { method: 'POST', token: bearer });
+        return json({});
+      }
 
-          if (url.includes('/api/slugs/')) {
-            const slug = decodeURIComponent(url.split('/api/slugs/')[1].split('?')[0]).toLowerCase();
-            if (slug === 'maple') {
-              const authUser = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
-              const isOwner = authUser && authUser.email === OWNER_EMAIL;
-              return new Response(JSON.stringify({ available: isOwner, reason: isOwner ? null : 'Reserved for site owner.' }), {
-                status: 200, headers: { 'Content-Type': 'application/json' }
-              });
-            }
-            const res = await sbFetch(`/rest/v1/profiles?select=slug&slug=eq.${encodeURIComponent(slug)}`);
-            if (res && res.ok) {
-              const rows = await res.json().catch(() => []);
-              const taken = Array.isArray(rows) && rows.length > 0;
-              return new Response(JSON.stringify({ available: !taken, reason: taken ? 'Already claimed' : null }), {
-                status: 200, headers: { 'Content-Type': 'application/json' }
-              });
-            }
-            const db = getLocalProfiles();
-            const taken = Boolean(db[slug]);
-            return new Response(JSON.stringify({ available: !taken, reason: taken ? 'Already claimed' : null }), {
-              status: 200, headers: { 'Content-Type': 'application/json' }
-            });
-          }
+      if (sub === 'recover') {
+        const body = parse(options.body);
+        await sb(`/auth/v1/recover?redirect_to=${encodeURIComponent(location.origin)}`, {
+          method: 'POST', body: { email: String(body.email || '').trim().toLowerCase() }
+        });
+        return json({}); // same answer whether or not the email exists
+      }
 
-          if (url.includes('/api/profiles/') && (url.endsWith('/like') || url.endsWith('/react'))) {
-            const parts = url.split('/api/profiles/')[1].split('/');
-            const slug = decodeURIComponent(parts[0]).toLowerCase();
-            const action = parts[1];
-            let row = null;
-            const res = await sbFetch(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
-            if (res && res.ok) {
-              const rows = await res.json().catch(() => []);
-              if (rows.length) row = rows[0];
-            }
-            const profile = unpackProfile(row, slug) || { ...DEFAULT_MAPLE, slug };
-            if (action === 'like') profile.likes = (Number(profile.likes) || 0) + 1;
-            else if (action === 'react') {
-              let body = {};
-              try { body = JSON.parse(options.body || '{}'); } catch {}
-              const key = body.reaction;
-              profile.reactions = profile.reactions || { fire: 0, hundred: 0, rocket: 0, star: 0 };
-              if (key) profile.reactions[key] = (Number(profile.reactions[key]) || 0) + 1;
-            }
-            await syncProfileToSupabase(profile);
-            return new Response(JSON.stringify(profile), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          }
+      if (sub === 'settings') return json({ external: {}, disable_signup: false, autoconfirm: false });
+      return json({ code: 404, msg: 'Not supported' }, 404);
+    }
 
-          if (url.includes('/api/profiles/')) {
-            const slug = decodeURIComponent(url.split('/api/profiles/')[1].split('?')[0]).toLowerCase();
-            let row = null;
-            const res = await sbFetch(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
-            if (res && res.ok) {
-              const rows = await res.json().catch(() => []);
-              if (rows.length) row = rows[0];
-            }
-            const profile = unpackProfile(row, slug);
-            if (!profile) {
-              return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
-            }
-            if (!url.includes('preview')) {
-              profile.visits = (Number(profile.visits) || 0) + 1;
-              syncProfileToSupabase(profile);
-            }
-            return new Response(JSON.stringify(profile), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          }
+    // ===== Uploads =====
+    if (url.includes('/api/uploads') && method === 'POST') {
+      try {
+        return json({ url: await shrinkImage(options.body) });
+      } catch {
+        return json({ error: 'Upload failed. Try a different image.' }, 400);
+      }
+    }
 
-          if (url.includes('/signup')) {
-            let body = {};
-            try { body = JSON.parse(options.body || '{}'); } catch {}
-            const email = (body.email || '').trim().toLowerCase();
-            const password = body.password || '';
-            const meta = body.data || {};
-            const slug = email === OWNER_EMAIL ? 'maple' : (meta.digital_slug || 'user');
-            const name = meta.full_name || (email === OWNER_EMAIL ? 'ᴍᴀᴘʟᴇ☆' : 'Creator');
+    // ===== Link availability =====
+    if (url.includes('/api/slugs/')) {
+      const slug = normSlug(decodeURIComponent(url.split('/api/slugs/')[1].split('?')[0]));
+      const au = await authUser();
+      const conflict = await slugConflict(slug, au && au.uid, !!(au && au.isOwner));
+      return json({ available: !conflict, reason: conflict });
+    }
 
-            let userId = '00000000-0000-0000-0000-000000000001';
-            const sbRes = await sbFetch('/auth/v1/signup', {
-              method: 'POST',
-              body: JSON.stringify({ email, password, data: { full_name: name, digital_slug: slug } })
-            });
-            if (sbRes && sbRes.ok) {
-              const sbData = await sbRes.json().catch(() => ({}));
-              if (sbData.user?.id) userId = sbData.user.id;
-            }
+    // ===== Public profiles, likes, reactions =====
+    if (url.includes('/api/profiles/')) {
+      const parts = url.split('/api/profiles/')[1].split('?')[0].split('/');
+      const slug = normSlug(decodeURIComponent(parts[0]));
+      const action = parts[1];
 
-            const userObj = {
-              id: userId,
-              email,
-              confirmed_at: new Date().toISOString(),
-              user_metadata: { full_name: name, digital_slug: slug },
-              app_metadata: { provider: 'email', roles: email === OWNER_EMAIL ? ['owner'] : ['user'] }
-            };
-            const token = makeFakeJwt(userObj);
-            userObj.access_token = token;
-            userObj.refresh_token = 'refresh-' + token;
+      if (method === 'POST' && (action === 'like' || action === 'react')) {
+        let stats;
+        if (action === 'like') stats = await rpcStats('bump_like', { p_slug: slug });
+        else stats = await rpcStats('bump_reaction', { p_slug: slug, p_key: String(parse(options.body).reaction || '') });
+        if (!stats) return json({ error: 'Could not save that. Please try again.' }, 400);
+        return json({ likes: stats.likes, visits: stats.visits, reactions: stats.reactions || {} });
+      }
 
-            localStorage.setItem('dig:auth_user', JSON.stringify(userObj));
-            const existing = getLocalProfiles()[slug] || (slug === 'maple' ? DEFAULT_MAPLE : {});
-            await syncProfileToSupabase({ ...existing, id: userId, slug, name: existing.name || name });
+      const res = await sb(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
+      if (!res || !res.ok) return json({ error: 'Could not load this profile.' }, 503);
+      const rows = await res.json().catch(() => []);
+      let profile;
+      if (rows.length) profile = unpackRow(rows[0]);
+      else if (slug === 'maple') profile = { ...defaultNew(), ...DEFAULT_MAPLE, slug: 'maple' };
+      else return json({ error: 'Not found' }, 404);
 
-            return new Response(JSON.stringify(userObj), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          }
+      let stats = null;
+      if (!url.includes('preview')) stats = await rpcStats('bump_visit', { p_slug: slug });
+      if (!stats) stats = await fetchStats(slug);
+      return json(withStats(profile, stats));
+    }
 
-          if (url.includes('/token')) {
-            let email = '', password = '';
-            if (typeof options.body === 'string' && options.body.includes('grant_type=')) {
-              const params = new URLSearchParams(options.body);
-              email = (params.get('username') || '').trim().toLowerCase();
-              password = params.get('password') || '';
-            } else {
-              try {
-                const b = JSON.parse(options.body || '{}');
-                email = (b.email || b.username || '').trim().toLowerCase();
-                password = b.password || '';
-              } catch {}
-            }
+    // ===== Signed-in user's own profile =====
+    if (url.includes('/api/me')) {
+      const au = await authUser();
+      if (!au) return json({ error: 'Please log in again.' }, 401);
 
-            if (!email) {
-              const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
-              if (saved) email = saved.email;
-            }
+      const existing = await getOwnRow(au);
+      if (existing === undefined) return json({ error: 'Could not reach the database. Please try again.' }, 503);
 
-            let userId = '00000000-0000-0000-0000-000000000001';
-            const prevSaved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
-            let slug = email === OWNER_EMAIL ? 'maple' : (prevSaved && prevSaved.email === email ? (prevSaved.user_metadata?.digital_slug || '') : '');
+      if (method !== 'PUT') {
+        let profile = null;
+        if (existing) profile = unpackRow(existing);
+        else if (au.isOwner) profile = { ...defaultNew(), ...DEFAULT_MAPLE, id: au.uid, slug: 'maple' };
+        if (!profile) return json({ profile: null });
+        return json({ profile: withStats(profile, await fetchStats(profile.slug)) });
+      }
 
-            const sbRes = await sbFetch('/auth/v1/token?grant_type=password', {
-              method: 'POST',
-              body: JSON.stringify({ email, password })
-            });
-            if (sbRes && sbRes.ok) {
-              const sbData = await sbRes.json().catch(() => ({}));
-              if (sbData.user?.id) userId = sbData.user.id;
-              if (!slug && sbData.user?.user_metadata?.digital_slug) slug = sbData.user.user_metadata.digital_slug;
-            } else if (email === OWNER_EMAIL || (sbRes && (sbRes.status === 400 || sbRes.status === 401))) {
-              // wrong password / unconfirmed email / owner without real login -> reject, with Supabase's real reason
-              let reason = 'Invalid login credentials';
-              if (sbRes) {
-                const errData = await sbRes.json().catch(() => ({}));
-                reason = errData.error_description || errData.msg || errData.message || reason;
-              } else {
-                reason = 'Could not reach the login server. Check your connection and try again.';
-              }
-              return new Response(JSON.stringify({ error: 'invalid_grant', error_description: reason, msg: reason, message: reason }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-            }
+      // ---- save ----
+      const body = parse(options.body);
+      let slug, current;
+      if (existing) {
+        slug = existing.slug;
+        current = unpackRow(existing);
+      } else {
+        slug = au.isOwner ? 'maple' : normSlug(body.slug);
+        const problem = slugProblem(slug, au.isOwner);
+        if (problem) return json({ error: problem }, 400);
+        current = { ...defaultNew(), ...(slug === 'maple' ? DEFAULT_MAPLE : {}), id: au.uid, slug };
+      }
+      const merged = { ...current };
+      for (const k of EDITABLE) if (body[k] !== undefined) merged[k] = body[k];
+      merged.name = String(merged.name || '').trim().slice(0, 80) || 'Creator';
+      for (const k of ['avatar', 'banner']) {
+        merged[k] = String(merged[k] || '').trim();
+        if (merged[k] && (merged[k].length > 600000 || !MEDIA_RE.test(merged[k]))) {
+          return json({ error: `${k === 'avatar' ? 'Avatar' : 'Banner'} must be a full https:// link or an uploaded image` }, 400);
+        }
+      }
+      const { id, likes, visits, reactions, ...toStore } = merged;
+      const packed = JSON.stringify({ __dig: 1, ...toStore, slug });
 
-            const userObj = {
-              id: userId,
-              email,
-              confirmed_at: new Date().toISOString(),
-              user_metadata: { full_name: email === OWNER_EMAIL ? 'ᴍᴀᴘʟᴇ☆' : (slug || email.split('@')[0]), digital_slug: slug },
-              app_metadata: { provider: 'email', roles: email === OWNER_EMAIL ? ['owner'] : ['user'] }
-            };
-            const token = makeFakeJwt(userObj);
-            localStorage.setItem('dig:auth_user', JSON.stringify(userObj));
+      const res = existing
+        ? await sb(`/rest/v1/profiles?id=eq.${au.uid}`, { method: 'PATCH', token: au.token, headers: { Prefer: 'return=representation' }, body: { name: packed } })
+        : await sb('/rest/v1/profiles', { method: 'POST', token: au.token, headers: { Prefer: 'return=representation' }, body: { id: au.uid, slug, name: packed } });
 
-            return new Response(JSON.stringify({
-              access_token: token, refresh_token: 'refresh-' + token,
-              token_type: 'bearer', expires_in: 86400 * 30, user: userObj
-            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          }
+      if (!res) return json({ error: 'Connection failed. Please try again.' }, 503);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        if (res.status === 409 || err.code === '23505') return json({ error: 'That link was taken. Choose another.' }, 409);
+        if (res.status === 401) return json({ error: 'Your session expired. Please log in again.' }, 401);
+        if (res.status === 403 || err.code === '42501') return json({ error: 'That link is reserved or not allowed.' }, 403);
+        return json({ error: err.message || 'Could not save. Please try again.' }, 400);
+      }
+      const rows = await res.json().catch(() => []);
+      if (!Array.isArray(rows) || !rows.length) return json({ error: 'Not allowed to edit this profile.' }, 403);
+      return json({ profile: withStats(unpackRow(rows[0]), await fetchStats(slug)) });
+    }
 
-          if (url.includes('/logout')) {
-            localStorage.removeItem('dig:auth_user');
-            return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          }
+    return originalFetch(input, options);
+  };
+})();
 
-          if (url.includes('/.netlify/identity/user') || url.endsWith('/user')) {
-            const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
-            if (!saved) return new Response(JSON.stringify({ msg: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
-            return new Response(JSON.stringify(saved), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          }
-
-          if (url.includes('/api/me')) {
-            const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
-            if (!saved) return new Response(JSON.stringify({ error: 'Please log in again.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
-            const slug = saved.email === OWNER_EMAIL ? 'maple' : (saved.user_metadata?.digital_slug || '');
-
-            if (options.method === 'PUT') {
-              let body = {};
-              try { body = JSON.parse(options.body || '{}'); } catch {}
-              const editor = document.getElementById('editor');
-              if (editor) {
-                const fd = new FormData(editor);
-                const getRows = (kind) => [...editor.querySelectorAll(`.row[data-kind="${kind}"]`)]
-                  .map(r => ({ platform: r.querySelector('select')?.value, value: r.querySelector('input')?.value.trim() }))
-                  .filter(r => r.value);
-                body = {
-                  ...body,
-                  name: String(fd.get('name') || body.name || 'ᴍᴀᴘʟᴇ☆').trim(),
-                  role: String(fd.get('role') || body.role || '').trim(),
-                  bio: String(fd.get('bio') || body.bio || '').trim(),
-                  country: String(fd.get('country') || body.country || 'Malaysia'),
-                  city: String(fd.get('city') || body.city || 'Masai, Johor'),
-                  avatar: editor.elements.namedItem('avatar')?.value.trim() || body.avatar || '',
-                  banner: editor.elements.namedItem('banner')?.value.trim() || body.banner || '',
-                  theme: String(fd.get('theme') || body.theme || 'flame'),
-                  gaming: getRows('game'),
-                  channels: getRows('channel')
-                };
-              }
-              const current = getLocalProfiles()[slug] || (slug === 'maple' ? DEFAULT_MAPLE : {});
-              const finalSlug = (saved.email === OWNER_EMAIL ? 'maple' : (body.slug || slug || '')).toLowerCase();
-              if (!finalSlug) return new Response(JSON.stringify({ error: 'Choose a link first.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-              const cur2 = getLocalProfiles()[finalSlug] || current;
-              const updated = { ...cur2, ...body, id: saved.id, slug: finalSlug };
-              if (!updated.name) updated.name = saved.user_metadata?.full_name || 'Creator';
-              saved.user_metadata = { ...(saved.user_metadata || {}), digital_slug: finalSlug };
-              localStorage.setItem('dig:auth_user', JSON.stringify(saved));
-              await syncProfileToSupabase(updated);
-              return new Response(JSON.stringify({ profile: updated }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-            }
-
-            let row = null;
-            const res = await sbFetch(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
-            if (res && res.ok) {
-              const rows = await res.json().catch(() => []);
-              if (rows.length) row = rows[0];
-            }
-            const profile = slug ? (unpackProfile(row, slug) || (slug === 'maple' ? { ...DEFAULT_MAPLE } : null)) : null;
-            return new Response(JSON.stringify({ profile }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          }
-
-          return originalFetch(input, options);
-        };
-      })();
     </script>
 
     <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
