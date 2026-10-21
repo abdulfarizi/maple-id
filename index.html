@@ -18,7 +18,7 @@
       rel="stylesheet"
     />
 
-    <!-- Supabase REST + LocalStorage Hybrid Bridge with Owner Protection -->
+    <!-- Complete Hybrid Bridge & Session Protector -->
     <script>
       (function () {
         const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
@@ -399,6 +399,30 @@
         });
         observer.observe(document.documentElement, { childList: true, subtree: true });
       })();
+    </script>
+
+    <!-- Always keep login buttons visible in topbar if logged out -->
+    <script>
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const nav = document.getElementById('nav-actions');
+          if (nav) {
+            const auth = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
+            if (!auth || !auth.email) {
+              nav.innerHTML = `
+                <a href="/maple" class="nav-link" data-link>Owner</a>
+                <a href="/#auth" class="nav-link" data-auth="login">Log in</a>
+                <a href="/#auth" class="btn btn-sm btn-accent" data-auth="signup">Get your ID</a>
+              `;
+            } else {
+              nav.innerHTML = `
+                <a href="/maple" class="nav-link" data-link>Owner</a>
+                <a href="/studio" data-link class="btn btn-sm btn-accent">Studio</a>
+              `;
+            }
+          }
+        }, 300);
+      });
     </script>
 
     <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
