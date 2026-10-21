@@ -300,9 +300,10 @@
         setTimeout(() => {
             const overlay = document.getElementById('intro-overlay');
             if (overlay) {
-                overlay.classList.add('fade-out');
+                overlay.classList.add('zoom-in');
+                setTimeout(() => overlay.classList.add('fade-out'), 700);
             }
-        }, 800);
+        }, 1200);
     });
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -332,6 +333,7 @@
     }
     function haptic(ms = 12) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch {} }
 
+    // Ambient Lofi Beats Generator
     let musicPlaying = false, musicInterval;
     document.getElementById('music-btn').addEventListener('click', function() {
         musicPlaying = !musicPlaying;
@@ -349,11 +351,12 @@
         }
     });
 
-    async function react(btn, emoji) {
+    // Reactions counter
+    function react(btn, emoji) {
         haptic(10);
         playTone(700, 0.04);
         const span = btn.querySelector('span');
-        span.textContent = parseInt(span.textContent, 10) + 1;
+        span.textContent = parseInt(span.textContent) + 1;
         showToast(`Reacted with ${emoji}!`);
     }
 
@@ -388,12 +391,21 @@
     }
     updateClock(); setInterval(updateClock, 15000);
 
+    document.querySelectorAll('.live').forEach((el) => {
+        el.addEventListener('pointermove', (e) => {
+            const r = el.getBoundingClientRect();
+            el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+            el.style.setProperty('--my', `${e.clientY - r.top}px`);
+        });
+        el.addEventListener('pointerdown', () => playTone(540, 0.035));
+    });
+
     const I18N = {
-        en: { title:'ᴍᴀᴘʟᴇ☆ | Digital Card', card:'Digital Card', statusOnline:'Online', role:'Digital Creator', basedIn:'Based in', localTime:'Local Time', save:'Save contact', qrHead:'Scan Digital Card', qrSub:'Point your camera to open this card', shareBtn:'Share Card', supportTag:'Support · 00', supportTitle:'Give Support to', supportDesc:'Enjoy the content? Fuel the next one with a small tip.', supportVia:'via SociaBuzz · wzii_', supportCta:'Give Support', gaming:'Gaming', robloxSub:'Add me as a friend', add:'Add', copyId:'Copy ID', copied:'Copied', channels:'Channels', subscribe:'Subscribe', messageMe:'Message me', chat:'Chat', follow:'Follow', footer:'Tap · Scan · Connect', toastSaved:'Contact saved', toastLink:'Link copied', toastDiscord:'Discord ID copied', toastAll:'All handles copied!', toastLang:'Language: English' },
-        ms: { title:'ᴍᴀᴘʟᴇ☆ | Kad Digital', card:'Kad Digital', statusOnline:'Aktif', role:'Pencipta Digital', basedIn:'Berasal dari', localTime:'Waktu Tempatan', save:'Simpan kenalan', qrHead:'Imbas Kad Digital', qrSub:'Halakan kamera anda untuk membuka kad ini', shareBtn:'Kongsi Kad', supportTag:'Sokongan · 00', supportTitle:'Beri Sokongan kepada', supportDesc:'Suka kandungan ini? Sokong karya seterusnya dengan sedikit sumbangan.', supportVia:'melalui SociaBuzz · wzii_', supportCta:'Beri Sokongan', gaming:'Permainan', robloxSub:'Tambah saya sebagai rakan', add:'Tambah', copyId:'Salin ID', copied:'Disalin', channels:'Saluran', subscribe:'Langgan', messageMe:'Hantar mesej', chat:'Sembang', follow:'Ikuti', footer:'Ketik · Imbas · Hubung', toastSaved:'Kenalan disimpan', toastLink:'Pautan disalin', toastDiscord:'ID Discord disalin', toastAll:'Semua nama pengguna disalin!', toastLang:'Bahasa: Bahasa Melayu' }
+        en: { title:'ᴍᴀᴘʟᴇ☆ | Digital Card', card:'Digital Card', statusOnline:'Online', role:'Digital Creator', basedIn:'Based in', focus:'Focus', focusVal:'Content & Tech', localTime:'Local Time', chipGaming:'Gaming', chipRig:'Gear', copyAll:'Copy All', bio:'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.', save:'Save contact', copyLink:'Copy link', qrLabel:'Show QR Code', qrHead:'Scan Digital Card', qrSub:'Point your camera to open this card', shareBtn:'Share Card', supportAria:'Give support', supportTag:'Support · 00', supportTitle:'Give Support to', supportDesc:'Enjoy the content? Fuel the next one with a small tip.', supportVia:'via SociaBuzz · wzii_', supportCta:'Give Support', gaming:'Gaming', robloxSub:'Add me as a friend', add:'Add', mlbbAria:'Copy Mobile Legends ID 37704847 and open Mobile Legends', copyId:'Copy ID', copied:'Copied', channels:'Channels', subscribe:'Subscribe', messageMe:'Message me', chat:'Chat', follow:'Follow', footer:'Tap · Scan · Connect', waText:'Hi Maple! I just tapped your NFC card.', toastSaved:'Contact saved', toastLink:'Link copied', toastDiscord:'Discord ID copied', toastAll:'All handles copied!', toastLang:'Language: English', mlbbDesktop:(id)=>`ID ${id} copied · open MLBB on your phone`, mlbbOpening:(id)=>`ID ${id} copied · opening Mobile Legends`, mlbbId:(id)=>`MLBB ID: ${id}`, mlbbIdOpening:(id)=>`MLBB ID: ${id} · opening app` },
+        ms: { title:'ᴍᴀᴘʟᴇ☆ | Kad Digital', card:'Kad Digital', statusOnline:'Aktif', role:'Pencipta Digital', basedIn:'Berasal dari', localTime:'Waktu Tempatan', save:'Simpan kenalan', qrHead:'Imbas Kad Digital', qrSub:'Halakan kamera anda untuk membuka kad ini', shareBtn:'Kongsi Kad', supportAria:'Beri sokongan', supportTag:'Sokongan · 00', supportTitle:'Beri Sokongan kepada', supportDesc:'Suka kandungan ini? Sokong karya seterusnya dengan sedikit sumbangan.', supportVia:'melalui SociaBuzz · wzii_', supportCta:'Beri Sokongan', gaming:'Permainan', robloxSub:'Tambah saya sebagai rakan', add:'Tambah', copyId:'Salin ID', copied:'Disalin', channels:'Saluran', subscribe:'Langgan', messageMe:'Hantar mesej', chat:'Sembang', follow:'Ikuti', footer:'Ketik · Imbas · Hubung', toastSaved:'Kenalan disimpan', toastLink:'Pautan disalin', toastDiscord:'ID Discord disalin', toastAll:'Semua nama pengguna disalin!', toastLang:'Bahasa: Bahasa Melayu', mlbbDesktop:(id)=>`ID ${id} disalin · buka MLBB di telefon anda`, mlbbOpening:(id)=>`ID ${id} disalin · membuka Mobile Legends`, mlbbId:(id)=>`ID MLBB: ${id}`, mlbbIdOpening:(id)=>`ID MLBB: ${id} · membuka aplikasi` }
     };
     const LANG_KEY = 'maple-lang';
-    let lang = (() => { try { const s = localStorage.getItem(LANG_KEY); if (I18N[s]) return s; } catch {} return 'en'; })();
+    let lang = (() => { try { const s = localStorage.getItem(LANG_KEY); if (I18N[s]) return s; } catch {} return /^(ms|id)\b/i.test(navigator.language || '') ? 'ms' : 'en'; })();
     const t = (k) => I18N[lang][k];
     function applyLang(next) {
         lang = I18N[next] ? next : 'en'; document.documentElement.lang = lang; document.title = t('title');
@@ -444,7 +456,13 @@
         copyCurrentUrl();
     }
 
-    const MLBB = { id:'37704847' };
+    const MLBB = { id:'37704847', androidPackage:'com.mobile.legends', iosScheme:'mobilelegends://', appStore:'https://apps.apple.com/app/id1160056295', playStore:'https://play.google.com/store/apps/details?id=com.mobile.legends' };
+    function detectPlatform() {
+        const ua = navigator.userAgent || '';
+        if (/iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios';
+        if (/Android/i.test(ua)) return 'android';
+        return 'desktop';
+    }
     function copyText(text) {
         const fallback = () => {
             const i = document.createElement('textarea'); i.value = text; i.setAttribute('readonly',''); i.style.position = 'fixed'; i.style.opacity = '0';
@@ -454,12 +472,13 @@
         if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(() => true, fallback);
         return Promise.resolve(fallback());
     }
-    document.getElementById('mlbb-tile')?.addEventListener('click', function () {
-        haptic(15); const cta = document.getElementById('mlbb-cta');
+    document.getElementById('mlbb-tile').addEventListener('click', function () {
+        haptic(15); const platform = detectPlatform(), cta = document.getElementById('mlbb-cta');
         copyText(MLBB.id).then((ok) => {
-            if (cta) cta.textContent = ok ? t('copied') : t('copyId');
-            setTimeout(() => { if (cta) cta.textContent = t('copyId'); }, 2000);
-            showToast(t('copied'));
+            cta.textContent = ok ? t('copied') : t('copyId');
+            setTimeout(() => { cta.textContent = t('copyId'); }, 2000);
+            if (platform === 'desktop') { showToast(ok ? t('mlbbDesktop')(MLBB.id) : t('mlbbId')(MLBB.id)); return; }
+            showToast(ok ? t('mlbbOpening')(MLBB.id) : t('mlbbIdOpening')(MLBB.id));
         });
     });
 
@@ -473,13 +492,13 @@
         s.onload = function () { if (window.sbBoW) sbBoW.draw("wzii_", "R2l2ZSBTdXBwb3J0", "position-bottom-right", "#cc0000", "#FFFFFF"); };
         document.body.appendChild(s);
     });
-    document.getElementById('support-tile')?.addEventListener('click', function (e) {
+    document.getElementById('support-tile').addEventListener('click', function (e) {
         haptic(20); playTone(880, 0.08, 'triangle'); var glyphs = ['💸','💰','🪙','💵'], r = this.getBoundingClientRect();
         var x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
         for (var i = 0; i < 10; i++) {
             var g = document.createElement('span'), a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 60;
             g.className = 'money-burst'; g.textContent = glyphs[i % glyphs.length]; g.style.left = x + 'px'; g.style.top = y + 'px';
-            g.style.setProperty('--bx', Math.cos(a) * d + 'px'); g.style.setProperty('--by', Math.sin(a) * d - 30 + 'px');
+            g.style.setProperty('--bx', Math.cos(a) * d + 'px'); g.style.setProperty('--by', Math.sin(a) * d - 30 + 'px'); g.style.setProperty('--br', (Math.random() * 80 - 40) + 'deg');
             document.body.appendChild(g); setTimeout(g.remove.bind(g), 900);
         }
         var open = document.getElementById('btnModal'); if (open) setTimeout(function () { open.click(); }, 350);
