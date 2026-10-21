@@ -317,8 +317,15 @@
               if (sbData.user?.id) userId = sbData.user.id;
               if (!slug && sbData.user?.user_metadata?.digital_slug) slug = sbData.user.user_metadata.digital_slug;
             } else if (email === OWNER_EMAIL || (sbRes && (sbRes.status === 400 || sbRes.status === 401))) {
-              // wrong password / unconfirmed email / owner without real login -> reject
-              return new Response(JSON.stringify({ error: 'invalid_grant', error_description: 'Invalid login credentials' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+              // wrong password / unconfirmed email / owner without real login -> reject, with Supabase's real reason
+              let reason = 'Invalid login credentials';
+              if (sbRes) {
+                const errData = await sbRes.json().catch(() => ({}));
+                reason = errData.error_description || errData.msg || errData.message || reason;
+              } else {
+                reason = 'Could not reach the login server. Check your connection and try again.';
+              }
+              return new Response(JSON.stringify({ error: 'invalid_grant', error_description: reason, msg: reason, message: reason }), { status: 400, headers: { 'Content-Type': 'application/json' } });
             }
 
             const userObj = {
