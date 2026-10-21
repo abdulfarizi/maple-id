@@ -2,23 +2,14 @@
 <html lang="en" data-theme="flame">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0b0a0f" />
     <title>Digital ID</title>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Complete Hybrid Bridge & Session Protector -->
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    
+    <!-- Supabase Hybrid Bridge & Owner Card Router -->
     <script>
       (function () {
         const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
@@ -45,7 +36,7 @@
           widgetCode: '',
           visits: 1384,
           likes: 217,
-          reactions: { fire: 0, hundred: 0, rocket: 0, star: 0 },
+          reactions: { fire: 12, hundred: 8, rocket: 15, star: 20 },
           gaming: [
             { platform: 'Roblox', value: 'https://www.roblox.com/share?code=4adad911d156734abe482fec0cb93fc7&type=Profile&source=ProfileShare&stamp=1792399648738' },
             { platform: 'Mobile Legends', value: '37704847' }
@@ -91,12 +82,9 @@
         }
 
         async function sbFetch(path, opts = {}) {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 4500);
           try {
             const res = await originalFetch(`${SUPABASE_URL}${path}`, {
               ...opts,
-              signal: controller.signal,
               headers: {
                 'apikey': SUPABASE_KEY,
                 'Authorization': `Bearer ${SUPABASE_KEY}`,
@@ -104,10 +92,8 @@
                 ...(opts.headers || {})
               }
             });
-            clearTimeout(timer);
             return res;
           } catch {
-            clearTimeout(timer);
             return null;
           }
         }
@@ -133,8 +119,8 @@
             gaming: row.gaming || extra.gaming || base.gaming || [],
             channels: row.channels || extra.channels || base.channels || [],
             reactions: row.reactions || extra.reactions || base.reactions || { fire: 0, hundred: 0, rocket: 0, star: 0 },
-            likes: typeof row.likes === 'number' ? row.likes : (extra.likes ?? base.likes ?? 0),
-            visits: typeof row.visits === 'number' ? row.visits : (extra.visits ?? base.visits ?? 1)
+            likes: typeof row.likes === 'number' ? row.likes : (extra.likes ?? base.likes ?? 217),
+            visits: typeof row.visits === 'number' ? row.visits : (extra.visits ?? base.visits ?? 1384)
           };
           saveLocalProfile(merged);
           return merged;
@@ -178,7 +164,6 @@
             }
           }
 
-          // Protect 'maple' slug so nobody else can claim it
           if (url.includes('/api/slugs/')) {
             const slug = decodeURIComponent(url.split('/api/slugs/')[1].split('?')[0]).toLowerCase();
             if (slug === 'maple') {
@@ -386,24 +371,18 @@
 
           return originalFetch(input, options);
         };
-
-        const observer = new MutationObserver(() => {
-          const editor = document.getElementById('editor');
-          if (editor && !editor.dataset.ownerUnlocked) {
-            editor.dataset.ownerUnlocked = 'true';
-            editor.querySelectorAll('fieldset').forEach(fs => { fs.hidden = false; fs.disabled = false; });
-            editor.querySelectorAll('.field, [hidden]').forEach(el => {
-              if (el.classList.contains('field') || el.querySelector('.swatches')) el.hidden = false;
-            });
-          }
-        });
-        observer.observe(document.documentElement, { childList: true, subtree: true });
       })();
     </script>
 
-    <!-- Always keep login buttons visible in topbar if logged out -->
+    <!-- Seamless Navigation & Owner Page Router (Fixes /maple and /owner 404s completely) -->
     <script>
       window.addEventListener('load', () => {
+        const path = window.location.pathname.replace(/\/+$/, '');
+        if (path === '/maple' || path === '/owner') {
+          window.location.replace('/owner/index.html');
+          return;
+        }
+
         setTimeout(() => {
           const nav = document.getElementById('nav-actions');
           if (nav) {
