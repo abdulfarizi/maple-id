@@ -145,16 +145,21 @@
     if (!Array.isArray(rows) || !rows.length) return null;
     return myUid && rows[0].id === myUid ? null : 'Already claimed. Choose another.';
   }
+  
   function unpackRow(row) {
     let extra = {};
     let name = row.name || 'Creator';
     if (typeof row.name === 'string' && row.name.startsWith('{"__dig":')) {
-      try { extra = JSON.parse(row.name); name = extra.name || 'Creator'; } catch {}
+      try { 
+        extra = JSON.parse(row.name); 
+        name = extra.name || 'Creator'; 
+      } catch {}
     }
     const { likes, visits, reactions, __dig, ...rest } = extra;
     return { ...defaultNew(), ...rest, id: row.id, slug: row.slug, name,
       gaming: rest.gaming || [], channels: rest.channels || [] };
   }
+
   function withStats(profile, stats) {
     const ok = stats && typeof stats === 'object' && !Array.isArray(stats) && stats.slug;
     return { ...profile, visits: ok ? stats.visits : 0, likes: ok ? stats.likes : 0, reactions: ok ? (stats.reactions || {}) : {} };
