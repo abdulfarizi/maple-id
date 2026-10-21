@@ -50,6 +50,34 @@
           ]
         };
 
+        // Resize + compress an uploaded image to a small data URL so it can live inside the profile row
+        async function shrinkImage(file, maxSide = 720, maxBytes = 140000) {
+          const src = await new Promise((resolve, reject) => {
+            const r = new FileReader();
+            r.onload = (e) => resolve(e.target.result);
+            r.onerror = reject;
+            r.readAsDataURL(file);
+          });
+          const img = await new Promise((resolve, reject) => {
+            const i = new Image();
+            i.onload = () => resolve(i);
+            i.onerror = reject;
+            i.src = src;
+          });
+          const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+          const w = Math.max(1, Math.round(img.width * scale));
+          const h = Math.max(1, Math.round(img.height * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#0b0a0f';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          let q = 0.85, out = canvas.toDataURL('image/jpeg', q);
+          while (out.length > maxBytes && q > 0.35) { q -= 0.1; out = canvas.toDataURL('image/jpeg', q); }
+          return out;
+        }
+
         function getLocalProfiles() {
           try {
             const raw = localStorage.getItem('dig:profiles_db');
@@ -145,22 +173,12 @@
 
           if (url.includes('/api/uploads') && options.method === 'POST') {
             try {
-              const file = options.body;
-              const dataUrl = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-              });
-              const mediaId = 'img_' + Date.now();
-              const store = JSON.parse(localStorage.getItem('dig:media_store') || '{}');
-              store[mediaId] = dataUrl;
-              localStorage.setItem('dig:media_store', JSON.stringify(store));
-              return new Response(JSON.stringify({ url: `https://local.upload/${mediaId}` }), {
+              const dataUrl = await shrinkImage(options.body);
+              return new Response(JSON.stringify({ url: dataUrl }), {
                 status: 200, headers: { 'Content-Type': 'application/json' }
               });
             } catch {
-              return new Response(JSON.stringify({ error: 'Upload failed.' }), { status: 400 });
+              return new Response(JSON.stringify({ error: 'Upload failed. Try a different image.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
             }
           }
 
@@ -286,8 +304,9 @@
               if (saved) email = saved.email;
             }
 
-            const slug = email === OWNER_EMAIL ? 'maple' : (email.split('@')[0].replace(/[^a-z0-9-]/g, '') || 'user');
             let userId = '00000000-0000-0000-0000-000000000001';
+            const prevSaved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
+            let slug = email === OWNER_EMAIL ? 'maple' : (prevSaved && prevSaved.email === email ? (prevSaved.user_metadata?.digital_slug || '') : '');
 
             const sbRes = await sbFetch('/auth/v1/token?grant_type=password', {
               method: 'POST',
@@ -296,13 +315,17 @@
             if (sbRes && sbRes.ok) {
               const sbData = await sbRes.json().catch(() => ({}));
               if (sbData.user?.id) userId = sbData.user.id;
+              if (!slug && sbData.user?.user_metadata?.digital_slug) slug = sbData.user.user_metadata.digital_slug;
+            } else if (email === OWNER_EMAIL || (sbRes && (sbRes.status === 400 || sbRes.status === 401))) {
+              // wrong password / unconfirmed email / owner without real login -> reject
+              return new Response(JSON.stringify({ error: 'invalid_grant', error_description: 'Invalid login credentials' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
             }
 
             const userObj = {
               id: userId,
               email,
               confirmed_at: new Date().toISOString(),
-              user_metadata: { full_name: email === OWNER_EMAIL ? 'ᴍᴀᴘʟᴇ☆' : slug, digital_slug: slug },
+              user_metadata: { full_name: email === OWNER_EMAIL ? 'ᴍᴀᴘʟᴇ☆' : (slug || email.split('@')[0]), digital_slug: slug },
               app_metadata: { provider: 'email', roles: email === OWNER_EMAIL ? ['owner'] : ['user'] }
             };
             const token = makeFakeJwt(userObj);
@@ -328,7 +351,7 @@
           if (url.includes('/api/me')) {
             const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
             if (!saved) return new Response(JSON.stringify({ error: 'Please log in again.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
-            const slug = saved.email === OWNER_EMAIL ? 'maple' : (saved.user_metadata?.digital_slug || 'maple');
+            const slug = saved.email === OWNER_EMAIL ? 'maple' : (saved.user_metadata?.digital_slug || '');
 
             if (options.method === 'PUT') {
               let body = {};
@@ -354,7 +377,13 @@
                 };
               }
               const current = getLocalProfiles()[slug] || (slug === 'maple' ? DEFAULT_MAPLE : {});
-              const updated = { ...current, ...body, id: saved.id, slug: body.slug || slug };
+              const finalSlug = (saved.email === OWNER_EMAIL ? 'maple' : (body.slug || slug || '')).toLowerCase();
+              if (!finalSlug) return new Response(JSON.stringify({ error: 'Choose a link first.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+              const cur2 = getLocalProfiles()[finalSlug] || current;
+              const updated = { ...cur2, ...body, id: saved.id, slug: finalSlug };
+              if (!updated.name) updated.name = saved.user_metadata?.full_name || 'Creator';
+              saved.user_metadata = { ...(saved.user_metadata || {}), digital_slug: finalSlug };
+              localStorage.setItem('dig:auth_user', JSON.stringify(saved));
               await syncProfileToSupabase(updated);
               return new Response(JSON.stringify({ profile: updated }), { status: 200, headers: { 'Content-Type': 'application/json' } });
             }
@@ -365,7 +394,7 @@
               const rows = await res.json().catch(() => []);
               if (rows.length) row = rows[0];
             }
-            const profile = unpackProfile(row, slug) || (slug === 'maple' ? { ...DEFAULT_MAPLE } : null);
+            const profile = slug ? (unpackProfile(row, slug) || (slug === 'maple' ? { ...DEFAULT_MAPLE } : null)) : null;
             return new Response(JSON.stringify({ profile }), { status: 200, headers: { 'Content-Type': 'application/json' } });
           }
 
