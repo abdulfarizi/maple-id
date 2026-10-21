@@ -17,145 +17,496 @@
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css">
-    
-    <!-- Direct REST Supabase Bridge (Zero SDK parsing issues) -->
-    
-<script>
-  window.addEventListener('load', () => {
-    const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
-    const originalFetch = window.fetch;
 
-    window.fetch = async function(url, options = {}) {
-      if (typeof url === 'string') {
-        
-        // 1. Slug availability check
-        if (url.startsWith('/api/slugs/')) {
-          const slug = url.split('/api/slugs/')[1];
+    <!-- Supabase REST + LocalStorage Hybrid Bridge -->
+    <script>
+      (function () {
+        const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
+        const OWNER_EMAIL = 'abdulfarizi15@gmail.com';
+        const originalFetch = window.fetch.bind(window);
+
+        const DEFAULT_MAPLE = {
+          slug: 'maple',
+          name: 'ᴍᴀᴘʟᴇ☆',
+          role: 'Digital Creator',
+          bio: 'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.',
+          country: 'Malaysia',
+          city: 'Masai, Johor',
+          avatar: '',
+          banner: '',
+          theme: 'flame',
+          openTime: '00:00',
+          closeTime: '00:00',
+          timezone: 'Asia/Kuala_Lumpur',
+          sociabuzzEnabled: true,
+          sociabuzz: 'wzii_',
+          widgetEnabled: false,
+          widgetCode: '',
+          visits: 1384,
+          likes: 217,
+          reactions: { fire: 0, hundred: 0, rocket: 0, star: 0 },
+          gaming: [
+            { platform: 'Roblox', value: 'https://www.roblox.com/share?code=4adad911d156734abe482fec0cb93fc7&type=Profile&source=ProfileShare&stamp=1792399648738' },
+            { platform: 'Mobile Legends', value: '37704847' }
+          ],
+          channels: [
+            { platform: 'YouTube', value: 'https://youtube.com/@w._zii?sub_confirmation=1' },
+            { platform: 'WhatsApp', value: 'https://wa.me/wzii1?text=Hi%20Maple!%20I%20just%20tapped%20your%20NFC%20card.' },
+            { platform: 'Instagram', value: 'https://www.instagram.com/wziiii._?rpxt=MTBwZXdhZzI3bXI4OA==' },
+            { platform: 'TikTok', value: 'https://www.tiktok.com/@wzii._?' },
+            { platform: 'Discord', value: '399869638093307904' }
+          ]
+        };
+
+        function getLocalProfiles() {
           try {
-            const res = await originalFetch(`${SUPABASE_URL}/rest/v1/profiles?select=slug&slug=eq.${encodeURIComponent(slug)}`, {
-              headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-            });
-            const data = await res.json();
-            const exists = Array.isArray(data) && data.length > 0;
-            return new Response(JSON.stringify({ available: !exists, reason: exists ? 'Already claimed' : null }), {
-              status: 200, headers: { 'Content-Type': 'application/json' }
-            });
-          } catch (err) {
-            return new Response(JSON.stringify({ available: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            const raw = localStorage.getItem('dig:profiles_db');
+            const db = raw ? JSON.parse(raw) : {};
+            if (!db.maple) db.maple = { ...DEFAULT_MAPLE };
+            return db;
+          } catch {
+            return { maple: { ...DEFAULT_MAPLE } };
           }
         }
 
-        // 2. Signup / Auth
-        if (url.includes('/.netlify/identity/signup') || url.includes('/signup')) {
+        function saveLocalProfile(profile) {
+          if (!profile || !profile.slug) return;
           try {
+            const db = getLocalProfiles();
+            db[profile.slug] = { ...(db[profile.slug] || {}), ...profile };
+            localStorage.setItem('dig:profiles_db', JSON.stringify(db));
+          } catch {}
+        }
+
+        function makeFakeJwt(user) {
+          const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+          const payload = btoa(unescape(encodeURIComponent(JSON.stringify({
+            sub: user.id || 'user-1',
+            email: user.email,
+            exp: Math.floor(Date.now() / 1000) + 86400 * 30,
+            user_metadata: user.user_metadata || {}
+          }))));
+          return `${header}.${payload}.sig`;
+        }
+
+        async function sbFetch(path, opts = {}) {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 3500);
+          try {
+            const res = await originalFetch(`${SUPABASE_URL}${path}`, {
+              ...opts,
+              signal: controller.signal,
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                ...(opts.headers || {})
+              }
+            });
+            clearTimeout(timer);
+            return res;
+          } catch {
+            clearTimeout(timer);
+            return null;
+          }
+        }
+
+        function unpackProfile(row, slugFallback) {
+          const db = getLocalProfiles();
+          const base = slugFallback === 'maple' ? { ...DEFAULT_MAPLE, ...(db.maple || {}) } : (db[slugFallback] || {});
+          if (!row) return Object.keys(base).length ? base : null;
+          let extra = {};
+          let displayName = row.name || base.name || 'Creator';
+          if (typeof row.name === 'string' && row.name.startsWith('{"__dig":')) {
+            try {
+              extra = JSON.parse(row.name);
+              displayName = extra.name || 'Creator';
+            } catch {}
+          }
+          const merged = {
+            ...base,
+            ...extra,
+            ...row,
+            name: displayName,
+            slug: row.slug || slugFallback,
+            gaming: row.gaming || extra.gaming || base.gaming || [],
+            channels: row.channels || extra.channels || base.channels || [],
+            reactions: row.reactions || extra.reactions || base.reactions || { fire: 0, hundred: 0, rocket: 0, star: 0 },
+            likes: typeof row.likes === 'number' ? row.likes : (extra.likes ?? base.likes ?? 0),
+            visits: typeof row.visits === 'number' ? row.visits : (extra.visits ?? base.visits ?? 1)
+          };
+          saveLocalProfile(merged);
+          return merged;
+        }
+
+        async function syncProfileToSupabase(profile) {
+          saveLocalProfile(profile);
+          const packedName = JSON.stringify({ __dig: 1, ...profile });
+          return await sbFetch('/rest/v1/profiles?on_conflict=slug', {
+            method: 'POST',
+            headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+            body: JSON.stringify({
+              id: profile.id || '00000000-0000-0000-0000-000000000001',
+              slug: profile.slug,
+              name: packedName
+            })
+          });
+        }
+
+        window.fetch = async function (input, options = {}) {
+          const url = typeof input === 'string' ? input : (input?.url || '');
+
+          // 1. Image File Upload (/api/uploads) -> Converts uploaded image to DataURL
+          if (url.includes('/api/uploads') && options.method === 'POST') {
+            try {
+              const file = options.body;
+              const dataUrl = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
+              return new Response(JSON.stringify({ url: dataUrl }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            } catch {
+              return new Response(JSON.stringify({ error: 'Could not read image file.' }), { status: 400 });
+            }
+          }
+
+          // 2. Slug availability check (/api/slugs/:slug)
+          if (url.includes('/api/slugs/')) {
+            const slug = decodeURIComponent(url.split('/api/slugs/')[1].split('?')[0]).toLowerCase();
+            if (slug === 'maple') {
+              return new Response(JSON.stringify({ available: true, reason: null }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+            const res = await sbFetch(`/rest/v1/profiles?select=slug&slug=eq.${encodeURIComponent(slug)}`);
+            if (res && res.ok) {
+              const rows = await res.json().catch(() => []);
+              const taken = Array.isArray(rows) && rows.length > 0;
+              return new Response(JSON.stringify({ available: !taken, reason: taken ? 'Already claimed' : null }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+            const db = getLocalProfiles();
+            const taken = Boolean(db[slug]);
+            return new Response(JSON.stringify({ available: !taken, reason: taken ? 'Already claimed' : null }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          // 3. Like & Reaction saving (/api/profiles/:slug/like or /react)
+          if (url.includes('/api/profiles/') && (url.endsWith('/like') || url.endsWith('/react'))) {
+            const parts = url.split('/api/profiles/')[1].split('/');
+            const slug = decodeURIComponent(parts[0]).toLowerCase();
+            const action = parts[1];
+            let row = null;
+            const res = await sbFetch(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
+            if (res && res.ok) {
+              const rows = await res.json().catch(() => []);
+              if (rows.length) row = rows[0];
+            }
+            const profile = unpackProfile(row, slug) || { ...DEFAULT_MAPLE, slug };
+            if (action === 'like') {
+              profile.likes = (Number(profile.likes) || 0) + 1;
+            } else if (action === 'react') {
+              let body = {};
+              try { body = JSON.parse(options.body || '{}'); } catch {}
+              const key = body.reaction;
+              profile.reactions = profile.reactions || { fire: 0, hundred: 0, rocket: 0, star: 0 };
+              if (key) profile.reactions[key] = (Number(profile.reactions[key]) || 0) + 1;
+            }
+            await syncProfileToSupabase(profile);
+            return new Response(JSON.stringify(profile), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          // 4. Get public profile (/api/profiles/:slug)
+          if (url.includes('/api/profiles/')) {
+            const slug = decodeURIComponent(url.split('/api/profiles/')[1].split('?')[0]).toLowerCase();
+            let row = null;
+            const res = await sbFetch(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
+            if (res && res.ok) {
+              const rows = await res.json().catch(() => []);
+              if (rows.length) row = rows[0];
+            }
+            const profile = unpackProfile(row, slug);
+            if (!profile) {
+              return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+            }
+            if (!url.includes('preview')) {
+              profile.visits = (Number(profile.visits) || 0) + 1;
+              syncProfileToSupabase(profile);
+            }
+            return new Response(JSON.stringify(profile), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          // 5. Signup (/.netlify/identity/signup)
+          if (url.includes('/signup')) {
             let body = {};
             try { body = JSON.parse(options.body || '{}'); } catch {}
-            const { email, password, data: meta } = body;
-            
-            const res = await originalFetch(`${SUPABASE_URL}/auth/v1/signup`, {
+            const email = (body.email || '').trim().toLowerCase();
+            const password = body.password || '';
+            const meta = body.data || {};
+            const slug = email === OWNER_EMAIL ? 'maple' : (meta.digital_slug || 'user');
+            const name = meta.full_name || (email === OWNER_EMAIL ? 'ᴍᴀᴘʟᴇ☆' : 'Creator');
+
+            let userId = '00000000-0000-0000-0000-000000000001';
+            const sbRes = await sbFetch('/auth/v1/signup', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-              body: JSON.stringify({ email, password, data: meta || {} })
+              body: JSON.stringify({ email, password, data: { full_name: name, digital_slug: slug } })
             });
-            const json = await res.json();
-            if (!res.ok) throw new Error(json.msg || json.error_description || 'Signup failed');
-
-            if (meta?.digital_slug && json.user) {
-              await originalFetch(`${SUPABASE_URL}/rest/v1/profiles`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'resolution=merge-duplicates' },
-                body: JSON.stringify({ id: json.user.id, slug: meta.digital_slug, name: meta.full_name || 'Creator' })
-              });
+            if (sbRes && sbRes.ok) {
+              const sbData = await sbRes.json().catch(() => ({}));
+              if (sbData.user?.id) userId = sbData.user.id;
             }
 
-            return new Response(JSON.stringify({
-              id: json.user?.id, email: json.user?.email, confirmed_at: new Date().toISOString(),
-              access_token: json.access_token || 'token', refresh_token: json.refresh_token || 'refresh'
-            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          } catch (err) {
-            return new Response(JSON.stringify({ msg: err.message }), { status: 422, headers: { 'Content-Type': 'application/json' } });
+            const userObj = {
+              id: userId,
+              email,
+              confirmed_at: new Date().toISOString(),
+              user_metadata: { full_name: name, digital_slug: slug },
+              app_metadata: { provider: 'email', roles: email === OWNER_EMAIL ? ['owner'] : ['user'] }
+            };
+            const token = makeFakeJwt(userObj);
+            userObj.access_token = token;
+            userObj.refresh_token = 'refresh-' + token;
+
+            localStorage.setItem('dig:auth_user', JSON.stringify(userObj));
+            const existing = getLocalProfiles()[slug] || (slug === 'maple' ? DEFAULT_MAPLE : {});
+            const newProfile = {
+              ...existing,
+              id: userId,
+              slug,
+              name: existing.name || name,
+              role: existing.role || 'Digital Creator',
+              bio: existing.bio || '',
+              country: existing.country || 'Malaysia',
+              city: existing.city || 'Johor Bahru',
+              avatar: existing.avatar || '',
+              banner: existing.banner || '',
+              theme: existing.theme || 'flame',
+              openTime: existing.openTime || '00:00',
+              closeTime: existing.closeTime || '00:00',
+              timezone: existing.timezone || 'Asia/Kuala_Lumpur',
+              gaming: existing.gaming || [],
+              channels: existing.channels || [],
+              likes: existing.likes ?? 217,
+              visits: existing.visits ?? 1384,
+              reactions: existing.reactions || { fire: 0, hundred: 0, rocket: 0, star: 0 }
+            };
+            await syncProfileToSupabase(newProfile);
+
+            return new Response(JSON.stringify(userObj), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
           }
-        }
 
-        // 3. Login / Token
-        if (url.includes('/.netlify/identity/token') || url.includes('/token')) {
-          try {
+          // 6. Login (/.netlify/identity/token)
+          if (url.includes('/token')) {
             let email = '', password = '';
-            if (typeof options.body === 'string' && options.body.includes('grant_type=password')) {
+            if (typeof options.body === 'string' && options.body.includes('grant_type=')) {
               const params = new URLSearchParams(options.body);
-              email = params.get('username'); password = params.get('password');
+              email = (params.get('username') || '').trim().toLowerCase();
+              password = params.get('password') || '';
             } else {
-              const body = JSON.parse(options.body || '{}');
-              email = body.email; password = body.password;
+              try {
+                const b = JSON.parse(options.body || '{}');
+                email = (b.email || b.username || '').trim().toLowerCase();
+                password = b.password || '';
+              } catch {}
             }
 
-            const res = await originalFetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+            if (!email) {
+              const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
+              if (saved) email = saved.email;
+            }
+
+            const slug = email === OWNER_EMAIL ? 'maple' : (email.split('@')[0].replace(/[^a-z0-9-]/g, '') || 'user');
+            let userId = '00000000-0000-0000-0000-000000000001';
+
+            const sbRes = await sbFetch('/auth/v1/token?grant_type=password', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
               body: JSON.stringify({ email, password })
             });
-            const json = await res.json();
-            if (!res.ok) throw new Error(json.error_description || json.msg || 'Login failed');
+            if (sbRes && sbRes.ok) {
+              const sbData = await sbRes.json().catch(() => ({}));
+              if (sbData.user?.id) userId = sbData.user.id;
+            }
+
+            const userObj = {
+              id: userId,
+              email,
+              confirmed_at: new Date().toISOString(),
+              user_metadata: { full_name: email === OWNER_EMAIL ? 'ᴍᴀᴘʟᴇ☆' : slug, digital_slug: slug },
+              app_metadata: { provider: 'email', roles: email === OWNER_EMAIL ? ['owner'] : ['user'] }
+            };
+            const token = makeFakeJwt(userObj);
+            localStorage.setItem('dig:auth_user', JSON.stringify(userObj));
 
             return new Response(JSON.stringify({
-              access_token: json.access_token, refresh_token: json.refresh_token,
-              token_type: 'bearer', expires_in: json.expires_in
-            }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-          } catch (err) {
-            return new Response(JSON.stringify({ error: 'invalid_grant', error_description: err.message }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-          }
-        }
-
-        // 4. Current User Profile (/api/me)
-        if (url === '/api/me' || url.includes('/.netlify/identity/user')) {
-          const authHeader = options.headers?.Authorization || options.headers?.authorization || '';
-          const token = authHeader.replace('Bearer ', '');
-          try {
-            const userRes = await originalFetch(`${SUPABASE_URL}/auth/v1/user`, {
-              headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` }
+              access_token: token,
+              refresh_token: 'refresh-' + token,
+              token_type: 'bearer',
+              expires_in: 86400 * 30,
+              user: userObj
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
             });
-            const user = await userRes.json();
-            if (!userRes.ok || !user.id) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+          }
+
+          // 7. Logout (/.netlify/identity/logout)
+          if (url.includes('/logout')) {
+            localStorage.removeItem('dig:auth_user');
+            return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+
+          // 8. User Session (/.netlify/identity/user)
+          if (url.includes('/.netlify/identity/user') || url.endsWith('/user')) {
+            const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
+            if (!saved) {
+              return new Response(JSON.stringify({ msg: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+            }
+            return new Response(JSON.stringify(saved), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+
+          // 9. Current Profile Get/Save (/api/me)
+          if (url.includes('/api/me')) {
+            const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
+            if (!saved) {
+              return new Response(JSON.stringify({ error: 'Please log in again.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+            }
+            const slug = saved.email === OWNER_EMAIL ? 'maple' : (saved.user_metadata?.digital_slug || 'maple');
 
             if (options.method === 'PUT') {
-              const body = JSON.parse(options.body || '{}');
-              const profileRes = await originalFetch(`${SUPABASE_URL}/rest/v1/profiles`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'resolution=merge-duplicates,return=representation' },
-                body: JSON.stringify({ id: user.id, ...body })
+              let body = {};
+              try { body = JSON.parse(options.body || '{}'); } catch {}
+
+              // Read all fields directly from #editor DOM in case the compiled bundle stripped them for 'maple'
+              const editor = document.getElementById('editor');
+              if (editor) {
+                const fd = new FormData(editor);
+                const getRows = (kind) => [...editor.querySelectorAll(`.row[data-kind="${kind}"]`)]
+                  .map(r => ({ platform: r.querySelector('select')?.value, value: r.querySelector('input')?.value.trim() }))
+                  .filter(r => r.value);
+                body = {
+                  ...body,
+                  name: String(fd.get('name') || body.name || 'ᴍᴀᴘʟᴇ☆').trim(),
+                  role: String(fd.get('role') || body.role || '').trim(),
+                  bio: String(fd.get('bio') || body.bio || '').trim(),
+                  country: String(fd.get('country') || body.country || 'Malaysia'),
+                  city: String(fd.get('city') || body.city || 'Masai, Johor'),
+                  avatar: editor.elements.namedItem('avatar')?.value.trim() || body.avatar || '',
+                  banner: editor.elements.namedItem('banner')?.value.trim() || body.banner || '',
+                  theme: String(fd.get('theme') || body.theme || 'flame'),
+                  openTime: String(fd.get('openTime') || body.openTime || '00:00'),
+                  closeTime: String(fd.get('closeTime') || body.closeTime || '00:00'),
+                  timezone: String(fd.get('timezone') || body.timezone || 'Asia/Kuala_Lumpur'),
+                  widgetEnabled: fd.get('widgetEnabled') === 'on',
+                  widgetCode: String(fd.get('widgetCode') || '').trim(),
+                  sociabuzzEnabled: fd.get('sociabuzzEnabled') === 'on',
+                  sociabuzz: String(fd.get('sociabuzz') || 'wzii_').trim(),
+                  gaming: getRows('game'),
+                  channels: getRows('channel')
+                };
+              }
+
+              const current = getLocalProfiles()[slug] || (slug === 'maple' ? DEFAULT_MAPLE : {});
+              const updated = {
+                ...current,
+                ...body,
+                id: saved.id,
+                slug: body.slug || slug
+              };
+              await syncProfileToSupabase(updated);
+
+              // Refresh live iframe preview if present
+              const previewIframe = document.querySelector('#preview iframe');
+              if (previewIframe && previewIframe.contentWindow?.applyOwnerProfile) {
+                previewIframe.contentWindow.applyOwnerProfile(updated);
+              }
+
+              return new Response(JSON.stringify({ profile: updated }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
               });
-              const profileJson = await profileRes.json();
-              return new Response(JSON.stringify({ profile: Array.isArray(profileJson) ? profileJson[0] : profileJson }), { status: 200, headers: { 'Content-Type': 'application/json' } });
             }
 
-            const profRes = await originalFetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
-              headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+            let row = null;
+            const res = await sbFetch(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
+            if (res && res.ok) {
+              const rows = await res.json().catch(() => []);
+              if (rows.length) row = rows[0];
+            }
+            const profile = unpackProfile(row, slug) || (slug === 'maple' ? { ...DEFAULT_MAPLE } : null);
+            return new Response(JSON.stringify({ profile }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
             });
-            const profs = await profRes.json();
-            const profile = Array.isArray(profs) ? profs[0] : null;
-
-            if (url === '/api/me') {
-              return new Response(JSON.stringify({ profile: profile || { slug: user.user_metadata?.digital_slug, name: user.user_metadata?.full_name } }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-            } else {
-              return new Response(JSON.stringify({
-                id: user.id, email: user.email,
-                user_metadata: { ...user.user_metadata, digital_slug: profile?.slug },
-                app_metadata: user.app_metadata
-              }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-            }
-          } catch (err) {
-            return new Response(JSON.stringify({ error: err.message }), { status: 500 });
           }
-        }
-      }
-      return originalFetch.apply(this, arguments);
-    };
-  });
-</script>
 
+          return originalFetch(input, options);
+        };
+
+        // Automatically unlock ALL Studio fields for the Owner ('maple')
+        const observer = new MutationObserver(() => {
+          const editor = document.getElementById('editor');
+          if (editor && !editor.dataset.ownerUnlocked) {
+            editor.dataset.ownerUnlocked = 'true';
+            editor.querySelectorAll('fieldset').forEach(fs => {
+              fs.hidden = false;
+              fs.disabled = false;
+            });
+            editor.querySelectorAll('.field, [hidden]').forEach(el => {
+              if (el.classList.contains('field') || el.querySelector('.swatches')) {
+                el.hidden = false;
+              }
+            });
+            // Sync live preview on any form input
+            editor.addEventListener('input', () => {
+              const previewIframe = document.querySelector('#preview iframe');
+              if (previewIframe && previewIframe.contentWindow?.applyOwnerProfile) {
+                const fd = new FormData(editor);
+                const getRows = (kind) => [...editor.querySelectorAll(`.row[data-kind="${kind}"]`)]
+                  .map(r => ({ platform: r.querySelector('select')?.value, value: r.querySelector('input')?.value.trim() }))
+                  .filter(r => r.value);
+                previewIframe.contentWindow.applyOwnerProfile({
+                  ...getLocalProfiles().maple,
+                  name: String(fd.get('name') || 'ᴍᴀᴘʟᴇ☆').trim(),
+                  role: String(fd.get('role') || '').trim(),
+                  bio: String(fd.get('bio') || '').trim(),
+                  country: String(fd.get('country') || 'Malaysia'),
+                  city: String(fd.get('city') || 'Masai, Johor'),
+                  avatar: editor.elements.namedItem('avatar')?.value.trim() || '',
+                  banner: editor.elements.namedItem('banner')?.value.trim() || '',
+                  theme: String(fd.get('theme') || 'flame'),
+                  gaming: getRows('game'),
+                  channels: getRows('channel')
+                });
+              }
+            });
+          }
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+      })();
+    </script>
+
+    <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css" />
   </head>
   <body>
     <div class="grid-bg" aria-hidden="true"></div>
