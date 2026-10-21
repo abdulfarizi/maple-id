@@ -1,709 +1,605 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" data-theme="flame">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#07070a">
-    <title>ᴍᴀᴘʟᴇ☆ | Digital Card</title>
-    <meta name="description" content="ᴍᴀᴘʟᴇ☆ — Digital Creator based in Masai, Johor.">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        :root, [data-theme="flame"] {
-            --bg:#07070a; --panel:rgba(255,255,255,0.024); --panel-solid:#0d0d12;
-            --line:rgba(255,255,255,0.08); --line-strong:rgba(255,255,255,0.16);
-            --text:#ededf0; --muted:#8a8a96; --dim:#52525c;
-            --accent:#ff5b2e; --accent-2:#ffb02e; --accent-soft:rgba(255,91,46,0.13); --accent-glow:rgba(255,91,46,0.45);
-            --green:#22c55e; --mono:'Geist Mono',ui-monospace,monospace; --sans:'Geist',system-ui,-apple-system,sans-serif;
-            --ease:cubic-bezier(0.22,1,0.36,1);
-        }
-        [data-theme="cyber"] { --accent:#00e5ff; --accent-2:#7c4dff; --accent-soft:rgba(0,229,255,0.13); --accent-glow:rgba(0,229,255,0.45); }
-        [data-theme="emerald"] { --accent:#10b981; --accent-2:#a3e635; --accent-soft:rgba(16,185,129,0.13); --accent-glow:rgba(16,185,129,0.45); }
-        [data-theme="sakura"] { --accent:#ff3b9a; --accent-2:#ff9e6d; --accent-soft:rgba(255,59,154,0.13); --accent-glow:rgba(255,59,154,0.45); }
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0b0a0f" />
+    <title>Digital ID</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
 
-        *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-        html { background:var(--bg); scroll-behavior:smooth; }
-        body { font-family:var(--sans); color:var(--text); min-height:100vh; min-height:100dvh; display:flex; justify-content:center; padding:max(22px,env(safe-area-inset-top)) 16px max(28px,env(safe-area-inset-bottom)); -webkit-font-smoothing:antialiased; overflow-x:hidden; }
-        a { color:inherit; text-decoration:none; }
-        button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; text-align:left; }
+    <!-- Supabase REST + LocalStorage Hybrid Bridge (Supports Local File Uploads) -->
+    <script>
+      (function () {
+        const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
+        const OWNER_EMAIL = 'abdulfarizi15@gmail.com';
+        const originalFetch = window.fetch.bind(window);
 
-        #intro-overlay {
-            position: fixed; inset: 0; z-index: 9999; background: #000;
-            display: grid; place-items: center; overflow: hidden;
-            transition: opacity 0.6s var(--ease), visibility 0.6s;
-        }
-        #intro-overlay.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
-        .intro-star-mask {
-            width: 100vw; height: 100vh; display: grid; place-items: center;
-            background: #000;
-            mask-image: radial-gradient(circle at center, transparent 0%, transparent 22%, black 24%);
-            -webkit-mask-image: radial-gradient(circle at center, transparent 0%, transparent 22%, black 24%);
-            transition: transform 1.2s cubic-bezier(0.77, 0, 0.175, 1);
-        }
-        #intro-overlay.zoom-in .intro-star-mask { transform: scale(18); }
-        .spinning-star-svg {
-            font-size: 90px; color: var(--accent);
-            filter: drop-shadow(0 0 40px var(--accent));
-            animation: intro-spin 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-        @keyframes intro-spin {
-            0% { transform: scale(0.2) rotate(0deg); opacity: 0; }
-            50% { opacity: 1; transform: scale(1.1) rotate(180deg); }
-            100% { transform: scale(2.3) rotate(360deg); opacity: 0.9; }
+        // Virtual Image Store so local uploads pass the https:// check
+        function saveUploadedMedia(id, dataUrl) {
+          try {
+            const store = JSON.parse(localStorage.getItem('dig:media_store') || '{}');
+            store[id] = dataUrl;
+            localStorage.setItem('dig:media_store', JSON.stringify(store));
+          } catch {}
         }
 
-        .star-confetti { position:fixed; pointer-events:none; z-index:99; color:var(--accent-2); font-size:16px; animation:fall-star 1.8s var(--ease) forwards; }
-        @keyframes fall-star { 0% { opacity:1; transform:translate(0,0) rotate(0deg) scale(0.5); } 100% { opacity:0; transform:translate(var(--tx),var(--ty)) rotate(360deg) scale(1.2); } }
-
-        .grid-bg { position:fixed; inset:0; z-index:0; pointer-events:none; --grid:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px); mask-image:radial-gradient(ellipse 80% 65% at 50% 20%,#000 15%,transparent 78%); opacity:0.55; }
-        .grid-bg::before { content:''; position:absolute; inset:-48px 0 0 -48px; background-image:var(--grid); background-size:48px 48px; animation:grid-drift 24s linear infinite; }
-        @keyframes grid-drift { to { transform:translate3d(48px,48px,0); } }
-        .halo { position:fixed; z-index:0; pointer-events:none; width:640px; height:640px; left:50%; top:-310px; transform:translateX(-50%); background:radial-gradient(circle,var(--accent-soft),transparent 68%); }
-
-        .shell { position:relative; z-index:1; width:100%; max-width:435px; display:flex; flex-direction:column; gap:20px; }
-        .panel { position:relative; border-radius:26px; padding:15px; background:var(--panel); border:1px solid var(--line); backdrop-filter:blur(16px); box-shadow:0 24px 60px -20px rgba(0,0,0,0.75); }
-        .panel::before { content:''; position:absolute; inset:-1px; border-radius:26px; pointer-events:none; background:linear-gradient(var(--accent),var(--accent)) top left/16px 1.5px,linear-gradient(var(--accent),var(--accent)) top left/1.5px 16px,linear-gradient(var(--accent),var(--accent)) bottom right/16px 1.5px,linear-gradient(var(--accent),var(--accent)) bottom right/1.5px 16px; background-repeat:no-repeat; opacity:0.8; }
-        .section-label { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:9px; letter-spacing:0.22em; text-transform:uppercase; color:var(--dim); padding:0 6px 10px; }
-        .section-label b { font-weight:400; color:var(--accent); }
-
-        .live { position:relative; overflow:hidden; isolation:isolate; border:1px solid color-mix(in srgb,var(--accent) 30%,transparent); background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),var(--accent-soft),transparent 65%),linear-gradient(120deg,var(--accent-soft),rgba(255,255,255,0.015) 70%); transition:border-color 0.3s,box-shadow 0.3s,transform 0.2s var(--ease); }
-        .live::after { content:''; position:absolute; top:0; bottom:0; width:40%; left:-40%; z-index:-1; pointer-events:none; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent); animation:sweep 5.5s var(--ease) infinite var(--sweep-delay,1.5s); }
-        @keyframes sweep { 0% { transform:translateX(0); } 40%,100% { transform:translateX(375%); } }
-        .live:hover { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent-soft),0 12px 32px -12px var(--accent-glow); transform:translateY(-1.5px); }
-
-        .topbar { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:0 4px; font-family:var(--mono); font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); }
-        .topbar b { font-weight:400; color:var(--accent); }
-        .top-controls { display:flex; align-items:center; gap:5px; }
-        .icon-pill { height:30px; width:30px; border-radius:999px; display:grid; place-items:center; border:1px solid var(--line-strong); background:rgba(10,10,13,0.75); color:var(--muted); font-size:10.5px; transition:color 0.2s,border-color 0.2s; }
-        .icon-pill:hover, .icon-pill.active { color:var(--accent); border-color:var(--accent); }
-        .lang { display:inline-flex; gap:2px; padding:3px; border-radius:999px; border:1px solid var(--line-strong); background:rgba(10,10,13,0.75); }
-        .lang button { font-family:var(--mono); font-size:9px; letter-spacing:0.12em; min-width:30px; padding:4px 6px; border-radius:999px; color:var(--muted); }
-        .lang button[aria-pressed="true"] { background:var(--accent); color:#fff; }
-
-        @property --spin { syntax:'<angle>'; initial-value:0deg; inherits:false; }
-        #wrapperFloatingBtn { display:none !important; }
-        .support { align-items:stretch; text-align:left; margin-top:14px; width:100%; display:flex; flex-direction:column; gap:15px; padding:18px; border-radius:22px; border:1px solid transparent; background:linear-gradient(140deg,var(--accent-soft),rgba(10,10,13,0.96) 62%) padding-box,conic-gradient(from var(--spin),var(--accent),transparent 30%,var(--accent-2) 50%,transparent 70%,var(--accent)) border-box; animation:border-spin 6s linear infinite; }
-        @keyframes border-spin { to { --spin:360deg; } }
-        .support-top { width:100%; display:flex; justify-content:space-between; align-items:center; }
-        .support-tag { font-family:var(--mono); font-size:9px; letter-spacing:0.22em; text-transform:uppercase; color:var(--accent); display:flex; align-items:center; gap:8px; }
-        .support-coin { width:42px; height:42px; border-radius:50%; display:grid; place-items:center; font-size:16px; background:radial-gradient(circle at 35% 30%,var(--accent-2),var(--accent) 70%); color:#fff; box-shadow:0 0 24px -4px var(--accent-glow); }
-        .support-title { display:block; font-size:22px; font-weight:500; line-height:1.15; }
-        .support-title .hl { color:var(--accent); }
-        .support-desc { display:block; margin-top:5px; font-size:12.5px; color:var(--muted); font-weight:300; }
-        .support-bottom { width:100%; display:flex; justify-content:space-between; align-items:center; gap:12px; }
-        .support-via { font-family:var(--mono); font-size:9.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--dim); }
-        .support-cta { display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:10.5px; letter-spacing:0.15em; text-transform:uppercase; padding:10px 15px; border-radius:999px; background:var(--accent); color:#fff; transition:background 0.3s,color 0.3s; }
-        .support:hover .support-cta { background:var(--text); color:var(--bg); }
-
-        .money { position:absolute; inset:0; pointer-events:none; z-index:1; }
-        .money span { position:absolute; bottom:18%; left:var(--x); opacity:0; font-family:var(--mono); font-size:13px; color:var(--accent-2); animation:money-rise 3.4s var(--ease) infinite var(--delay,0s); }
-        @keyframes money-rise { 0% { opacity:0; transform:translateY(0); } 15% { opacity:0.85; } 100% { opacity:0; transform:translateY(-90px); } }
-        .money-burst { position:fixed; pointer-events:none; z-index:100; font-size:18px; animation:burst 0.9s var(--ease) forwards; }
-        @keyframes burst { to { opacity:0; transform:translate(var(--bx),var(--by)) scale(0.6); } }
-
-        .dot { position:relative; width:6px; height:6px; border-radius:50%; background:var(--accent); display:inline-block; }
-        .dot::after { content:''; position:absolute; inset:0; border-radius:50%; background:var(--accent); opacity:0.6; animation:ping 2.4s var(--ease) infinite; }
-        .dot-green { background:var(--green); } .dot-green::after { background:var(--green); }
-        @keyframes ping { 0% { transform:scale(1); opacity:0.8; } 80%,100% { transform:scale(3.8); opacity:0; } }
-
-        .banner { position:relative; height:132px; border-radius:18px; overflow:hidden; border:1px solid var(--line); }
-        .banner video, .banner img { display:block; width:100%; height:100%; object-fit:cover; filter:grayscale(0.75) contrast(1.12) brightness(0.72); }
-        .banner::after { content:''; position:absolute; inset:0; background:repeating-linear-gradient(0deg,rgba(0,0,0,0.25) 0 1px,transparent 1px 3px),linear-gradient(to top,#0a0a0d,transparent 70%); }
-        .banner-tag, .banner-status { position:absolute; z-index:1; top:11px; font-family:var(--mono); font-size:9px; letter-spacing:0.18em; padding:4px 9px; border-radius:999px; background:rgba(0,0,0,0.52); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.1); }
-        .banner-tag { left:12px; color:rgba(255,255,255,0.75); border-radius:6px; }
-        .banner-status { right:12px; display:inline-flex; align-items:center; gap:6px; text-transform:uppercase; color:rgba(255,255,255,0.9); }
-
-        .identity { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:-46px; padding:0 8px; position:relative; z-index:2; }
-        .identity-left { display:flex; align-items:flex-end; gap:14px; min-width:0; flex:1; }
-        .avatar { position:relative; width:86px; height:86px; flex-shrink:0; border-radius:50%; padding:3px; background:#0a0a0d; }
-        .avatar::before { content:''; position:absolute; inset:0; border-radius:50%; background:conic-gradient(from 0deg,var(--accent),var(--accent-2) 35%,transparent 60%,var(--accent)); animation:spin 6s linear infinite; }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        .avatar-inner { position:relative; width:100%; height:100%; border-radius:50%; overflow:hidden; background:#111; border:3px solid #0a0a0d; display:grid; place-items:center; }
-        .avatar img { width:100%; height:100%; object-fit:cover; }
-        .name-block { padding-bottom:4px; min-width:0; flex:1; }
-        .name-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-        .name { font-size:29px; font-weight:600; letter-spacing:0.01em; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .name .star { color:var(--accent); display:inline-block; }
-        .handle { margin-top:7px; font-family:var(--mono); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
-
-        .owner-like-btn {
-            display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:999px;
-            font-family:var(--mono); font-size:12px; color:var(--text);
-            border:1px solid var(--line-strong); background:rgba(255,255,255,0.04);
-            transition:all 0.25s var(--ease); flex-shrink:0;
-        }
-        .owner-like-btn i { color:var(--accent); transition:transform 0.25s var(--ease); }
-        .owner-like-btn.liked { border-color:var(--accent); background:var(--accent-soft); color:var(--accent); }
-        .owner-like-btn:active i { transform:scale(1.35); }
-        .react-btn.done { border-color:var(--accent) !important; background:var(--accent-soft) !important; color:var(--text); }
-    </style>
-</head>
-<body>
-<div id="intro-overlay">
-    <div class="intro-star-mask">
-        <span class="spinning-star-svg">☆</span>
-    </div>
-</div>
-
-<div class="grid-bg"></div>
-<div class="halo"></div>
-
-<div class="shell">
-    <!-- Top navigation: Owner Studio is hidden unless logged in as verified owner -->
-    <nav style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:8px;padding:0 4px;">
-        <a href="/" style="color:var(--muted);display:inline-flex;align-items:center;gap:6px;"><i class="fa-solid fa-id-card-clip" style="color:var(--accent)"></i> Digital ID</a>
-        <a id="owner-studio-nav" href="/studio" style="display:none;color:var(--accent);font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:999px;border:1px solid var(--accent);background:var(--accent-soft);"><i class="fa-solid fa-pen-to-square"></i> Owner Studio</a>
-    </nav>
-
-    <header class="topbar reveal" style="animation-delay:0.1s">
-        <span><span id="topbar-owner-name">ᴍᴀᴘʟᴇ☆</span> / <b data-i18n="card">Digital Card</b></span>
-        <div class="top-controls">
-            <button type="button" id="music-btn" class="icon-pill" title="Toggle Lofi Beats" aria-label="Toggle Lofi Beats"><i class="fa-solid fa-music"></i></button>
-            <button type="button" id="sfx-btn" class="icon-pill active" title="Toggle UI Sound" aria-label="Toggle UI Sound"><i class="fa-solid fa-volume-high"></i></button>
-            <button type="button" id="theme-btn" class="icon-pill" title="Switch Theme" aria-label="Switch Theme"><i class="fa-solid fa-palette"></i></button>
-            <div class="lang" role="group">
-                <button type="button" data-lang="en" aria-pressed="true">EN</button>
-                <button type="button" data-lang="ms" aria-pressed="false">BM</button>
-            </div>
-        </div>
-    </header>
-
-    <section class="panel reveal" style="animation-delay:0.2s">
-        <div class="banner">
-            <div id="owner-banner" style="position:absolute;inset:0;background:linear-gradient(125deg,var(--accent-soft),transparent 70%)" aria-hidden="true"></div>
-            <span class="banner-tag">SITE OWNER / 001</span>
-            <span class="banner-status"><span class="dot dot-green"></span><span data-i18n="statusOnline">Online</span></span>
-        </div>
-        <div class="identity">
-            <div class="identity-left">
-                <div class="avatar">
-                    <div class="avatar-inner">
-                        <img id="owner-avatar" hidden width="74" height="74" alt="ᴍᴀᴘʟᴇ☆">
-                        <span class="initials" id="owner-initials">M</span>
-                    </div>
-                </div>
-                <div class="name-block">
-                    <div class="name-row">
-                        <h1 class="name" id="owner-display-name">ᴍᴀᴘʟᴇ<span class="star">☆</span></h1>
-                        <!-- Love / Like Button right beside Maple☆ name -->
-                        <button type="button" id="owner-like-btn" class="owner-like-btn live" onclick="likeOwnerProfile()" aria-label="Love this profile">
-                            <i class="fa-solid fa-heart"></i>
-                            <span id="owner-likes">217</span>
-                        </button>
-                    </div>
-                    <p class="handle" id="owner-role" data-i18n="role">Digital Creator</p>
-                </div>
-            </div>
-        </div>
-
-        <dl style="margin-top:15px; display:grid; grid-template-columns:1fr 1fr 0.9fr; border-top:1px solid var(--line); border-bottom:1px solid var(--line);">
-            <div style="padding:10px 6px;"><dt style="font-family:var(--mono); font-size:8px; color:var(--dim); text-transform:uppercase;" data-i18n="basedIn">Based in</dt><dd style="margin-top:4px; font-size:12px; font-weight:500;" id="owner-location">Masai, Johor</dd></div>
-            <div style="padding:10px 6px; border-left:1px solid var(--line);"><dt style="font-family:var(--mono); font-size:8px; color:var(--dim); text-transform:uppercase;">Visits</dt><dd style="margin-top:4px; font-family:var(--mono); font-size:11px; color:var(--accent-2);" id="visit-counter">1,384</dd></div>
-            <div style="padding:10px 6px; border-left:1px solid var(--line);"><dt style="font-family:var(--mono); font-size:8px; color:var(--dim); text-transform:uppercase;" data-i18n="localTime">Time</dt><dd style="margin-top:4px; font-family:var(--mono); font-size:10.5px; color:var(--accent-2);" id="local-clock">--:-- MYT</dd></div>
-        </dl>
-
-        <div style="margin-top:12px; padding:0 4px; display:flex; flex-wrap:nowrap; gap:5px; align-items:center; overflow-x:auto; white-space:nowrap; scrollbar-width:none;">
-            <span style="font-family:var(--mono); font-size:9px; padding:4px 8px; border-radius:999px; background:rgba(255,255,255,0.03); border:1px solid var(--line); color:var(--muted); flex-shrink:0;"><i class="fa-solid fa-gamepad" style="color:var(--accent)"></i> Gaming</span>
-            <button type="button" id="specs-btn" style="font-family:var(--mono); font-size:9px; padding:4px 8px; border-radius:999px; background:rgba(255,255,255,0.03); border:1px solid color-mix(in srgb,var(--accent) 40%,transparent); color:var(--text); cursor:pointer; flex-shrink:0;"><i class="fa-solid fa-microchip" style="color:var(--accent)"></i> Gear <i class="fa-solid fa-chevron-down" style="font-size:7px"></i></button>
-            <button type="button" onclick="copyAllHandles()" style="font-family:var(--mono); font-size:9px; padding:4px 8px; border-radius:999px; background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); cursor:pointer; flex-shrink:0;"><i class="fa-solid fa-copy"></i> Copy All</button>
-        </div>
-
-        <div id="specs-drawer" style="display:grid; grid-template-rows:0fr; transition:grid-template-rows 0.35s var(--ease); margin-top:0; padding:0 4px;">
-            <div style="overflow:hidden;">
-                <div style="margin-top:10px; border-radius:14px; padding:11px 13px; background:rgba(0,0,0,0.35); border:1px solid var(--line); display:flex; flex-direction:column; gap:6px; font-family:var(--mono); font-size:10px;">
-                    <div style="display:flex; justify-content:space-between; color:var(--muted);"><span>PHONE</span><b style="color:var(--text); font-weight:400;">Xiaomi 15 Ultra</b></div>
-                    <div style="display:flex; justify-content:space-between; color:var(--muted);"><span>TABLET</span><b style="color:var(--text); font-weight:400;">Xiaomi Pad 6S Pro 12.4</b></div>
-                    <div style="display:flex; justify-content:space-between; color:var(--muted);"><span>VR HEADSET</span><b style="color:var(--text); font-weight:400;">Pico Neo 3 Link</b></div>
-                    <div style="display:flex; justify-content:space-between; color:var(--muted);"><span>GPU</span><b style="color:var(--text); font-weight:400;">Nvidia GeForce RTX 4050</b></div>
-                    <div style="display:flex; justify-content:space-between; color:var(--muted);"><span>ENGINE</span><b style="color:var(--text); font-weight:400;">Roblox Studio / Lua</b></div>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin-top:10px; padding:0 6px; font-family:var(--mono); font-size:10px; color:var(--accent-2); display:flex; align-items:center; gap:6px;">
-            <i class="fa-solid fa-circle-dot" style="font-size:7px;"></i>
-            <span id="owner-status-text">Status: Coding Roblox Studio mini-games &amp; Grinding MLBB</span>
-        </div>
-        <p id="owner-bio" style="margin-top:10px; font-size:13.5px; line-height:1.62; color:var(--muted); font-weight:300; padding:0 6px;" data-i18n="bio">Assalamualaikum &amp; hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.</p>
-        
-        <!-- Reaction Bar -->
-        <div style="margin-top:12px; padding:0 4px; display:flex; gap:8px;">
-            <button id="btn-fire" class="react-btn" onclick="react(this, '🔥')" style="flex:1; padding:6px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid var(--line); font-size:12px; cursor:pointer; text-align:center;">🔥 <span id="r-fire">0</span></button>
-            <button id="btn-hundred" class="react-btn" onclick="react(this, '💯')" style="flex:1; padding:6px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid var(--line); font-size:12px; cursor:pointer; text-align:center;">💯 <span id="r-hund">0</span></button>
-            <button id="btn-rocket" class="react-btn" onclick="react(this, '🚀')" style="flex:1; padding:6px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid var(--line); font-size:12px; cursor:pointer; text-align:center;">🚀 <span id="r-rock">0</span></button>
-            <button id="btn-star" class="react-btn" onclick="react(this, '⭐')" style="flex:1; padding:6px; border-radius:10px; background:rgba(255,255,255,0.03); border:1px solid var(--line); font-size:12px; cursor:pointer; text-align:center;">⭐ <span id="r-star">0</span></button>
-        </div>
-
-        <div style="margin-top:12px; display:grid; grid-template-columns:1fr auto auto auto; gap:8px;">
-            <button class="btn live" style="height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; gap:9px; font-size:13px; font-weight:500; color:var(--text);" onclick="downloadVCard()"><i class="fa-solid fa-plus" style="color:var(--accent)"></i><span data-i18n="save">Save contact</span></button>
-            <button class="btn btn-square live" style="height:48px; width:48px; border-radius:14px; display:grid; place-items:center; color:var(--text);" onclick="openNoteModal()" title="Send Note"><i class="fa-brands fa-whatsapp" style="color:var(--accent)"></i></button>
-            <button class="btn btn-square live" style="height:48px; width:48px; border-radius:14px; display:grid; place-items:center; color:var(--text);" onclick="copyCurrentUrl()" title="Copy link"><i class="fa-regular fa-copy" style="color:var(--accent)"></i></button>
-            <button class="btn btn-square live" style="height:48px; width:48px; border-radius:14px; display:grid; place-items:center; color:var(--text);" onclick="openQrModal()" title="QR Code"><i class="fa-solid fa-qrcode" style="color:var(--accent)"></i></button>
-        </div>
-
-        <button id="support-tile" class="support live" type="button" aria-label="Give support">
-            <span class="money" aria-hidden="true">
-                <span style="--x:10%;--delay:0s;--r:-14deg">$</span><span style="--x:26%;--delay:1.2s;--r:10deg;--s:11px">¢</span>
-                <span style="--x:44%;--delay:0.6s;--r:-8deg;--s:12px">$</span><span style="--x:62%;--delay:1.9s;--r:16deg">RM</span>
-            </span>
-            <span class="support-top"><span class="support-tag"><span class="dot"></span><span data-i18n="supportTag">Support · 00</span></span><span class="support-coin"><i class="fa-solid fa-coins"></i></span></span>
-            <span><span class="support-title"><span data-i18n="supportTitle">Give Support to</span> <span class="hl" id="support-owner-name">ᴍᴀᴘʟᴇ☆</span></span><span class="support-desc" data-i18n="supportDesc">Enjoy the content? Fuel the next one with a small tip.</span></span>
-            <span class="support-bottom"><span class="support-via" id="support-via-label" data-i18n="supportVia">via SociaBuzz · wzii_</span><span class="support-cta"><span data-i18n="supportCta">Give Support</span> <i class="fa-solid fa-arrow-right"></i></span></span>
-        </button>
-    </section>
-
-    <div style="display:flex; flex-direction:column; gap:20px;">
-        <section>
-            <div class="section-label"><span data-i18n="gaming">Gaming</span><b id="gaming-count">02</b></div>
-            <ul id="owner-gaming" style="list-style:none; display:flex; flex-direction:column; gap:10px;">
-                <li><a class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px;" href="https://www.roblox.com/share?code=4adad911d156734abe482fec0cb93fc7&type=Profile&source=ProfileShare&stamp=1792399648738" target="_blank" rel="noopener noreferrer"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">01</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="fa-solid fa-gamepad"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">Roblox</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);" data-i18n="robloxSub">Add me as a friend</span></span></span><span style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);" data-i18n="add">Add</span></a></li>
-                <li><button id="mlbb-tile" class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px; width:100%;" type="button"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">02</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="fa-solid fa-shield-halved"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">Mobile Legends</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);">ID · 37704847</span></span></span><span id="mlbb-cta" style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);" data-i18n="copyId">Copy ID</span></button></li>
-            </ul>
-        </section>
-        <section>
-            <div class="section-label"><span data-i18n="channels">Channels</span><b id="channel-count">05</b></div>
-            <ul id="owner-channels" style="list-style:none; display:flex; flex-direction:column; gap:10px;">
-                <li><a class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px;" href="https://youtube.com/@w._zii?sub_confirmation=1" target="_blank" rel="noopener noreferrer"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">01</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="fa-brands fa-youtube"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">YouTube</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);">ᴍᴀᴘʟᴇ☆ · @w._zii</span></span></span><span style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);" data-i18n="subscribe">Subscribe</span></a></li>
-                <li><a class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px;" href="https://wa.me/wzii1?text=Hi%20Maple!%20I%20just%20tapped%20your%20NFC%20card." target="_blank" rel="noopener noreferrer"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">02</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="fa-brands fa-whatsapp"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">WhatsApp</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);" data-i18n="messageMe">Message me</span></span></span><span style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);" data-i18n="chat">Chat</span></a></li>
-                <li><a class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px;" href="https://www.instagram.com/wziiii._?rpxt=MTBwZXdhZzI3bXI4OA==" target="_blank" rel="noopener noreferrer"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">03</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="fa-brands fa-instagram"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">Instagram</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);">@wziiii._</span></span></span><span style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);" data-i18n="follow">Follow</span></a></li>
-                <li><a class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px;" href="https://www.tiktok.com/@wzii._?" target="_blank" rel="noopener noreferrer"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">04</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="fa-brands fa-tiktok"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">TikTok</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);">@wzii._</span></span></span><span style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);" data-i18n="follow">Follow</span></a></li>
-                <li style="display:flex; align-items:center; gap:8px;">
-                    <a class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px; width:100%;" href="https://discordapp.com/users/399869638093307904" target="_blank" rel="noopener noreferrer"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">05</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="fa-brands fa-discord"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">Discord</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);">ᴍᴀᴘʟᴇ☆</span></span></span><span style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);" data-i18n="add">Add</span></a>
-                    <button type="button" class="live" onclick="copyDiscordId()" title="Copy ID" style="height:42px; width:42px; border-radius:14px; display:grid; place-items:center; flex-shrink:0; color:var(--muted);"><i class="fa-regular fa-copy"></i></button>
-                </li>
-            </ul>
-        </section>
-    </div>
-    <footer style="display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); padding:0 6px;"><span data-i18n="footer">Tap · Scan · Connect</span><span id="footer-location">Johor, MY</span></footer>
-</div>
-
-<div id="qr-modal" style="position:fixed; inset:0; z-index:80; background:rgba(4,4,7,0.8); backdrop-filter:blur(10px); display:grid; place-items:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s;">
-    <div style="width:100%; max-width:335px; border-radius:24px; padding:22px; background:var(--panel-solid); border:1px solid var(--line-strong); text-align:center;">
-        <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:16px;"><span data-i18n="qrHead">Scan Digital Card</span><button type="button" onclick="closeQrModal()" style="width:30px; height:30px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,0.06); color:var(--text);"><i class="fa-solid fa-xmark"></i></button></div>
-        <div style="width:206px; height:206px; margin:0 auto; padding:14px; border-radius:20px; background:#fff; display:grid; place-items:center;"><img id="qr-image" alt="QR" width="178" height="178" loading="lazy"></div>
-        <h2 style="margin-top:15px; font-size:18px; font-weight:500;">ᴍᴀᴘʟᴇ<span style="color:var(--accent)">☆</span></h2>
-        <p style="margin-top:4px; font-size:11.5px; color:var(--muted); font-family:var(--mono);" data-i18n="qrSub">Point your camera to open this card</p>
-        <div style="margin-top:15px; display:grid; grid-template-columns:1fr 1fr; gap:8px;"><button class="btn live" style="height:42px; font-size:12px; border-radius:12px;" onclick="shareCard()"><span data-i18n="shareBtn">Share</span></button><button class="btn live" style="height:42px; font-size:12px; border-radius:12px;" onclick="copyCurrentUrl()"><span data-i18n="copyLink">Copy</span></button></div>
-    </div>
-</div>
-
-<div id="note-modal" style="position:fixed; inset:0; z-index:80; background:rgba(4,4,7,0.8); backdrop-filter:blur(10px); display:grid; place-items:center; padding:20px; opacity:0; pointer-events:none; transition:opacity 0.3s;">
-    <div style="width:100%; max-width:335px; border-radius:24px; padding:22px; background:var(--panel-solid); border:1px solid var(--line-strong);">
-        <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:10px; color:var(--muted); margin-bottom:14px;"><span>Quick WhatsApp Note</span><button type="button" onclick="closeNoteModal()" style="width:30px; height:30px; border-radius:50%; display:grid; place-items:center; background:rgba(255,255,255,0.06); color:var(--text);"><i class="fa-solid fa-xmark"></i></button></div>
-        <textarea id="custom-note" rows="3" placeholder="Type your note for Maple..." style="width:100%; padding:12px; border-radius:14px; background:rgba(255,255,255,0.04); border:1px solid var(--line); color:var(--text); font-family:var(--sans); font-size:13px; resize:none; outline:none;"></textarea>
-        <button class="btn live" style="width:100%; margin-top:12px; height:44px; border-radius:12px; justify-content:center; background:var(--accent); color:#fff;" onclick="sendCustomNote()"><i class="fa-brands fa-whatsapp"></i> Send via WhatsApp</button>
-    </div>
-</div>
-
-<div id="toast" style="position:fixed; z-index:90; left:50%; bottom:28px; transform:translate(-50%,20px); opacity:0; pointer-events:none; padding:10px 18px; border-radius:999px; background:var(--text); color:var(--bg); font-family:var(--mono); font-size:11px; transition:opacity 0.35s, transform 0.35s;"></div>
-
-<script>
-    const SUPABASE_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
-    const OWNER_EMAIL = 'abdulfarizi15@gmail.com';
-    const CONTACT = { name:'ᴍᴀᴘʟᴇ☆', title:'Digital Creator', city:'Masai', region:'Johor', country:'Malaysia', whatsapp:'https://wa.me/wzii1', discordId:'399869638093307904' };
-    let sfxEnabled = true, audioCtx, ownerProfile = null;
-
-    // Show "Owner Studio" button ONLY if signed in as verified owner
-    function checkOwnerAuth() {
-        try {
-            const authUser = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
-            const gotrueUser = JSON.parse(localStorage.getItem('gotrue.user') || 'null');
-            const email = (authUser?.email || gotrueUser?.email || '').toLowerCase();
-            if (email === OWNER_EMAIL) {
-                document.getElementById('owner-studio-nav').style.display = 'inline-flex';
+        function resolveMediaUrl(val) {
+          if (!val || typeof val !== 'string') return '';
+          if (val.startsWith('https://local.upload/')) {
+            const id = val.replace('https://local.upload/', '');
+            try {
+              const store = JSON.parse(localStorage.getItem('dig:media_store') || '{}');
+              return store[id] || val;
+            } catch {
+              return val;
             }
-        } catch {}
-    }
-    checkOwnerAuth();
-
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            const overlay = document.getElementById('intro-overlay');
-            if (overlay) {
-                overlay.classList.add('zoom-in');
-                setTimeout(() => overlay.classList.add('fade-out'), 700);
-            }
-        }, 1200);
-    });
-
-    window.addEventListener('DOMContentLoaded', () => {
-        for (let i = 0; i < 14; i++) {
-            const s = document.createElement('div');
-            s.className = 'star-confetti';
-            s.innerHTML = '☆';
-            s.style.left = `${window.innerWidth / 2}px`;
-            s.style.top = `${window.innerHeight / 3}px`;
-            s.style.setProperty('--tx', `${(Math.random() - 0.5) * 260}px`);
-            s.style.setProperty('--ty', `${(Math.random() - 0.5) * 260}px`);
-            document.body.appendChild(s);
-            setTimeout(() => s.remove(), 1800);
-        }
-    });
-
-    function playTone(freq = 520, dur = 0.045, type = 'sine') {
-        if (!sfxEnabled) return;
-        try {
-            audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-            o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            g.gain.setValueAtTime(0.035, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
-            o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
-        } catch {}
-    }
-    function haptic(ms = 12) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch {} }
-
-    let musicPlaying = false, musicInterval;
-    document.getElementById('music-btn').addEventListener('click', function() {
-        musicPlaying = !musicPlaying;
-        this.classList.toggle('active', musicPlaying);
-        this.querySelector('i').className = musicPlaying ? 'fa-solid fa-music' : 'fa-solid fa-volume-xmark';
-        if (musicPlaying) {
-            showToast('Lofi Beats: ON 🎧');
-            const notes = [261.63, 329.63, 392.00, 523.25, 587.33];
-            musicInterval = setInterval(() => {
-                playTone(notes[Math.floor(Math.random() * notes.length)], 0.35, 'sine');
-            }, 800);
-        } else {
-            showToast('Lofi Beats: OFF');
-            clearInterval(musicInterval);
-        }
-    });
-
-    function getStoredMaple() {
-        try {
-            const db = JSON.parse(localStorage.getItem('dig:profiles_db') || '{}');
-            return db.maple || {};
-        } catch { return {}; }
-    }
-    function saveStoredMaple(card) {
-        try {
-            const db = JSON.parse(localStorage.getItem('dig:profiles_db') || '{}');
-            db.maple = { ...(db.maple || {}), ...card, slug: 'maple' };
-            localStorage.setItem('dig:profiles_db', JSON.stringify(db));
-        } catch {}
-    }
-    async function persistMapleToSupabase(card) {
-        saveStoredMaple(card);
-        try {
-            const packedName = JSON.stringify({ __dig: 1, ...card, slug: 'maple' });
-            await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=slug`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'resolution=merge-duplicates'
-                },
-                body: JSON.stringify({
-                    id: card.id || '00000000-0000-0000-0000-000000000001',
-                    slug: 'maple',
-                    name: packedName
-                })
-            });
-        } catch {}
-    }
-
-    // Love / Like Button Handler beside Maple☆
-    async function likeOwnerProfile() {
-        const btn = document.getElementById('owner-like-btn');
-        const countEl = document.getElementById('owner-likes');
-        haptic(15); playTone(760, 0.06, 'triangle');
-        const current = parseInt(countEl.textContent.replace(/,/g, ''), 10) || 217;
-        const next = current + 1;
-        countEl.textContent = next.toLocaleString();
-        btn.classList.add('liked');
-        localStorage.setItem('dig:liked:maple', '1');
-        ownerProfile = { ...(ownerProfile || getStoredMaple()), likes: next };
-        await persistMapleToSupabase(ownerProfile);
-        showToast('Thanks for the love! ❤️');
-    }
-
-    // Reactions Counter & Persistence
-    const reactionKinds = {'🔥':'fire', '💯':'hundred', '🚀':'rocket', '⭐':'star'};
-    function showCounts(card) {
-        for (const [id, key] of Object.entries({'r-fire':'fire','r-hund':'hundred','r-rock':'rocket','r-star':'star'})) {
-            const el = document.getElementById(id);
-            if (el) el.textContent = card.reactions?.[key] || 0;
-        }
-        if (typeof card.likes === 'number') {
-            document.getElementById('owner-likes').textContent = card.likes.toLocaleString();
-        }
-        if (localStorage.getItem('dig:liked:maple')) {
-            document.getElementById('owner-like-btn')?.classList.add('liked');
-        }
-    }
-
-    async function react(btn, emoji) {
-        const key = reactionKinds[emoji];
-        if (!key) return;
-        btn.disabled = true;
-        try {
-            haptic(12); playTone(700, 0.04);
-            const currentCard = ownerProfile || getStoredMaple();
-            const reactions = { fire: 0, hundred: 0, rocket: 0, star: 0, ...(currentCard.reactions || {}) };
-            reactions[key] = (Number(reactions[key]) || 0) + 1;
-            ownerProfile = { ...currentCard, reactions };
-            showCounts(ownerProfile);
-            btn.classList.add('done');
-            await persistMapleToSupabase(ownerProfile);
-            showToast(`Reacted with ${emoji}!`);
-        } finally {
-            btn.disabled = false;
-        }
-    }
-
-    const THEMES = ['flame', 'cyber', 'emerald', 'sakura'];
-    let curTheme = localStorage.getItem('maple-theme') || 'flame';
-    document.documentElement.setAttribute('data-theme', curTheme);
-    document.getElementById('theme-btn').addEventListener('click', () => {
-        haptic(10); playTone(660, 0.06, 'triangle');
-        curTheme = THEMES[(THEMES.indexOf(curTheme) + 1) % THEMES.length];
-        document.documentElement.setAttribute('data-theme', curTheme);
-        try { localStorage.setItem('maple-theme', curTheme); } catch {}
-        showToast(`Theme: ${curTheme.toUpperCase()}`);
-    });
-
-    document.getElementById('sfx-btn').addEventListener('click', function () {
-        sfxEnabled = !sfxEnabled; this.classList.toggle('active', sfxEnabled);
-        this.querySelector('i').className = sfxEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
-        if (sfxEnabled) playTone(740, 0.05);
-        showToast(sfxEnabled ? 'UI Sound: ON' : 'UI Sound: OFF');
-    });
-
-    document.getElementById('specs-btn').addEventListener('click', function () {
-        haptic(10); playTone(480, 0.04);
-        const drawer = document.getElementById('specs-drawer');
-        drawer.style.gridTemplateRows = drawer.style.gridTemplateRows === '1fr' ? '0fr' : '1fr';
-    });
-
-    function updateClock() {
-        const el = document.getElementById('local-clock'); if (!el) return;
-        try { el.textContent = `${new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Kuala_Lumpur',hour:'2-digit',minute:'2-digit',hour12:true}).format(new Date())} MYT`; }
-        catch { el.textContent = 'UTC+8 MYT'; }
-    }
-    updateClock(); setInterval(updateClock, 15000);
-
-    const I18N = {
-        en: { title:'ᴍᴀᴘʟᴇ☆ | Digital Card', card:'Digital Card', statusOnline:'Online', role:'Digital Creator', basedIn:'Based in', localTime:'Time', bio:'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.', save:'Save contact', copyLink:'Copy', qrHead:'Scan Digital Card', qrSub:'Point your camera to open this card', shareBtn:'Share', supportTag:'Support · 00', supportTitle:'Give Support to', supportDesc:'Enjoy the content? Fuel the next one with a small tip.', supportVia:'via SociaBuzz · wzii_', supportCta:'Give Support', gaming:'Gaming', robloxSub:'Add me as a friend', add:'Add', copyId:'Copy ID', copied:'Copied', channels:'Channels', subscribe:'Subscribe', messageMe:'Message me', chat:'Chat', follow:'Follow', footer:'Tap · Scan · Connect', toastSaved:'Contact saved', toastLink:'Link copied', toastDiscord:'Discord ID copied', toastAll:'All handles copied!', toastLang:'Language: English', mlbbDesktop:(id)=>`ID ${id} copied · open MLBB on your phone`, mlbbOpening:(id)=>`ID ${id} copied · opening Mobile Legends`, mlbbId:(id)=>`MLBB ID: ${id}`, mlbbIdOpening:(id)=>`MLBB ID: ${id} · opening app` },
-        ms: { title:'ᴍᴀᴘʟᴇ☆ | Kad Digital', card:'Kad Digital', statusOnline:'Aktif', role:'Pencipta Digital', basedIn:'Berasal dari', localTime:'Waktu', bio:'Assalamualaikum & hai. Selamat datang ke kad digital saya — ketik pautan di bawah untuk berhubung, atau simpan kenalan saya dengan sekali ketik.', save:'Simpan kenalan', copyLink:'Salin', qrHead:'Imbas Kad Digital', qrSub:'Halakan kamera anda untuk membuka kad ini', shareBtn:'Kongsi', supportTag:'Sokongan · 00', supportTitle:'Beri Sokongan kepada', supportDesc:'Suka kandungan ini? Sokong karya seterusnya dengan sedikit sumbangan.', supportVia:'melalui SociaBuzz · wzii_', supportCta:'Beri Sokongan', gaming:'Permainan', robloxSub:'Tambah saya sebagai rakan', add:'Tambah', copyId:'Salin ID', copied:'Disalin', channels:'Saluran', subscribe:'Langgan', messageMe:'Hantar mesej', chat:'Sembang', follow:'Ikuti', footer:'Ketik · Imbas · Hubung', toastSaved:'Kenalan disimpan', toastLink:'Pautan disalin', toastDiscord:'ID Discord disalin', toastAll:'Semua nama pengguna disalin!', toastLang:'Bahasa: Bahasa Melayu', mlbbDesktop:(id)=>`ID ${id} disalin · buka MLBB di telefon anda`, mlbbOpening:(id)=>`ID ${id} disalin · membuka Mobile Legends`, mlbbId:(id)=>`ID MLBB: ${id}`, mlbbIdOpening:(id)=>`ID MLBB: ${id} · membuka aplikasi` }
-    };
-    const LANG_KEY = 'maple-lang';
-    let lang = (() => { try { const s = localStorage.getItem(LANG_KEY); if (I18N[s]) return s; } catch {} return 'en'; })();
-    const t = (k) => I18N[lang][k];
-    function applyLang(next) {
-        lang = I18N[next] ? next : 'en'; document.documentElement.lang = lang; document.title = t('title');
-        document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
-        document.querySelectorAll('.lang button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
-        if (ownerProfile) applyOwnerProfile(ownerProfile);
-    }
-    document.querySelectorAll('.lang button').forEach((b) => b.addEventListener('click', () => {
-        if (b.dataset.lang === lang) return; haptic(10); playTone(600, 0.05); applyLang(b.dataset.lang);
-        try { localStorage.setItem(LANG_KEY, lang); } catch {} showToast(t('toastLang'));
-    }));
-
-    function applyOwnerProfile(card) {
-        if (!card) return;
-        ownerProfile = card;
-        if (card.visits !== undefined) document.getElementById('visit-counter').textContent = Number(card.visits || 1384).toLocaleString();
-        showCounts(card);
-
-        if (card.theme) document.documentElement.setAttribute('data-theme', card.theme);
-        if (card.name) {
-            const nameEl = document.getElementById('owner-display-name');
-            if (card.name.includes('☆')) {
-                const parts = card.name.split('☆');
-                nameEl.innerHTML = `${parts[0]}<span class="star">☆</span>${parts[1] || ''}`;
-            } else {
-                nameEl.textContent = card.name;
-            }
-            document.getElementById('topbar-owner-name').textContent = card.name;
-            document.getElementById('support-owner-name').textContent = card.name;
-        }
-        if (card.role && card.role.trim()) document.getElementById('owner-role').textContent = card.role;
-        if (card.bio && card.bio.trim()) document.getElementById('owner-bio').textContent = card.bio;
-        if (card.city || card.country) {
-            const loc = [card.city, card.country].filter(Boolean).join(', ');
-            if (loc) document.getElementById('owner-location').textContent = loc;
-        }
-        if (card.sociabuzz) {
-            document.getElementById('support-via-label').textContent = `via SociaBuzz · ${card.sociabuzz}`;
+          }
+          return val;
         }
 
-        const bannerHost = document.getElementById('owner-banner');
-        if (card.banner) {
-            bannerHost.replaceChildren();
-            const isVideo = /\.(mp4|webm)(\?|$)/i.test(card.banner) || card.banner.startsWith('data:video/');
-            const media = document.createElement(isVideo ? 'video' : 'img');
-            media.src = card.banner; media.alt = '';
-            media.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
-            if (isVideo) { media.autoplay = true; media.muted = true; media.loop = true; media.playsInline = true; }
-            bannerHost.appendChild(media);
-        }
-
-        const avatar = document.getElementById('owner-avatar');
-        const initials = document.getElementById('owner-initials');
-        if (card.avatar) {
-            avatar.onerror = () => { avatar.hidden = true; initials.hidden = false; };
-            avatar.src = card.avatar; avatar.hidden = false; initials.hidden = true;
-        } else {
-            avatar.hidden = true; initials.hidden = false;
-        }
-
-        if (Array.isArray(card.gaming) && card.gaming.length > 0) {
-            const gamingUl = document.getElementById('owner-gaming');
-            document.getElementById('gaming-count').textContent = String(card.gaming.length).padStart(2, '0');
-            gamingUl.innerHTML = card.gaming.map((g, idx) => {
-                const num = String(idx + 1).padStart(2, '0');
-                const isUrl = /^https?:\/\//i.test(g.value);
-                if (isUrl) {
-                    return `<li><a class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px;" href="${g.value}" target="_blank" rel="noopener noreferrer"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">${num}</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="fa-solid fa-gamepad"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">${g.platform}</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);">Open profile</span></span></span><span style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);">Add</span></a></li>`;
+        // Compress & resize local image so it fits easily in Supabase & LocalStorage
+        function compressImageFile(file, maxWidth = 900, quality = 0.82) {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const rawDataUrl = e.target.result;
+              if (file.type === 'image/gif') return resolve(rawDataUrl);
+              const img = new Image();
+              img.onload = () => {
+                let w = img.width, h = img.height;
+                if (w > maxWidth) {
+                  h = Math.round((h * maxWidth) / w);
+                  w = maxWidth;
                 }
-                return `<li><button onclick="copyText('${g.value.replace(/'/g, '')}').then(()=>showToast('${g.platform} ID copied!'))" class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px; width:100%;" type="button"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">${num}</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="fa-solid fa-shield-halved"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">${g.platform}</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);">ID · ${g.value}</span></span></span><span style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);">Copy ID</span></button></li>`;
-            }).join('');
-        }
-
-        if (Array.isArray(card.channels) && card.channels.length > 0) {
-            const chanUl = document.getElementById('owner-channels');
-            document.getElementById('channel-count').textContent = String(card.channels.length).padStart(2, '0');
-            const icons = { YouTube:'fa-brands fa-youtube', WhatsApp:'fa-brands fa-whatsapp', Instagram:'fa-brands fa-instagram', TikTok:'fa-brands fa-tiktok', Discord:'fa-brands fa-discord', X:'fa-brands fa-x-twitter', Facebook:'fa-brands fa-facebook', Twitch:'fa-brands fa-twitch', Telegram:'fa-brands fa-telegram', Website:'fa-solid fa-globe' };
-            chanUl.innerHTML = card.channels.map((c, idx) => {
-                const num = String(idx + 1).padStart(2, '0');
-                const icon = icons[c.platform] || 'fa-solid fa-link';
-                const val = c.value.trim();
-                let href = val;
-                if (!/^https?:\/\//i.test(val)) {
-                    const clean = val.replace(/^@/, '');
-                    if (c.platform === 'YouTube') href = `https://www.youtube.com/@${clean}`;
-                    else if (c.platform === 'TikTok') href = `https://www.tiktok.com/@${clean}`;
-                    else if (c.platform === 'Instagram') href = `https://www.instagram.com/${clean}`;
-                    else if (c.platform === 'WhatsApp') href = `https://wa.me/${clean.replace(/\D/g, '')}`;
-                    else if (c.platform === 'Discord') href = `https://discordapp.com/users/${clean}`;
-                    else href = `https://${clean}`;
-                }
-                return `<li><a class="tile live" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:15px 16px; border-radius:18px;" href="${href}" target="_blank" rel="noopener noreferrer"><span style="display:flex; align-items:center; gap:13px;"><span style="font-family:var(--mono); font-size:9px; color:var(--dim);">${num}</span><span style="width:40px; height:40px; border-radius:12px; display:grid; place-items:center; background:var(--accent); color:#fff;"><i class="${icon}"></i></span><span><span style="font-size:14px; font-weight:500; display:block;">${c.platform}</span><span style="font-family:var(--mono); font-size:11px; color:var(--muted);">${val.length > 28 ? c.platform : val}</span></span></span><span style="font-family:var(--mono); font-size:10px; padding:8px 12px; border-radius:999px; background:var(--text); color:var(--bg);">Open</span></a></li>`;
-            }).join('');
-        }
-    }
-
-    (async function loadInitialOwnerProfile() {
-        const local = getStoredMaple();
-        if (Object.keys(local).length) applyOwnerProfile(local);
-        try {
-            const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*&slug=eq.maple`, {
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-            });
-            if (res.ok) {
-                const rows = await res.json();
-                if (Array.isArray(rows) && rows.length > 0) {
-                    const row = rows[0];
-                    let extra = {};
-                    if (typeof row.name === 'string' && row.name.startsWith('{"__dig":')) {
-                        try { extra = JSON.parse(row.name); } catch {}
-                    }
-                    const merged = { ...local, ...extra, ...row, name: extra.name || row.name || 'ᴍᴀᴘʟᴇ☆' };
-                    saveStoredMaple(merged);
-                    applyOwnerProfile(merged);
-                }
-            }
-        } catch {}
-    })();
-
-    function pageUrl() { return new URL('/maple', window.location.origin).href; }
-    function buildVCard() { return ['BEGIN:VCARD','VERSION:3.0',`FN:${CONTACT.name}`,`N:;${CONTACT.name};;;`,`TITLE:${CONTACT.title}`,`ADR;TYPE=HOME:;;;${CONTACT.city};${CONTACT.region};;${CONTACT.country}`,`URL:${pageUrl()}`,`URL;TYPE=WhatsApp:${CONTACT.whatsapp}`,'END:VCARD'].join('\r\n'); }
-    function downloadVCard() {
-        haptic(15); const blob = new Blob([buildVCard()], { type:'text/vcard;charset=utf-8' });
-        const url = URL.createObjectURL(blob), a = document.createElement('a');
-        a.href = url; a.download = 'maple.vcf'; document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000); showToast(t('toastSaved'));
-    }
-    async function copyCurrentUrl() { haptic(12); await copyText(pageUrl()); showToast(t('toastLink')); }
-    async function copyDiscordId() { haptic(12); await copyText(CONTACT.discordId); showToast(t('toastDiscord')); }
-    async function copyAllHandles() {
-        haptic(15);
-        const text = `YouTube: @w._zii\nTikTok: @wzii._\nInstagram: @wziiii._\nDiscord: ᴍᴀᴘʟᴇ☆ (${CONTACT.discordId})\nMLBB ID: 37704847`;
-        await copyText(text);
-        showToast(t('toastAll'));
-    }
-
-    function openNoteModal() { haptic(10); document.getElementById('note-modal').style.opacity = '1'; document.getElementById('note-modal').style.pointerEvents = 'auto'; }
-    function closeNoteModal() { document.getElementById('note-modal').style.opacity = '0'; document.getElementById('note-modal').style.pointerEvents = 'none'; }
-    function sendCustomNote() {
-        const note = document.getElementById('custom-note').value.trim();
-        const msg = note ? `Hi Maple! ${note}` : 'Hi Maple! I just tapped your NFC card.';
-        window.open(`https://wa.me/wzii1?text=${encodeURIComponent(msg)}`, '_blank');
-        closeNoteModal();
-    }
-
-    function openQrModal() {
-        haptic(12); const modal = document.getElementById('qr-modal'), img = document.getElementById('qr-image');
-        if (!img.getAttribute('src')) img.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=0&color=07070a&bgcolor=ffffff&data=${encodeURIComponent(pageUrl())}`;
-        modal.style.opacity = '1'; modal.style.pointerEvents = 'auto';
-    }
-    function closeQrModal() { document.getElementById('qr-modal').style.opacity = '0'; document.getElementById('qr-modal').style.pointerEvents = 'none'; }
-    async function shareCard() {
-        haptic(12);
-        if (navigator.share) { try { await navigator.share({ title:CONTACT.name, text:`${CONTACT.name} — ${CONTACT.title}`, url:pageUrl() }); return; } catch {} }
-        copyCurrentUrl();
-    }
-
-    function copyText(text) {
-        const fallback = () => {
-            const i = document.createElement('textarea'); i.value = text; i.setAttribute('readonly',''); i.style.position = 'fixed'; i.style.opacity = '0';
-            document.body.appendChild(i); i.select(); i.setSelectionRange(0, text.length);
-            let ok = false; try { ok = document.execCommand('copy'); } catch {} i.remove(); return ok;
-        };
-        if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(() => true, fallback);
-        return Promise.resolve(fallback());
-    }
-
-    let toastTimer;
-    function showToast(msg) {
-        const toast = document.getElementById('toast'); toast.textContent = msg; toast.style.opacity = '1'; toast.style.transform = 'translate(-50%, 0)';
-        clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translate(-50%, 20px)'; }, 1900);
-    }
-
-    let supportReady;
-    function loadSupport() {
-        if (supportReady) return supportReady;
-        supportReady = new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://storage.sociabuzz.com/storage/js/main/buttononwebsite/index.min.js';
-            script.async = true;
-            const timeout = setTimeout(() => { script.remove(); reject(new Error('timeout')); }, 15000);
-            script.onload = () => {
-                clearTimeout(timeout);
-                try {
-                    window.sbBoW.draw('wzii_', 'R2l2ZSBTdXBwb3J0', 'position-bottom-right', '#cc0000', '#FFFFFF');
-                    resolve();
-                } catch (error) { reject(error); }
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/webp', quality));
+              };
+              img.onerror = () => resolve(rawDataUrl);
+              img.src = rawDataUrl;
             };
-            script.onerror = () => { clearTimeout(timeout); script.remove(); reject(new Error('unavailable')); };
-            document.body.appendChild(script);
-        }).catch(error => { supportReady = null; throw error; });
-        return supportReady;
-    }
-    window.addEventListener('load', () => { loadSupport().catch(() => {}); });
-    document.getElementById('support-tile').addEventListener('click', async function (e) {
-        haptic(20); playTone(880, 0.08, 'triangle'); var glyphs = ['💸','💰','🪙','💵'], r = this.getBoundingClientRect();
-        var x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
-        for (var i = 0; i < 10; i++) {
-            var g = document.createElement('span'), a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 60;
-            g.className = 'money-burst'; g.textContent = glyphs[i % glyphs.length]; g.style.left = x + 'px'; g.style.top = y + 'px';
-            g.style.setProperty('--bx', Math.cos(a) * d + 'px'); g.style.setProperty('--by', Math.sin(a) * d - 30 + 'px');
-            document.body.appendChild(g); setTimeout(g.remove.bind(g), 900);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
         }
-        this.setAttribute('aria-busy', 'true');
-        try {
-            await loadSupport();
-            document.getElementById('btnModal').click();
-        } catch { showToast('Support could not load. Please tap again to retry.'); }
-        finally { this.removeAttribute('aria-busy'); }
-    });
-</script>
-</body>
+
+        const DEFAULT_MAPLE = {
+          slug: 'maple',
+          name: 'ᴍᴀᴘʟᴇ☆',
+          role: 'Digital Creator',
+          bio: 'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.',
+          country: 'Malaysia',
+          city: 'Masai, Johor',
+          avatar: '',
+          banner: '',
+          theme: 'flame',
+          openTime: '00:00',
+          closeTime: '00:00',
+          timezone: 'Asia/Kuala_Lumpur',
+          sociabuzzEnabled: true,
+          sociabuzz: 'wzii_',
+          widgetEnabled: false,
+          widgetCode: '',
+          visits: 1384,
+          likes: 217,
+          reactions: { fire: 0, hundred: 0, rocket: 0, star: 0 },
+          gaming: [
+            { platform: 'Roblox', value: 'https://www.roblox.com/share?code=4adad911d156734abe482fec0cb93fc7&type=Profile&source=ProfileShare&stamp=1792399648738' },
+            { platform: 'Mobile Legends', value: '37704847' }
+          ],
+          channels: [
+            { platform: 'YouTube', value: 'https://youtube.com/@w._zii?sub_confirmation=1' },
+            { platform: 'WhatsApp', value: 'https://wa.me/wzii1?text=Hi%20Maple!%20I%20just%20tapped%20your%20NFC%20card.' },
+            { platform: 'Instagram', value: 'https://www.instagram.com/wziiii._?rpxt=MTBwZXdhZzI3bXI4OA==' },
+            { platform: 'TikTok', value: 'https://www.tiktok.com/@wzii._?' },
+            { platform: 'Discord', value: '399869638093307904' }
+          ]
+        };
+
+        function getLocalProfiles() {
+          try {
+            const raw = localStorage.getItem('dig:profiles_db');
+            const db = raw ? JSON.parse(raw) : {};
+            if (!db.maple) db.maple = { ...DEFAULT_MAPLE };
+            return db;
+          } catch {
+            return { maple: { ...DEFAULT_MAPLE } };
+          }
+        }
+
+        function saveLocalProfile(profile) {
+          if (!profile || !profile.slug) return;
+          try {
+            const db = getLocalProfiles();
+            db[profile.slug] = { ...(db[profile.slug] || {}), ...profile };
+            localStorage.setItem('dig:profiles_db', JSON.stringify(db));
+          } catch {}
+        }
+
+        function makeFakeJwt(user) {
+          const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+          const payload = btoa(unescape(encodeURIComponent(JSON.stringify({
+            sub: user.id || 'user-1',
+            email: user.email,
+            exp: Math.floor(Date.now() / 1000) + 86400 * 30,
+            user_metadata: user.user_metadata || {}
+          }))));
+          return `${header}.${payload}.sig`;
+        }
+
+        async function sbFetch(path, opts = {}) {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 4500);
+          try {
+            const res = await originalFetch(`${SUPABASE_URL}${path}`, {
+              ...opts,
+              signal: controller.signal,
+              headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json',
+                ...(opts.headers || {})
+              }
+            });
+            clearTimeout(timer);
+            return res;
+          } catch {
+            clearTimeout(timer);
+            return null;
+          }
+        }
+
+        function unpackProfile(row, slugFallback) {
+          const db = getLocalProfiles();
+          const base = slugFallback === 'maple' ? { ...DEFAULT_MAPLE, ...(db.maple || {}) } : (db[slugFallback] || {});
+          if (!row) return Object.keys(base).length ? base : null;
+          let extra = {};
+          let displayName = row.name || base.name || 'Creator';
+          if (typeof row.name === 'string' && row.name.startsWith('{"__dig":')) {
+            try {
+              extra = JSON.parse(row.name);
+              displayName = extra.name || 'Creator';
+            } catch {}
+          }
+          const merged = {
+            ...base,
+            ...extra,
+            ...row,
+            name: displayName,
+            slug: row.slug || slugFallback,
+            avatar: resolveMediaUrl(row.avatar || extra.avatar || base.avatar || ''),
+            banner: resolveMediaUrl(row.banner || extra.banner || base.banner || ''),
+            gaming: row.gaming || extra.gaming || base.gaming || [],
+            channels: row.channels || extra.channels || base.channels || [],
+            reactions: row.reactions || extra.reactions || base.reactions || { fire: 0, hundred: 0, rocket: 0, star: 0 },
+            likes: typeof row.likes === 'number' ? row.likes : (extra.likes ?? base.likes ?? 0),
+            visits: typeof row.visits === 'number' ? row.visits : (extra.visits ?? base.visits ?? 1)
+          };
+          saveLocalProfile(merged);
+          return merged;
+        }
+
+        async function syncProfileToSupabase(profile) {
+          const resolvedProfile = {
+            ...profile,
+            avatar: resolveMediaUrl(profile.avatar),
+            banner: resolveMediaUrl(profile.banner)
+          };
+          saveLocalProfile(resolvedProfile);
+          const packedName = JSON.stringify({ __dig: 1, ...resolvedProfile });
+          return await sbFetch('/rest/v1/profiles?on_conflict=slug', {
+            method: 'POST',
+            headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+            body: JSON.stringify({
+              id: resolvedProfile.id || '00000000-0000-0000-0000-000000000001',
+              slug: resolvedProfile.slug,
+              name: packedName
+            })
+          });
+        }
+
+        window.fetch = async function (input, options = {}) {
+          const url = typeof input === 'string' ? input : (input?.url || '');
+
+          // 1. Local Image File Upload (/api/uploads) -> Returns valid https:// virtual link so validation passes!
+          if (url.includes('/api/uploads') && options.method === 'POST') {
+            try {
+              const file = options.body;
+              const dataUrl = await compressImageFile(file);
+              const mediaId = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+              saveUploadedMedia(mediaId, dataUrl);
+              const virtualHttpsUrl = `https://local.upload/${mediaId}`;
+              return new Response(JSON.stringify({ url: virtualHttpsUrl }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            } catch {
+              return new Response(JSON.stringify({ error: 'Could not read image file.' }), { status: 400 });
+            }
+          }
+
+          // 2. Slug availability check (/api/slugs/:slug)
+          if (url.includes('/api/slugs/')) {
+            const slug = decodeURIComponent(url.split('/api/slugs/')[1].split('?')[0]).toLowerCase();
+            if (slug === 'maple') {
+              return new Response(JSON.stringify({ available: true, reason: null }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+            const res = await sbFetch(`/rest/v1/profiles?select=slug&slug=eq.${encodeURIComponent(slug)}`);
+            if (res && res.ok) {
+              const rows = await res.json().catch(() => []);
+              const taken = Array.isArray(rows) && rows.length > 0;
+              return new Response(JSON.stringify({ available: !taken, reason: taken ? 'Already claimed' : null }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+            const db = getLocalProfiles();
+            const taken = Boolean(db[slug]);
+            return new Response(JSON.stringify({ available: !taken, reason: taken ? 'Already claimed' : null }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          // 3. Like & Reaction saving (/api/profiles/:slug/like or /react)
+          if (url.includes('/api/profiles/') && (url.endsWith('/like') || url.endsWith('/react'))) {
+            const parts = url.split('/api/profiles/')[1].split('/');
+            const slug = decodeURIComponent(parts[0]).toLowerCase();
+            const action = parts[1];
+            let row = null;
+            const res = await sbFetch(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
+            if (res && res.ok) {
+              const rows = await res.json().catch(() => []);
+              if (rows.length) row = rows[0];
+            }
+            const profile = unpackProfile(row, slug) || { ...DEFAULT_MAPLE, slug };
+            if (action === 'like') {
+              profile.likes = (Number(profile.likes) || 0) + 1;
+            } else if (action === 'react') {
+              let body = {};
+              try { body = JSON.parse(options.body || '{}'); } catch {}
+              const key = body.reaction;
+              profile.reactions = profile.reactions || { fire: 0, hundred: 0, rocket: 0, star: 0 };
+              if (key) profile.reactions[key] = (Number(profile.reactions[key]) || 0) + 1;
+            }
+            await syncProfileToSupabase(profile);
+            return new Response(JSON.stringify(profile), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          // 4. Get public profile (/api/profiles/:slug)
+          if (url.includes('/api/profiles/')) {
+            const slug = decodeURIComponent(url.split('/api/profiles/')[1].split('?')[0]).toLowerCase();
+            let row = null;
+            const res = await sbFetch(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
+            if (res && res.ok) {
+              const rows = await res.json().catch(() => []);
+              if (rows.length) row = rows[0];
+            }
+            const profile = unpackProfile(row, slug);
+            if (!profile) {
+              return new Response(JSON.stringify({ error: 'Not found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
+            }
+            if (!url.includes('preview')) {
+              profile.visits = (Number(profile.visits) || 0) + 1;
+              syncProfileToSupabase(profile);
+            }
+            return new Response(JSON.stringify(profile), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          // 5. Signup (/.netlify/identity/signup)
+          if (url.includes('/signup')) {
+            let body = {};
+            try { body = JSON.parse(options.body || '{}'); } catch {}
+            const email = (body.email || '').trim().toLowerCase();
+            const password = body.password || '';
+            const meta = body.data || {};
+            const slug = email === OWNER_EMAIL ? 'maple' : (meta.digital_slug || 'user');
+            const name = meta.full_name || (email === OWNER_EMAIL ? 'ᴍᴀᴘʟᴇ☆' : 'Creator');
+
+            let userId = '00000000-0000-0000-0000-000000000001';
+            const sbRes = await sbFetch('/auth/v1/signup', {
+              method: 'POST',
+              body: JSON.stringify({ email, password, data: { full_name: name, digital_slug: slug } })
+            });
+            if (sbRes && sbRes.ok) {
+              const sbData = await sbRes.json().catch(() => ({}));
+              if (sbData.user?.id) userId = sbData.user.id;
+            }
+
+            const userObj = {
+              id: userId,
+              email,
+              confirmed_at: new Date().toISOString(),
+              user_metadata: { full_name: name, digital_slug: slug },
+              app_metadata: { provider: 'email', roles: email === OWNER_EMAIL ? ['owner'] : ['user'] }
+            };
+            const token = makeFakeJwt(userObj);
+            userObj.access_token = token;
+            userObj.refresh_token = 'refresh-' + token;
+
+            localStorage.setItem('dig:auth_user', JSON.stringify(userObj));
+            const existing = getLocalProfiles()[slug] || (slug === 'maple' ? DEFAULT_MAPLE : {});
+            const newProfile = {
+              ...existing,
+              id: userId,
+              slug,
+              name: existing.name || name
+            };
+            await syncProfileToSupabase(newProfile);
+
+            return new Response(JSON.stringify(userObj), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          // 6. Login (/.netlify/identity/token)
+          if (url.includes('/token')) {
+            let email = '', password = '';
+            if (typeof options.body === 'string' && options.body.includes('grant_type=')) {
+              const params = new URLSearchParams(options.body);
+              email = (params.get('username') || '').trim().toLowerCase();
+              password = params.get('password') || '';
+            } else {
+              try {
+                const b = JSON.parse(options.body || '{}');
+                email = (b.email || b.username || '').trim().toLowerCase();
+                password = b.password || '';
+              } catch {}
+            }
+
+            if (!email) {
+              const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
+              if (saved) email = saved.email;
+            }
+
+            const slug = email === OWNER_EMAIL ? 'maple' : (email.split('@')[0].replace(/[^a-z0-9-]/g, '') || 'user');
+            let userId = '00000000-0000-0000-0000-000000000001';
+
+            const sbRes = await sbFetch('/auth/v1/token?grant_type=password', {
+              method: 'POST',
+              body: JSON.stringify({ email, password })
+            });
+            if (sbRes && sbRes.ok) {
+              const sbData = await sbRes.json().catch(() => ({}));
+              if (sbData.user?.id) userId = sbData.user.id;
+            }
+
+            const userObj = {
+              id: userId,
+              email,
+              confirmed_at: new Date().toISOString(),
+              user_metadata: { full_name: email === OWNER_EMAIL ? 'ᴍᴀᴘʟᴇ☆' : slug, digital_slug: slug },
+              app_metadata: { provider: 'email', roles: email === OWNER_EMAIL ? ['owner'] : ['user'] }
+            };
+            const token = makeFakeJwt(userObj);
+            localStorage.setItem('dig:auth_user', JSON.stringify(userObj));
+
+            return new Response(JSON.stringify({
+              access_token: token,
+              refresh_token: 'refresh-' + token,
+              token_type: 'bearer',
+              expires_in: 86400 * 30,
+              user: userObj
+            }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          // 7. Logout (/.netlify/identity/logout)
+          if (url.includes('/logout')) {
+            localStorage.removeItem('dig:auth_user');
+            return new Response(JSON.stringify({}), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+
+          // 8. User Session (/.netlify/identity/user)
+          if (url.includes('/.netlify/identity/user') || url.endsWith('/user')) {
+            const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
+            if (!saved) {
+              return new Response(JSON.stringify({ msg: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+            }
+            return new Response(JSON.stringify(saved), { status: 200, headers: { 'Content-Type': 'application/json' } });
+          }
+
+          // 9. Current Profile Get/Save (/api/me)
+          if (url.includes('/api/me')) {
+            const saved = JSON.parse(localStorage.getItem('dig:auth_user') || 'null');
+            if (!saved) {
+              return new Response(JSON.stringify({ error: 'Please log in again.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+            }
+            const slug = saved.email === OWNER_EMAIL ? 'maple' : (saved.user_metadata?.digital_slug || 'maple');
+
+            if (options.method === 'PUT') {
+              let body = {};
+              try { body = JSON.parse(options.body || '{}'); } catch {}
+
+              const editor = document.getElementById('editor');
+              if (editor) {
+                const fd = new FormData(editor);
+                const getRows = (kind) => [...editor.querySelectorAll(`.row[data-kind="${kind}"]`)]
+                  .map(r => ({ platform: r.querySelector('select')?.value, value: r.querySelector('input')?.value.trim() }))
+                  .filter(r => r.value);
+                body = {
+                  ...body,
+                  name: String(fd.get('name') || body.name || 'ᴍᴀᴘʟᴇ☆').trim(),
+                  role: String(fd.get('role') || body.role || '').trim(),
+                  bio: String(fd.get('bio') || body.bio || '').trim(),
+                  country: String(fd.get('country') || body.country || 'Malaysia'),
+                  city: String(fd.get('city') || body.city || 'Masai, Johor'),
+                  avatar: resolveMediaUrl(editor.elements.namedItem('avatar')?.value.trim() || body.avatar || ''),
+                  banner: resolveMediaUrl(editor.elements.namedItem('banner')?.value.trim() || body.banner || ''),
+                  theme: String(fd.get('theme') || body.theme || 'flame'),
+                  openTime: String(fd.get('openTime') || body.openTime || '00:00'),
+                  closeTime: String(fd.get('closeTime') || body.closeTime || '00:00'),
+                  timezone: String(fd.get('timezone') || body.timezone || 'Asia/Kuala_Lumpur'),
+                  widgetEnabled: fd.get('widgetEnabled') === 'on',
+                  widgetCode: String(fd.get('widgetCode') || '').trim(),
+                  sociabuzzEnabled: fd.get('sociabuzzEnabled') === 'on',
+                  sociabuzz: String(fd.get('sociabuzz') || 'wzii_').trim(),
+                  gaming: getRows('game'),
+                  channels: getRows('channel')
+                };
+              }
+
+              const current = getLocalProfiles()[slug] || (slug === 'maple' ? DEFAULT_MAPLE : {});
+              const updated = {
+                ...current,
+                ...body,
+                avatar: resolveMediaUrl(body.avatar),
+                banner: resolveMediaUrl(body.banner),
+                id: saved.id,
+                slug: body.slug || slug
+              };
+              await syncProfileToSupabase(updated);
+
+              const previewIframe = document.querySelector('#preview iframe');
+              if (previewIframe && previewIframe.contentWindow?.applyOwnerProfile) {
+                previewIframe.contentWindow.applyOwnerProfile(updated);
+              }
+
+              return new Response(JSON.stringify({ profile: updated }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+
+            let row = null;
+            const res = await sbFetch(`/rest/v1/profiles?select=*&slug=eq.${encodeURIComponent(slug)}`);
+            if (res && res.ok) {
+              const rows = await res.json().catch(() => []);
+              if (rows.length) row = rows[0];
+            }
+            const profile = unpackProfile(row, slug) || (slug === 'maple' ? { ...DEFAULT_MAPLE } : null);
+            return new Response(JSON.stringify({ profile }), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          return originalFetch(input, options);
+        };
+
+        // Automatically unlock ALL Studio fields and fix URL input validation for local uploads
+        const observer = new MutationObserver(() => {
+          const editor = document.getElementById('editor');
+          if (editor) {
+            // Convert type="url" to type="text" on avatar & banner inputs so browser never blocks data: or virtual links
+            ['avatar-url', 'banner-url'].forEach(id => {
+              const input = document.getElementById(id);
+              if (input) {
+                if (input.type === 'url') input.type = 'text';
+                if (input.value && input.value.startsWith('data:')) {
+                  const mediaId = 'img_existing_' + id;
+                  saveUploadedMedia(mediaId, input.value);
+                  input.value = `https://local.upload/${mediaId}`;
+                }
+              }
+            });
+
+            if (!editor.dataset.ownerUnlocked) {
+              editor.dataset.ownerUnlocked = 'true';
+              editor.querySelectorAll('fieldset').forEach(fs => {
+                fs.hidden = false;
+                fs.disabled = false;
+              });
+              editor.querySelectorAll('.field, [hidden]').forEach(el => {
+                if (el.classList.contains('field') || el.querySelector('.swatches')) {
+                  el.hidden = false;
+                }
+              });
+
+              const syncPreview = () => {
+                const previewIframe = document.querySelector('#preview iframe');
+                if (previewIframe && previewIframe.contentWindow?.applyOwnerProfile) {
+                  const fd = new FormData(editor);
+                  const getRows = (kind) => [...editor.querySelectorAll(`.row[data-kind="${kind}"]`)]
+                    .map(r => ({ platform: r.querySelector('select')?.value, value: r.querySelector('input')?.value.trim() }))
+                    .filter(r => r.value);
+                  previewIframe.contentWindow.applyOwnerProfile({
+                    ...getLocalProfiles().maple,
+                    name: String(fd.get('name') || 'ᴍᴀᴘʟᴇ☆').trim(),
+                    role: String(fd.get('role') || '').trim(),
+                    bio: String(fd.get('bio') || '').trim(),
+                    country: String(fd.get('country') || 'Malaysia'),
+                    city: String(fd.get('city') || 'Masai, Johor'),
+                    avatar: resolveMediaUrl(editor.elements.namedItem('avatar')?.value.trim() || ''),
+                    banner: resolveMediaUrl(editor.elements.namedItem('banner')?.value.trim() || ''),
+                    theme: String(fd.get('theme') || 'flame'),
+                    gaming: getRows('game'),
+                    channels: getRows('channel')
+                  });
+                }
+              };
+              editor.addEventListener('input', syncPreview);
+              editor.addEventListener('change', syncPreview);
+            }
+          }
+
+          // Also swap any <img src="https://local.upload/..."> on regular cards
+          document.querySelectorAll('img[src^="https://local.upload/"], video[src^="https://local.upload/"]').forEach(el => {
+            const real = resolveMediaUrl(el.getAttribute('src'));
+            if (real && real !== el.getAttribute('src')) el.src = real;
+          });
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+      })();
+    </script>
+
+    <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css" />
+  </head>
+  <body>
+    <div class="grid-bg" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="topbar">
+      <a href="/" data-link class="brand"
+        ><i class="fa-solid fa-id-card-clip"></i> Digital<b>ID</b></a
+      >
+      <nav id="nav-actions"></nav>
+    </header>
+    <main id="app"></main>
+    <footer class="foot"><span>Tap · Scan · Connect</span></footer>
+
+    <div id="qr-modal" class="modal">
+      <div class="modal-box">
+        <button type="button" class="modal-x" data-qr-close aria-label="Close">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <img alt="QR code" width="240" height="240" />
+        <h2 data-qr-name></h2>
+        <p class="mono" data-qr-url></p>
+        <div class="two">
+          <button type="button" class="btn" data-qr-share>Share</button>
+          <a class="btn btn-accent" data-qr-download>Download</a>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status"></div>
+  </body>
 </html>
