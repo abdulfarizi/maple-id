@@ -161,28 +161,6 @@
             transform: translateY(-1px);
             opacity: 0.92;
         }
-
-        /* Full Customization Drawer for Owner Page */
-        .drawer {
-            position: fixed; top: 0; right: -420px; width: 380px; max-width: 95vw; height: 100vh;
-            background: #121216; border-left: 1px solid rgba(255,255,255,0.12);
-            padding: 72px 22px 32px; overflow-y: auto; z-index: 1000;
-            transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: -16px 0 40px rgba(0,0,0,0.7); color: #f4f4f5; font-family: var(--sans);
-        }
-        .drawer.open { right: 0; }
-        .drawer h3 { font-size: 18px; margin-bottom: 16px; border-bottom: 1px solid #27272a; padding-bottom: 10px; }
-        .field-group { margin-bottom: 14px; }
-        .field-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
-        .field-group input, .field-group textarea, .field-group select {
-            width: 100%; padding: 9px 12px; background: #18181b; border: 1px solid #27272a; border-radius: 8px; color: #fff; font-size: 13.5px;
-        }
-        .customize-toggle {
-            position: fixed; top: 20px; right: 20px; background: rgba(24, 24, 27, 0.9);
-            color: #fff; border: 1px solid rgba(255, 255, 255, 0.18); padding: 8px 14px;
-            border-radius: 12px; font-weight: 600; cursor: pointer; z-index: 1001; backdrop-filter: blur(10px);
-        }
-        .customize-toggle:hover { background: var(--accent); }
     </style>
 </head>
 <body>
@@ -191,33 +169,6 @@
         <span class="spinning-star-svg">☆</span>
     </div>
 </div>
-
-<button class="customize-toggle" id="openCustomizer" style="display:none;">⚙️ Customize Page</button>
-
-<aside class="drawer" id="customizerDrawer">
-    <h3>Owner Page Studio</h3>
-    <div class="field-group">
-        <label>Display Name</label>
-        <input type="text" id="custName" />
-    </div>
-    <div class="field-group">
-        <label>Role / Bio Subtitle</label>
-        <input type="text" id="custRole" />
-    </div>
-    <div class="field-group">
-        <label>Bio</label>
-        <textarea id="custBio" rows="3"></textarea>
-    </div>
-    <div class="field-group">
-        <label>Profile Picture URL</label>
-        <input type="url" id="custAvatar" placeholder="https://..." />
-    </div>
-    <div class="field-group">
-        <label>Banner URL or Video</label>
-        <input type="url" id="custBanner" placeholder="https://..." />
-    </div>
-    <button class="btn btn-accent" id="saveCustBtn" style="width:100%; margin-top:10px; height:42px; border-radius:10px;">Save Changes</button>
-</aside>
 
 <div class="grid-bg"></div>
 <div class="halo"></div>
@@ -375,8 +326,9 @@
     function applyOwnerProfile(p) {
         if (!p) return;
         if (p.name) {
+            const cleanName = typeof p.name === 'string' && p.name.startsWith('{"__dig":') ? JSON.parse(p.name).name : p.name;
             const nameEl = document.getElementById('display-name-el');
-            if (nameEl) nameEl.innerHTML = `${p.name}<span class="star">☆</span>`;
+            if (nameEl) nameEl.innerHTML = `${cleanName || 'ᴍᴀᴘʟᴇ☆'}<span class="star">☆</span>`;
         }
         if (p.role) {
             const roleEl = document.getElementById('display-role-el');
@@ -424,51 +376,20 @@
                 const rows = await res.json();
                 if (rows.length) {
                     const row = rows[0];
-                    let extra = {};
-                    if (typeof row.name === 'string' && row.name.startsWith('{"__dig":')) {
-                        try { extra = JSON.parse(row.name); } catch {}
-                    }
-                    profile = { ...extra, ...row };
+                    applyOwnerProfile(row);
                 }
             }
         } catch {}
-        if (!profile) {
-            try { profile = (JSON.parse(localStorage.getItem('dig:profiles_db') || '{}')).maple || null; } catch {}
-        }
-        applyOwnerProfile(profile);
     }
     loadOwnerProfile();
 
-    let isOwnerLoggedIn = false;
     try {
         const jwt = (document.cookie.match(/(?:^|; )nf_jwt=([^;]*)/) || [])[1];
         const claims = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(jwt).split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))));
         if (String(claims.email || '').toLowerCase() === OWNER_EMAIL && claims.exp * 1000 > Date.now()) {
-            isOwnerLoggedIn = true;
             document.getElementById('owner-studio-btn').style.display = 'inline-flex';
-            document.getElementById('openCustomizer').style.display = 'block';
         }
     } catch {}
-
-    const drawer = document.getElementById('customizerDrawer');
-    document.getElementById('openCustomizer').addEventListener('click', () => {
-        drawer.classList.toggle('open');
-        document.getElementById('custName').value = document.getElementById('display-name-el').textContent.replace('☆','').trim();
-        document.getElementById('custRole').value = document.getElementById('display-role-el').textContent;
-        document.getElementById('custBio').value = document.getElementById('display-bio-el').textContent;
-    });
-
-    document.getElementById('saveCustBtn').addEventListener('click', async () => {
-        const newName = document.getElementById('custName').value;
-        const newRole = document.getElementById('custRole').value;
-        const newBio = document.getElementById('custBio').value;
-        const newAvatar = document.getElementById('custAvatar').value;
-        const newBanner = document.getElementById('custBanner').value;
-
-        applyOwnerProfile({ name: newName, role: newRole, bio: newBio, avatar: newAvatar, banner: newBanner });
-        drawer.classList.remove('open');
-        showToast('Changes applied locally!');
-    });
 
     window.addEventListener('load', () => {
         setTimeout(() => {
