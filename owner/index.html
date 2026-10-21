@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="image" fetchpriority="high" href="/.netlify/images?url=/142224.webp&w=240&fm=webp&q=80" imagesrcset="/.netlify/images?url=/142224.webp&w=80&fm=webp&q=80 80w, /.netlify/images?url=/142224.webp&w=160&fm=webp&q=80 160w, /.netlify/images?url=/142224.webp&w=240&fm=webp&q=80 240w, /.netlify/images?url=/142224.webp&w=400&fm=webp&q=80 400w" imagesizes="74px">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
@@ -159,7 +158,7 @@
     </header>
 
     <section class="panel reveal" style="animation-delay:0.2s">
-        <div class="banner">
+        <div class="banner" id="owner-banner">
             <video id="banner-video" autoplay muted loop playsinline preload="auto" width="480" height="132" aria-hidden="true">
                 <source src="video.webm" type="video/webm">
             </video>
@@ -170,8 +169,8 @@
             <div class="identity-left">
                 <div class="avatar">
                     <div class="avatar-inner">
-                        <img src="/.netlify/images?url=/142224.webp&w=240&fm=webp&q=80" width="74" height="74" alt="ᴍᴀᴘʟᴇ☆">
-                        <span class="initials" style="display:none">M</span>
+                        <img id="owner-avatar" hidden width="74" height="74" alt="ᴍᴀᴘʟᴇ☆">
+                        <span class="initials" id="owner-initials" style="font-weight:600;font-size:26px">M</span>
                     </div>
                 </div>
                 <div class="name-block">
@@ -287,6 +286,65 @@
     const OWNER_EMAIL = 'abdulfarizi15@gmail.com';
     const CONTACT = { name:'ᴍᴀᴘʟᴇ☆', title:'Digital Creator', city:'Masai', region:'Johor', country:'Malaysia', whatsapp:'https://wa.me/wzii1', discordId:'399869638093307904' };
     let sfxEnabled = true, audioCtx;
+
+    // ---- Owner profile (avatar / banner come from Studio) ----
+    const SB_URL = 'https://qebbuxixnqsquprfpyv.supabase.co';
+    const SB_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
+
+    function applyOwnerProfile(p) {
+        if (!p) return;
+        const img = document.getElementById('owner-avatar');
+        const ini = document.getElementById('owner-initials');
+        if (img && ini) {
+            if (p.avatar) {
+                img.onload = () => { img.hidden = false; ini.style.display = 'none'; };
+                img.onerror = () => { img.hidden = true; ini.style.display = ''; };
+                img.src = p.avatar;
+            } else { img.hidden = true; ini.style.display = ''; }
+        }
+        const banner = document.getElementById('owner-banner');
+        if (banner && p.banner) {
+            const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(p.banner);
+            const old = banner.querySelector('#banner-video, #banner-img');
+            let el;
+            if (isVideo) {
+                el = document.createElement('video');
+                el.id = 'banner-video'; el.autoplay = true; el.muted = true; el.loop = true; el.playsInline = true;
+                el.src = p.banner;
+            } else {
+                el = document.createElement('img');
+                el.id = 'banner-img'; el.alt = ''; el.src = p.banner;
+            }
+            el.setAttribute('aria-hidden', 'true');
+            el.onerror = () => el.remove();
+            if (old) old.replaceWith(el); else banner.prepend(el);
+        }
+    }
+
+    async function loadOwnerProfile() {
+        let profile = null;
+        try {
+            const res = await fetch(`${SB_URL}/rest/v1/profiles?select=*&slug=eq.maple`, {
+                headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` }
+            });
+            if (res.ok) {
+                const rows = await res.json();
+                if (rows.length) {
+                    const row = rows[0];
+                    let extra = {};
+                    if (typeof row.name === 'string' && row.name.startsWith('{"__dig":')) {
+                        try { extra = JSON.parse(row.name); } catch {}
+                    }
+                    profile = { ...extra, ...row };
+                }
+            }
+        } catch {}
+        if (!profile) {
+            try { profile = (JSON.parse(localStorage.getItem('dig:profiles_db') || '{}')).maple || null; } catch {}
+        }
+        applyOwnerProfile(profile);
+    }
+    loadOwnerProfile();
 
     // Show Studio button ONLY if logged in as verified owner
     try {
