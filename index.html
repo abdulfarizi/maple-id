@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
     
+    <!-- Supabase bridge: real Supabase Auth sessions + database rules (see supabase_setup.sql) -->
     <script>
 (function () {
   const SUPABASE_URL = 'https://qebbuxixnqsqjuprfpyv.supabase.co';
@@ -26,12 +27,45 @@
   const MEDIA_RE = /^(https?:\/\/\S+|data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+)$/i;
   const EDITABLE = ['name','role','bio','country','city','avatar','banner','theme','openTime','closeTime','timezone',
     'widgetEnabled','widgetCode','sociabuzzEnabled','sociabuzz','sociabuzzLabel','sociabuzzPosition',
-    'sociabuzzColor','sociabuzzTextColor','gaming','channels','layoutTheme'];
+    'sociabuzzColor','sociabuzzTextColor','gaming','channels',
+    // layout + star-layout options
+    'layout','accent','accent2','cardTag','statusText','statusMode','specs','footerText','bannerGray','bannerDim',
+    'avatarShape','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid'];
+  const BOOLS = ['showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid'];
+  const HEX_RE = /^#[0-9a-f]{6}$/i;
+  const clampInt = (v, lo, hi, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; };
+  const str = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
+  // Coerce every layout option to a safe value (never trust what the browser sent)
+  function cleanOptions(m) {
+    m.layout = m.layout === 'star' ? 'star' : 'basic';
+    m.accent = HEX_RE.test(m.accent || '') ? m.accent : '';
+    m.accent2 = HEX_RE.test(m.accent2 || '') ? m.accent2 : '';
+    m.cardTag = str(m.cardTag, 24);
+    m.statusText = str(m.statusText, 90);
+    m.footerText = str(m.footerText, 40);
+    m.statusMode = ['auto','online','offline','hidden'].includes(m.statusMode) ? m.statusMode : 'auto';
+    m.avatarShape = ['circle','rounded','square'].includes(m.avatarShape) ? m.avatarShape : 'circle';
+    m.bannerGray = clampInt(m.bannerGray, 0, 100, 75);
+    m.bannerDim = clampInt(m.bannerDim, 30, 100, 72);
+    for (const k of BOOLS) if (m[k] !== undefined) m[k] = m[k] === true || m[k] === 'true';
+    if (m.specs !== undefined) {
+      m.specs = (Array.isArray(m.specs) ? m.specs : []).slice(0, 12)
+        .map((x) => ({ label: str(x && x.label, 24), value: str(x && x.value, 60) }))
+        .filter((x) => x.label && x.value);
+    }
+    return m;
+  }
 
   const DEFAULT_MAPLE = {
     name: 'ᴍᴀᴘʟᴇ☆', role: 'Digital Creator',
     bio: 'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.',
-    country: 'Malaysia', city: 'Masai, Johor', avatar: '', banner: '', theme: 'flame', layoutTheme: 'owner',
+    country: 'Malaysia', city: 'Masai, Johor', avatar: '', banner: '', theme: 'flame',
+    layout: 'star', cardTag: 'ID / 001', statusText: 'Coding Roblox Studio mini-games & Grinding MLBB',
+    specs: [
+      { label: 'PHONE', value: 'Xiaomi 15 Ultra' }, { label: 'TABLET', value: 'Xiaomi Pad 6S Pro 12.4' },
+      { label: 'VR HEADSET', value: 'Pico Neo 3 Link' }, { label: 'GPU', value: 'Nvidia GeForce RTX 4050' },
+      { label: 'ENGINE', value: 'Roblox Studio / Lua' }
+    ],
     openTime: '00:00', closeTime: '00:00', timezone: 'Asia/Kuala_Lumpur',
     sociabuzzEnabled: true, sociabuzz: 'wzii_', widgetEnabled: false, widgetCode: '',
     gaming: [
@@ -47,12 +81,13 @@
     ]
   };
   const defaultNew = () => ({
-    name: 'Creator', role: '', bio: '', country: 'Malaysia', city: '', avatar: '', banner: '',
-    theme: 'flame', layoutTheme: 'basic', openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
+    layout: 'basic', name: 'Creator', role: '', bio: '', country: 'Malaysia', city: '', avatar: '', banner: '',
+    theme: 'flame', openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
     sociabuzzEnabled: false, sociabuzz: '', widgetEnabled: false, widgetCode: '',
     gaming: [], channels: [], createdAt: new Date().toISOString().slice(0, 10)
   });
 
+  // ---------- Supabase helpers ----------
   async function sb(path, { method = 'GET', body, token, headers = {} } = {}) {
     try {
       return await originalFetch(SUPABASE_URL + path, {
@@ -74,6 +109,7 @@
     return json({ code: res.status, msg }, res.status);
   }
 
+  // ---------- session (real Supabase JWT) ----------
   function readCookie(name) {
     const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
     if (!m) return null;
@@ -105,6 +141,7 @@
     let s = freshestToken();
     if (!s) return null;
     const stale = () => s && s.claims.exp * 1000 - Date.now() < 15000;
+    // the site's own refresh timer updates the token shortly after load; wait for it briefly
     for (let i = 0; i < 25 && stale(); i++) {
       await new Promise((r) => setTimeout(r, 160));
       s = freshestToken() || s;
@@ -128,6 +165,7 @@
     return out;
   }
 
+  // ---------- profile helpers ----------
   const normSlug = (s) => String(s || '').toLowerCase().trim();
   function slugProblem(slug, isOwner) {
     if (!slug) return 'Choose a link first.';
@@ -140,26 +178,22 @@
     const problem = slugProblem(slug, isOwner);
     if (problem) return problem;
     const res = await sb(`/rest/v1/profiles?select=id&slug=eq.${encodeURIComponent(slug)}`);
-    if (!res || !res.ok) return null;
+    if (!res || !res.ok) return null; // can't check; the database still enforces it
     const rows = await res.json().catch(() => []);
     if (!Array.isArray(rows) || !rows.length) return null;
     return myUid && rows[0].id === myUid ? null : 'Already claimed. Choose another.';
   }
-  
   function unpackRow(row) {
     let extra = {};
     let name = row.name || 'Creator';
     if (typeof row.name === 'string' && row.name.startsWith('{"__dig":')) {
-      try { 
-        extra = JSON.parse(row.name); 
-        name = extra.name || 'Creator'; 
-      } catch {}
+      try { extra = JSON.parse(row.name); name = extra.name || 'Creator'; } catch {}
     }
     const { likes, visits, reactions, __dig, ...rest } = extra;
-    return { ...defaultNew(), ...rest, id: row.id, slug: row.slug, name,
+    const base = row.slug === 'maple' ? { ...defaultNew(), ...DEFAULT_MAPLE } : defaultNew();
+    return { ...base, ...rest, id: row.id, slug: row.slug, name,
       gaming: rest.gaming || [], channels: rest.channels || [] };
   }
-
   function withStats(profile, stats) {
     const ok = stats && typeof stats === 'object' && !Array.isArray(stats) && stats.slug;
     return { ...profile, visits: ok ? stats.visits : 0, likes: ok ? stats.likes : 0, reactions: ok ? (stats.reactions || {}) : {} };
@@ -184,6 +218,7 @@
     return rows[0] || null;
   }
 
+  // ---------- image upload: resize + compress to a small data URL ----------
   async function shrinkImage(file, maxSide = 720, maxBytes = 140000) {
     const src = await new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -211,10 +246,12 @@
     return out;
   }
 
+  // ---------- fetch router ----------
   window.fetch = async function (input, options = {}) {
     const url = typeof input === 'string' ? input : ((input && input.url) || '');
     const method = String(options.method || (input && input.method) || 'GET').toUpperCase();
 
+    // ===== Identity (real Supabase Auth) =====
     const idAt = url.indexOf(IDENTITY + '/');
     if (idAt !== -1) {
       const sub = url.slice(idAt + IDENTITY.length + 1).split('?')[0].replace(/\/+$/, '');
@@ -234,7 +271,7 @@
         });
         if (!res || !res.ok) return authError(res, 'Sign-up failed. Please try again.');
         const d = await res.json().catch(() => ({}));
-        if (d.access_token && d.user) {
+        if (d.access_token && d.user) { // email confirmation is switched off in Supabase
           document.cookie = 'nf_jwt=' + encodeURIComponent(d.access_token) + '; path=/; secure; samesite=lax';
           if (d.refresh_token) document.cookie = 'nf_refresh=' + encodeURIComponent(d.refresh_token) + '; path=/; secure; samesite=lax';
           return json({ ...normUser(d.user), access_token: d.access_token, refresh_token: d.refresh_token, expires_in: d.expires_in, token_type: 'bearer' });
@@ -282,13 +319,14 @@
         await sb(`/auth/v1/recover?redirect_to=${encodeURIComponent(location.origin)}`, {
           method: 'POST', body: { email: String(body.email || '').trim().toLowerCase() }
         });
-        return json({});
+        return json({}); // same answer whether or not the email exists
       }
 
       if (sub === 'settings') return json({ external: {}, disable_signup: false, autoconfirm: false });
       return json({ code: 404, msg: 'Not supported' }, 404);
     }
 
+    // ===== Uploads =====
     if (url.includes('/api/uploads') && method === 'POST') {
       try {
         return json({ url: await shrinkImage(options.body) });
@@ -297,6 +335,7 @@
       }
     }
 
+    // ===== Link availability =====
     if (url.includes('/api/slugs/')) {
       const slug = normSlug(decodeURIComponent(url.split('/api/slugs/')[1].split('?')[0]));
       const au = await authUser();
@@ -304,6 +343,7 @@
       return json({ available: !conflict, reason: conflict });
     }
 
+    // ===== Public profiles, likes, reactions =====
     if (url.includes('/api/profiles/')) {
       const parts = url.split('/api/profiles/')[1].split('?')[0].split('/');
       const slug = normSlug(decodeURIComponent(parts[0]));
@@ -331,6 +371,7 @@
       return json(withStats(profile, stats));
     }
 
+    // ===== Signed-in user's own profile =====
     if (url.includes('/api/me')) {
       const au = await authUser();
       if (!au) return json({ error: 'Please log in again.' }, 401);
@@ -346,6 +387,7 @@
         return json({ profile: withStats(profile, await fetchStats(profile.slug)) });
       }
 
+      // ---- save ----
       const body = parse(options.body);
       let slug, current;
       if (existing) {
@@ -360,6 +402,8 @@
       const merged = { ...current };
       for (const k of EDITABLE) if (body[k] !== undefined) merged[k] = body[k];
       merged.name = String(merged.name || '').trim().slice(0, 80) || 'Creator';
+      cleanOptions(merged);
+      if (slug === 'maple') merged.layout = 'star';
       for (const k of ['avatar', 'banner']) {
         merged[k] = String(merged[k] || '').trim();
         if (merged[k] && (merged[k].length > 600000 || !MEDIA_RE.test(merged[k]))) {
@@ -389,12 +433,96 @@
     return originalFetch(input, options);
   };
 })();
+
     </script>
 
     <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css" />
   </head>
   <body>
+    <div id="star-intro" style="position:fixed;inset:0;z-index:99999;background:#07070a"></div>
+    <script>
+/* Hollow-star zoom intro: a dark cover with a star-shaped hole. The star grows until the page is revealed. */
+function createStarIntro(opts) {
+    opts = opts || {};
+    var el = document.getElementById('star-intro');
+    if (!el) return { go: function () {}, skip: function () {} };
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { el.remove(); return { go: function () {}, skip: function () {} }; }
+
+    var W = window.innerWidth, H = window.innerHeight, cx = W / 2, cy = H / 2, bg = opts.bg || '#07070a';
+    el.style.background = 'transparent';
+    el.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="display:block">'
+        + '<defs><mask id="star-intro-mask"><rect width="' + W + '" height="' + H + '" fill="#fff"/><path id="si-hole" fill="#000"/></mask></defs>'
+        + '<rect width="' + W + '" height="' + H + '" fill="' + bg + '" mask="url(#star-intro-mask)"/>'
+        + '<path id="si-ring" fill="none" stroke-linejoin="round"/></svg>';
+    var hole = el.querySelector('#si-hole'), ring = el.querySelector('#si-ring');
+
+    var base = Math.max(46, Math.min(74, Math.min(W, H) * 0.15));
+    var Rmax = Math.hypot(W, H) / 2 / 0.3 * 1.12;           // big enough that the hole clears every corner
+    var APPEAR = 450, MIN_HOLD = 250, ZOOM = 1050;
+    var start = performance.now(), zoomAt = null, wantGo = false, done = false, safety;
+
+    function star(R, rot) {
+        var d = '';
+        for (var i = 0; i < 10; i++) {
+            var r = i % 2 ? R * 0.382 : R, a = -Math.PI / 2 + rot + i * Math.PI / 5;
+            d += (i ? 'L' : 'M') + (cx + r * Math.cos(a)).toFixed(1) + ' ' + (cy + r * Math.sin(a)).toFixed(1);
+        }
+        return d + 'Z';
+    }
+    var backOut = function (u) { var c = 1.70158; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); };
+    var inOut = function (u) { return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+
+    function setColor() {
+        var accent = (getComputedStyle(document.documentElement).getPropertyValue('--accent') || '').trim() || '#ff6a3d';
+        ring.setAttribute('stroke', accent);
+        ring.style.filter = 'drop-shadow(0 0 10px ' + accent + ')';
+    }
+    function finish() { if (done) return; done = true; clearTimeout(safety); el.remove(); if (opts.onDone) opts.onDone(); }
+
+    function frame(now) {
+        if (done) return;
+        var t = now - start, R, rot = 0, ringA = 1;
+        if (zoomAt === null) {
+            if (t < APPEAR) { var u0 = t / APPEAR; R = base * backOut(u0); ringA = Math.min(1, u0 * 1.6); }
+            else R = base * (1 + 0.045 * Math.sin((t - APPEAR) / 170));
+            if (wantGo && t >= APPEAR + MIN_HOLD) { zoomAt = now; setColor(); }
+        }
+        if (zoomAt !== null) {
+            var u = Math.min(1, (now - zoomAt) / ZOOM), e = inOut(u);
+            R = base * Math.pow(Rmax / base, e);
+            rot = e * Math.PI * 0.8;                            // spins while it grows (symmetrical, so it lands cleanly)
+            ringA = 1 - Math.max(0, (u - 0.5) / 0.5);
+            if (u >= 1) { finish(); return; }
+        }
+        var d = star(R, rot);
+        hole.setAttribute('d', d); ring.setAttribute('d', d);
+        ring.setAttribute('stroke-width', (2 + R * 0.012).toFixed(2)); ring.style.opacity = ringA;
+        requestAnimationFrame(frame);
+    }
+    setColor();
+    requestAnimationFrame(frame);
+    safety = setTimeout(function () { wantGo = true; }, 6000);   // never get stuck
+    return {
+        go: function () { wantGo = true; },
+        skip: function () { finish(); }
+    };
+}
+
+    (function () {
+      var el = document.getElementById('star-intro');
+      var path = location.pathname.replace(/\/+$/, '') || '/';
+      var seen = false;
+      try { seen = !!sessionStorage.getItem('dig-intro'); } catch (e) {}
+      // Only on the home page / studio, once per visit. Star-layout cards play their own intro.
+      if (seen || (path !== '/' && path !== '/studio' && path !== '/index.html')) { el.remove(); return; }
+      try { sessionStorage.setItem('dig-intro', '1'); } catch (e) {}
+      var intro = createStarIntro({ bg: '#07070a' });
+      var go = function () { setTimeout(function () { intro.go(); }, 250); };
+      if (document.readyState === 'complete') go(); else window.addEventListener('load', go);
+    })();
+    </script>
     <div class="grid-bg" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
     <header class="topbar">
@@ -405,12 +533,6 @@
     </header>
     <main id="app"></main>
     <footer class="foot"><span>Tap · Scan · Connect</span></footer>
-
-    <!-- Create your own Digital ID CTA Floating Button -->
-    <div id="wrapperFloatingBtn" style="position:fixed; bottom:20px; right:20px; z-index:999999; display:flex; align-items:center; gap:12px; background:rgba(12,12,18,0.9); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.16); padding:10px 18px; border-radius:999px; color:#ffffff; font-family:'Geist',system-ui,sans-serif; font-size:13.5px; box-shadow:0 12px 30px rgba(0,0,0,0.55);">
-      <span>✨ Do you want to create your own Digital ID?</span>
-      <a href="/?auth=signup" data-link style="background:var(--accent,#ff6a3d); color:#ffffff; text-decoration:none; font-weight:600; padding:7px 14px; border-radius:999px; white-space:nowrap; transition:transform 0.2s, opacity 0.2s;">Press over here →</a>
-    </div>
 
     <div id="qr-modal" class="modal">
       <div class="modal-box">
