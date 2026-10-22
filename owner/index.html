@@ -195,6 +195,49 @@
         .owner-studio-badge.show { display:inline-flex; }
         #toast { position:fixed; z-index:90; left:50%; bottom:28px; transform:translate(-50%,20px); opacity:0; pointer-events:none; padding:10px 18px; border-radius:999px; background:var(--text); color:var(--bg); font-family:var(--mono); font-size:11px; transition:opacity 0.35s, transform 0.35s; }
         .hidden { display:none !important; }
+        .music-panel { position:fixed; z-index:70; top:62px; left:50%; transform:translateX(-50%); width:min(94vw,380px); max-height:calc(100vh - 80px); overflow:auto; border-radius:20px; padding:14px; background:rgba(14,13,19,0.96); backdrop-filter:blur(18px); border:1px solid var(--line-strong); box-shadow:0 24px 60px rgba(0,0,0,0.55); }
+        .music-panel[hidden] { display:none; }
+        .mp-head { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+        .mp-hint { margin-top:8px; font-size:11px; color:var(--dim); line-height:1.45; }
+        .mp-muted { display:grid; place-items:center; text-align:center; border-radius:14px; border:1px dashed var(--line-strong); color:var(--muted); font-family:var(--mono); font-size:11px; padding:20px; }
+        .mp-lofi-btn { width:100%; height:46px; border-radius:14px; display:flex; align-items:center; justify-content:center; gap:10px; color:var(--text); font-size:13px; }
+        .mp-lofi-btn i { color:var(--accent); }
+        .mp-vol { margin-top:12px; display:flex; align-items:center; gap:12px; }
+        .mp-vol input[type=range] { flex:1; accent-color:var(--accent); height:28px; }
+        .mp-pct { font-family:var(--mono); font-size:10px; color:var(--muted); min-width:34px; text-align:right; }
+        .mp-link { margin-top:8px; font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); padding:6px 2px; }
+        .grab { display:block; width:42px; height:4px; border-radius:99px; background:rgba(255,255,255,0.28); margin:0 auto; }
+        .shop-handle { position:fixed; z-index:60; left:50%; bottom:max(14px, env(safe-area-inset-bottom)); transform:translateX(-50%); width:min(92vw,380px); padding:9px 18px 12px; border-radius:20px; background:rgba(16,15,22,0.94); backdrop-filter:blur(16px); border:1px solid color-mix(in srgb,var(--accent) 55%,transparent); box-shadow:0 14px 40px rgba(0,0,0,0.5), 0 0 28px var(--accent-soft); touch-action:none; color:var(--text); animation:handleBob 2.6s ease-in-out infinite; }
+        .shop-handle .grab { margin-bottom:8px; }
+        .shop-handle-row { display:flex; align-items:center; justify-content:center; gap:10px; font-family:var(--mono); font-size:11px; letter-spacing:0.14em; text-transform:uppercase; }
+        .shop-handle-row i { color:var(--accent); }
+        @keyframes handleBob { 0%,100% { transform:translateX(-50%) translateY(0); } 50% { transform:translateX(-50%) translateY(-4px); } }
+        .shop-backdrop { position:fixed; inset:0; z-index:64; background:rgba(4,4,7,0.6); opacity:0; pointer-events:none; transition:opacity 0.3s; }
+        .shop-backdrop.open { opacity:1; pointer-events:auto; }
+        .shop-sheet { position:fixed; z-index:65; left:50%; bottom:0; width:min(100vw,520px); max-height:84vh; display:flex; flex-direction:column; border-radius:26px 26px 0 0; background:var(--panel-solid, #101016); border:1px solid var(--line-strong); border-bottom:0; box-shadow:0 -24px 70px rgba(0,0,0,0.6); transform:translate(-50%,105%); transition:transform 0.45s var(--ease); }
+        .shop-sheet.open { transform:translate(-50%,0); }
+        .sheet-grab { padding:10px 0 4px; touch-action:none; cursor:grab; }
+        .sheet-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 18px 10px; }
+        .sheet-head b { font-size:19px; font-weight:600; display:block; }
+        .sheet-head small { font-family:var(--mono); font-size:10px; color:var(--muted); display:block; margin-top:3px; }
+        .shop-note { margin:0 18px 10px; padding:9px 12px; border-radius:12px; background:var(--accent-soft); color:var(--muted); font-size:12px; line-height:1.45; }
+        .shop-list { overflow:auto; padding:2px 14px 6px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; overscroll-behavior:contain; }
+        .shop-foot { padding:8px 18px max(14px, env(safe-area-inset-bottom)); text-align:center; font-family:var(--mono); font-size:9.5px; letter-spacing:0.06em; color:var(--dim); }
+        .prod { display:flex; flex-direction:column; gap:7px; padding:10px; border-radius:16px; background:rgba(255,255,255,0.035); border:1px solid var(--line); min-width:0; }
+        .prod-img { aspect-ratio:1/1; border-radius:11px; background:linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,0.03)); display:grid; place-items:center; overflow:hidden; color:var(--accent); font-size:26px; }
+        .prod-img img { width:100%; height:100%; object-fit:cover; display:block; }
+        .prod-name { font-size:13.5px; font-weight:500; line-height:1.25; overflow-wrap:anywhere; }
+        .prod-desc { font-size:11px; color:var(--muted); line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .prod-row { display:flex; align-items:center; justify-content:space-between; gap:6px; margin-top:auto; }
+        .prod-price { font-family:var(--mono); font-size:12.5px; color:var(--accent-2); font-weight:500; }
+        .qty { display:inline-flex; align-items:center; gap:2px; border:1px solid var(--line); border-radius:999px; }
+        .qty button { width:26px; height:26px; font-size:14px; color:var(--text); }
+        .qty span { min-width:16px; text-align:center; font-family:var(--mono); font-size:11px; }
+        .prod-buy { height:38px; border-radius:11px; background:var(--accent); color:#fff; font-size:12.5px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:7px; }
+        .prod-buy[disabled] { background:rgba(255,255,255,0.08); color:var(--dim); cursor:not-allowed; }
+        .prod.sold .prod-img { filter:grayscale(1) brightness(0.6); }
+        body.has-shop .shell { padding-bottom:96px; }
+        @media (max-width:340px) { .shop-list { grid-template-columns:1fr; } }
         #star-intro { position:fixed; inset:0; z-index:99999; background:#07070a; }
     </style>
 </head>
@@ -220,6 +263,23 @@
             </div>
         </div>
     </header>
+
+    <div id="music-panel" class="music-panel" hidden role="dialog" aria-label="Music">
+        <div class="mp-head"><span data-i18n="musicHead">Music</span><button type="button" class="x-btn" data-act="close-music" aria-label="Close"><i class="fa-solid fa-xmark"></i></button></div>
+        <div id="mp-spotify" class="hidden">
+            <div id="mp-embed"></div>
+            <button type="button" class="mp-link hidden" id="mp-expand" data-act="mp-expand"></button>
+            <p class="mp-hint" data-i18n="spotifyHint"></p>
+        </div>
+        <div id="mp-lofi" class="hidden">
+            <button type="button" class="btn live mp-lofi-btn" id="lofi-toggle"><i class="fa-solid fa-play"></i> <span id="lofi-label" data-i18n="lofiPlay">Play lofi beats</span></button>
+        </div>
+        <div class="mp-vol">
+            <button type="button" class="icon-pill" id="mp-mute" aria-label="Mute"><i class="fa-solid fa-volume-high"></i></button>
+            <input type="range" id="mp-range" min="0" max="100" step="1" aria-label="Volume">
+            <span id="mp-pct" class="mp-pct">60%</span>
+        </div>
+    </div>
 
     <section class="panel reveal">
         <div class="banner" id="banner">
@@ -272,6 +332,22 @@
     <footer style="display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); padding:0 6px;"><span data-i18n="footer">Tap · Scan · Connect</span><span id="footer-right"></span></footer>
 </div>
 
+<button id="shop-handle" class="shop-handle hidden" type="button" data-act="shop-open" aria-label="Open shop">
+    <span class="grab"></span>
+    <span class="shop-handle-row"><i class="fa-solid fa-bag-shopping"></i> <span id="shop-handle-text"></span> <i class="fa-solid fa-chevron-up"></i></span>
+</button>
+<div id="shop-backdrop" class="shop-backdrop" data-act="shop-close"></div>
+<aside id="shop-sheet" class="shop-sheet" aria-hidden="true" role="dialog" aria-label="Shop">
+    <div class="sheet-grab" id="shop-grab"><span class="grab"></span></div>
+    <div class="sheet-head">
+        <div><b id="shop-title"></b><small id="shop-seller"></small></div>
+        <button type="button" class="x-btn" data-act="shop-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p class="shop-note hidden" id="shop-note"></p>
+    <div class="shop-list" id="shop-list"></div>
+    <p class="shop-foot" data-i18n="shopFoot"></p>
+</aside>
+
 <div id="qr-modal" class="modal">
     <div class="modal-card">
         <div class="modal-head"><span data-i18n="qrHead">Scan Digital Card</span><button type="button" class="x-btn" data-act="close-qr"><i class="fa-solid fa-xmark"></i></button></div>
@@ -313,7 +389,8 @@
         bannerGray: 75, bannerDim: 72, avatarShape: 'circle',
         showVisits: true, showTime: true, showReactions: true, showCta: true, intro: true, confetti: true,
         sfx: true, music: true, themeSwitch: true, grid: true,
-        gaming: [], channels: [], openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur'
+        gaming: [], channels: [], openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
+        shopEnabled: false, shopTitle: '', shopNote: '', currency: 'auto', products: [], spotify: '', musicAuto: true
     };
     const MAPLE_DEFAULTS = {
         cardTag: 'ID / 001',
@@ -335,7 +412,7 @@
         ],
         channels: [
             { platform: 'YouTube', value: 'https://youtube.com/@w._zii?sub_confirmation=1' },
-            { platform: 'WhatsApp', value: 'https://wa.me/wzii1?text=Hi%20Maple!%20I%20just%20tapped%20your%20NFC%20card.' },
+            { platform: 'WhatsApp', value: 'https://wa.me/wzii1?s=t' },
             { platform: 'Instagram', value: 'https://www.instagram.com/wziiii._?rpxt=MTBwZXdhZzI3bXI4OA==' },
             { platform: 'TikTok', value: 'https://www.tiktok.com/@wzii._?' },
             { platform: 'Discord', value: '399869638093307904' }
@@ -346,8 +423,27 @@
     // ---------- link builders (same rules as the basic layout) ----------
     const ICONS = { YouTube: 'fa-brands fa-youtube', TikTok: 'fa-brands fa-tiktok', Instagram: 'fa-brands fa-instagram', Discord: 'fa-brands fa-discord', WhatsApp: 'fa-brands fa-whatsapp', X: 'fa-brands fa-x-twitter', Facebook: 'fa-brands fa-facebook', Twitch: 'fa-brands fa-twitch', Telegram: 'fa-brands fa-telegram', Website: 'fa-solid fa-globe' };
     const clean = (v) => String(v || '').replace(/^@/, '').replace(/\s+/g, '');
+    // WhatsApp: phone number (with country code), wa.me link, or a WhatsApp username
+    function waInfo(v) {
+        v = String(v || '').trim(); if (!v) return null;
+        const m = v.match(/^(?:https?:\/\/)?(?:www\.)?(?:wa\.me\/|(?:api\.)?whatsapp\.com\/send\/?\?(?:[^#]*&)?phone=)(@?[^\/?#&\s]+)/i);
+        let target = m ? m[1] : v;
+        if (!m && isUrl(v)) return null;                         // some other WhatsApp link (e.g. a group invite): keep as typed
+        target = target.replace(/^@/, '');
+        const digits = target.replace(/[\s\-().+]/g, '');
+        let out = null;
+        if (/^\d{7,15}$/.test(digits)) out = { target: digits, sub: '+' + digits, href: 'https://wa.me/' + digits };
+        else if (/^(?=.*[A-Za-z])[A-Za-z0-9._]{3,35}$/.test(target)) out = { target: target, sub: '@' + target, href: 'https://wa.me/' + encodeURIComponent(target) };
+        if (out && m) out.href = /^https?:/i.test(v) ? v : 'https://' + v;   // keep a pasted link (and its pre-filled text) as is
+        return out;
+    }
     function channelInfo({ platform: e, value: t }) {
         t = String(t || ''); const n = ICONS[e] || 'fa-solid fa-link', r = clean(t);
+        if (e === 'WhatsApp') {
+            const w = waInfo(t);
+            if (w) return { label: e, sub: w.sub, href: w.href, icon: n, kind: e, wa: w.target };
+        }
+        if (e === 'Discord' && !isUrl(t) && /^(discord\.gg|discord\.com|discordapp\.com)\//i.test(r)) return { label: e, sub: r, href: 'https://' + r, icon: n, kind: e };
         if (isUrl(t)) { let s = t; try { const u = new URL(t); s = u.host.replace(/^www\./, '') + u.pathname.replace(/\/$/, ''); } catch {} return { label: e, sub: s, href: t, icon: n, kind: e }; }
         switch (e) {
             case 'YouTube': return { label: e, sub: '@' + r, href: 'https://www.youtube.com/@' + r, icon: n, kind: e };
@@ -357,18 +453,25 @@
             case 'Facebook': return { label: e, sub: r, href: 'https://www.facebook.com/' + r, icon: n, kind: e };
             case 'Twitch': return { label: e, sub: r, href: 'https://www.twitch.tv/' + r, icon: n, kind: e };
             case 'Telegram': return { label: e, sub: '@' + r, href: 'https://t.me/' + r, icon: n, kind: e };
-            case 'WhatsApp': { const d = t.replace(/\D/g, ''); return { label: e, sub: '+' + d, href: 'https://wa.me/' + d, icon: n, kind: e, wa: d }; }
-            case 'Discord': return /^\d{15,21}$/.test(r) ? { label: e, sub: 'ID ' + r, href: 'https://discord.com/users/' + r, copy: r, icon: n, kind: e } : { label: e, sub: r, copy: r, icon: n, kind: e };
+            case 'WhatsApp': return { label: e, sub: t, copy: t, icon: n, kind: e };
+            case 'Discord': return /^\d{15,21}$/.test(r) ? { label: e, sub: 'ID ' + r, href: 'https://discord.com/users/' + r, copy: r, icon: n, kind: e } : { label: e, sub: '@' + r, copy: r, icon: n, kind: e };
             case 'Website': return { label: 'Website', sub: t, href: 'https://' + t, icon: n, kind: e };
             default: return { label: e, sub: t, copy: t, icon: n, kind: e };
         }
     }
+    // Games: tidy up what people type (MLBB id + zone, Supercell tags)
+    function normGame(e, t) {
+        t = String(t || '').trim(); if (isUrl(t)) return t;
+        if (e === 'Mobile Legends') { const m = t.match(/^(\d{5,})\D+(\d{3,5})\)?$/); return m ? m[1] + '(' + m[2] + ')' : t; }
+        if (e === 'Brawl Stars' || e === 'Clash of Clans' || e === 'Clash Royale') { const x = t.replace(/\s+/g, '').replace(/^#+/, '').toUpperCase(); return x ? '#' + x : ''; }
+        return t;
+    }
     function gameInfo({ platform: e, value: t }) {
-        t = String(t || ''); const n = 'fa-solid fa-gamepad';
+        t = normGame(e, t); const n = 'fa-solid fa-gamepad';
         if (isUrl(t)) return { label: e, sub: 'Open profile', href: t, icon: n, kind: 'game' };
         if (e === 'Roblox') return { label: e, sub: t, href: /^\d+$/.test(t) ? 'https://www.roblox.com/users/' + t + '/profile' : 'https://www.roblox.com/search/users?keyword=' + encodeURIComponent(t), copy: t, icon: n, kind: 'game' };
         if (e === 'Minecraft') return { label: e, sub: t, copy: t, icon: 'fa-solid fa-cube', kind: 'game' };
-        return { label: e, sub: 'ID ' + t, copy: t, icon: n, kind: 'game' };
+        return { label: e, sub: /^\d+$/.test(t) ? 'ID ' + t : t, copy: t, icon: n, kind: 'game' };
     }
 
     // ---------- translations (interface only; your own text is shown as you wrote it) ----------
@@ -379,6 +482,12 @@
             gaming: 'Gaming', channels: 'Channels', subscribe: 'Subscribe', chat: 'Chat', follow: 'Follow', add: 'Add', open: 'Open', copyId: 'Copy ID', copied: 'Copied',
             footer: 'Tap · Scan · Connect', noteHead: 'Quick WhatsApp Note', notePlaceholder: 'Type your note…', noteSend: 'Send via WhatsApp', noteHi: 'Hi', noteDefault: 'I just tapped your card.',
             toastSaved: 'Contact saved', toastLink: 'Link copied', toastAll: 'All handles copied!', toastId: 'ID copied', toastLang: 'Language: English', toastTheme: 'Theme', toastLofiOn: 'Lofi Beats: ON 🎧', toastLofiOff: 'Lofi Beats: OFF', toastSfxOn: 'UI Sound: ON', toastSfxOff: 'UI Sound: OFF', toastReact: 'Reacted', toastReacted: 'You already reacted 🙂',
+            shopTitle: 'Shop', shopSeller: 'Seller', shopFoot: 'Tap Buy to chat with the seller on WhatsApp. Your order details are filled in for you.', buy: 'Buy', soldOut: 'Sold out',
+            buyHi: 'Hi {seller}! I’d like to buy:', buyPrice: 'Price', buyTotal: 'total', buyFrom: 'From your Digital ID card', toastPreviewBuy: 'Preview: Buy opens WhatsApp on the live card',
+            showTracks: 'Show tracks', hideTracks: 'Hide tracks',
+            musicHead: 'Music', lofiPlay: 'Play lofi beats', lofiStop: 'Stop lofi beats', volume: 'Volume', mute: 'Mute', unmute: 'Unmute',
+            spotifyHint: 'Tap ▶ in the player to start. Browsers don’t allow music to start by itself. Spotify’s own volume follows your device volume; the slider and mute control this card’s sounds and stop the player.',
+            mutedNote: 'Muted. Tap the speaker to turn the sound back on.', toastMuted: 'Muted', toastUnmuted: 'Sound on',
             ctaTag: 'Digital ID', ctaTitle: 'Want your own Digital ID?', ctaDesc: 'Claim your free link and build a card like this in minutes.', ctaBtn: 'Create yours',
             notFoundTitle: 'No card here yet', notFoundDesc: 'Nobody has claimed this link. It could be yours.', notFoundBtn: 'Claim it', errTitle: 'Couldn’t load this card', errDesc: 'Please try again in a moment.' },
         ms: { card: 'Kad Digital', studio: 'Studio', loading: 'Memuatkan…', statusOnline: 'Aktif', statusOffline: 'Luar talian', basedIn: 'Berasal dari', visits: 'Lawatan', localTime: 'Waktu',
@@ -387,6 +496,12 @@
             gaming: 'Permainan', channels: 'Saluran', subscribe: 'Langgan', chat: 'Sembang', follow: 'Ikuti', add: 'Tambah', open: 'Buka', copyId: 'Salin ID', copied: 'Disalin',
             footer: 'Ketik · Imbas · Hubung', noteHead: 'Nota WhatsApp Pantas', notePlaceholder: 'Taip nota anda…', noteSend: 'Hantar melalui WhatsApp', noteHi: 'Hai', noteDefault: 'Saya baru mengetik kad anda.',
             toastSaved: 'Kenalan disimpan', toastLink: 'Pautan disalin', toastAll: 'Semua nama pengguna disalin!', toastId: 'ID disalin', toastLang: 'Bahasa: Bahasa Melayu', toastTheme: 'Tema', toastLofiOn: 'Lofi Beats: HIDUP 🎧', toastLofiOff: 'Lofi Beats: MATI', toastSfxOn: 'Bunyi UI: HIDUP', toastSfxOff: 'Bunyi UI: MATI', toastReact: 'Bertindak balas', toastReacted: 'Anda sudah bertindak balas 🙂',
+            shopTitle: 'Kedai', shopSeller: 'Penjual', shopFoot: 'Ketik Beli untuk bersembang dengan penjual di WhatsApp. Butiran pesanan diisi untuk anda.', buy: 'Beli', soldOut: 'Habis dijual',
+            buyHi: 'Hai {seller}! Saya ingin membeli:', buyPrice: 'Harga', buyTotal: 'jumlah', buyFrom: 'Dari kad Digital ID anda', toastPreviewBuy: 'Pratonton: Beli membuka WhatsApp pada kad sebenar',
+            showTracks: 'Papar lagu', hideTracks: 'Sembunyi lagu',
+            musicHead: 'Muzik', lofiPlay: 'Main lofi beats', lofiStop: 'Henti lofi beats', volume: 'Kelantangan', mute: 'Senyap', unmute: 'Buka bunyi',
+            spotifyHint: 'Ketik ▶ pada pemain untuk mula. Pelayar tidak membenarkan muzik bermula sendiri. Kelantangan Spotify mengikut kelantangan peranti anda; peluncur dan butang senyap mengawal bunyi kad ini dan menghentikan pemain.',
+            mutedNote: 'Senyap. Ketik pembesar suara untuk buka bunyi.', toastMuted: 'Senyap', toastUnmuted: 'Bunyi dihidupkan',
             ctaTag: 'Digital ID', ctaTitle: 'Mahu Digital ID anda sendiri?', ctaDesc: 'Tuntut pautan percuma anda dan bina kad seperti ini dalam beberapa minit.', ctaBtn: 'Cipta sekarang',
             notFoundTitle: 'Belum ada kad di sini', notFoundDesc: 'Tiada sesiapa menuntut pautan ini. Mungkin milik anda.', notFoundBtn: 'Tuntut', errTitle: 'Tidak dapat memuatkan kad ini', errDesc: 'Sila cuba lagi sebentar.' }
     };
@@ -476,9 +591,19 @@
     // ---------- tiny helpers ----------
     let toastTimer;
     function showToast(msg) { const el = $('toast'); el.textContent = msg; el.style.opacity = '1'; el.style.transform = 'translate(-50%,0)'; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translate(-50%,20px)'; }, 1900); }
-    function playTone(freq = 520, dur = 0.045, type = 'sine') {
-        if (!sfxEnabled) return;
-        try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime); g.gain.setValueAtTime(0.035, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur); } catch {}
+    // One master volume + mute for everything this card plays
+    const VOL_KEY = 'dig-vol', MUTE_KEY = 'dig-muted';
+    let vol = (() => { try { const v = parseInt(localStorage.getItem(VOL_KEY), 10); return isNaN(v) ? 60 : Math.min(100, Math.max(0, v)); } catch { return 60; } })();
+    let muted = (() => { try { return localStorage.getItem(MUTE_KEY) === '1'; } catch { return false; } })();
+    let master = null;
+    function applyVolume() { if (master) master.gain.value = muted ? 0 : (vol / 100) * 2.5; }
+    function ensureAudio() {
+        if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); master = audioCtx.createGain(); master.connect(audioCtx.destination); applyVolume(); }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    function playTone(freq = 520, dur = 0.045, type = 'sine', force = false) {
+        if ((!force && !sfxEnabled) || muted || vol === 0) return;
+        try { ensureAudio(); const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime); g.gain.setValueAtTime(0.035, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur); o.connect(g); g.connect(master); o.start(); o.stop(audioCtx.currentTime + dur); } catch {}
     }
     const haptic = (ms = 12) => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch {} };
     function copyText(text) {
@@ -591,6 +716,12 @@
         box.innerHTML = REACTS.map(([k, e]) => { let done = false; try { done = !!localStorage.getItem('dig:react:' + p.slug + ':' + k); } catch {} return `<button type="button" data-react="${k}" class="${done ? 'done' : ''}">${e} <span>${Number((p.reactions || {})[k] || 0)}</span></button>`; }).join('');
     }
     function waNumber(p) { const w = chansOf(p).find((c) => c.wa); return w ? w.wa : ''; }
+    // Seller / chat target: the first WhatsApp channel (phone number, username or wa.me link)
+    function sellerWa(p) {
+        const c = (p.channels || []).find((x) => x && x.platform === 'WhatsApp' && x.value);
+        const w = c ? waInfo(c.value) : null; return w ? { ...w, raw: c.value } : null;
+    }
+    function waWithText(href, text) { try { const u = new URL(href); u.searchParams.delete('text'); return u.origin + u.pathname + (u.search ? u.search + '&' : '?') + 'text=' + encodeURIComponent(text) + u.hash; } catch { return href; } }
     function renderActions(p) {
         const wa = waNumber(p); const cols = ['1fr', wa ? 'auto' : '', 'auto', 'auto'].filter(Boolean).join(' ');
         const a = $('actions'); a.style.gridTemplateColumns = cols;
@@ -665,13 +796,14 @@
         $('state').classList.add('hidden'); $('shell').hidden = false;
         applyLook(P); renderBanner(P); renderIdentity(P); renderStats(P); renderChips(P); renderTexts(P);
         renderReacts(P); renderActions(P); renderSections(P); renderSupport(P); renderBottom(P);
-        applyLang(lang); renderStatus(); renderClock();
+        renderShop(P); renderMusic(P); applyLang(lang); renderStatus(); renderClock();
         const mine = !PREVIEW && viewerId() && viewerId() === P.id;
         $('owner-studio-btn').classList.toggle('show', !!mine);
         if (firstRender) {
             firstRender = false;
             if (INTRO) { if (P.intro === false) INTRO.skip(); else INTRO.go(); }
             if (!PREVIEW && P.confetti !== false && P.intro !== false) setTimeout(confetti, 1500);
+            if (!PREVIEW && spotifyEmbed(P.spotify) && P.musicAuto !== false && P.music !== false && !muted) setTimeout(() => { if (!panelOpen) togglePanel(true); }, P.intro === false ? 700 : 2700);
         }
     }
     window.renderCard = renderCard;
@@ -752,6 +884,9 @@
         const copyBtn = e.target.closest('[data-copy]');
         if (copyBtn) { haptic(12); copyText(copyBtn.dataset.copy).then(() => showToast(t('toastId'))); return; }
         const rb = e.target.closest('[data-react]'); if (rb) { react(rb); return; }
+        const qb = e.target.closest('[data-qty]');
+        if (qb) { const card = qb.closest('.prod'), q = Math.min(9, Math.max(1, (parseInt(card.dataset.q, 10) || 1) + parseInt(qb.dataset.qty, 10))); card.dataset.q = String(q); card.querySelector('.qty span').textContent = String(q); haptic(8); return; }
+        const bb = e.target.closest('[data-buy]'); if (bb) { const card = bb.closest('.prod'); buy(parseInt(bb.dataset.buy, 10), parseInt(card.dataset.q, 10) || 1); return; }
         const el = e.target.closest('[data-act]'); if (!el || !P) return;
         switch (el.dataset.act) {
             case 'vcard': downloadVCard(); break;
@@ -761,7 +896,11 @@
             case 'share': shareCard(); break;
             case 'note': haptic(10); openModal('note-modal'); break;
             case 'close-note': closeModal('note-modal'); break;
-            case 'send-note': { const n = $('custom-note').value.trim(); const msg = t('noteHi') + ' ' + P.name + '! ' + (n || t('noteDefault')); window.open('https://wa.me/' + waNumber(P) + '?text=' + encodeURIComponent(msg), '_blank', 'noopener'); closeModal('note-modal'); break; }
+            case 'close-music': togglePanel(false); break;
+            case 'shop-open': openShop(); break;
+            case 'shop-close': closeShop(); break;
+            case 'mp-expand': expanded = !expanded; buildEmbed(); syncSoundUi(); break;
+            case 'send-note': { const n = $('custom-note').value.trim(); const msg = t('noteHi') + ' ' + P.name + '! ' + (n || t('noteDefault')); const sw = sellerWa(P); if (sw) window.open(waWithText(sw.href, msg), '_blank', 'noopener'); closeModal('note-modal'); break; }
             case 'specs': { haptic(10); playTone(480, 0.04); drawerOpen = !drawerOpen; $('specs').classList.toggle('open', drawerOpen); break; }
             case 'copy-all': {
                 haptic(15);
@@ -788,14 +927,133 @@
     document.addEventListener('pointerdown', (e) => { if (e.target.closest && e.target.closest('.live')) playTone(540, 0.035); });
     ['qr-modal', 'note-modal'].forEach((id) => $(id).addEventListener('click', (e) => { if (e.target.id === id) closeModal(id); }));
 
+
+    // ---------- shop (seller section): slide-up sheet, Buy opens WhatsApp ----------
+    const CUR = { MYR: { s: 'RM ', d: 2 }, SGD: { s: 'S$', d: 2 }, BND: { s: 'B$', d: 2 }, IDR: { s: 'Rp ', d: 0 }, PHP: { s: '₱', d: 2 }, THB: { s: '฿', d: 2 }, USD: { s: '$', d: 2 } };
+    const CUR_BY_COUNTRY = { Malaysia: 'MYR', Indonesia: 'IDR', Singapore: 'SGD', Brunei: 'BND', Philippines: 'PHP', Thailand: 'THB' };
+    const curOf = (p) => (CUR[p.currency] ? p.currency : (CUR_BY_COUNTRY[p.country] || 'MYR'));
+    const money = (n, c) => { const m = CUR[c] || CUR.MYR; return m.s + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: m.d, maximumFractionDigits: m.d }); };
+    const productsOf = (p) => (p.products || []).filter((x) => x && x.name).slice(0, 12);
+    let shopOpen = false;
+    function renderShop(p) {
+        const items = productsOf(p), seller = sellerWa(p), on = !!(p.shopEnabled && items.length && seller);
+        $('shop-handle').classList.toggle('hidden', !on); document.body.classList.toggle('has-shop', on);
+        if (!on) { closeShop(); return; }
+        const title = p.shopTitle || t('shopTitle');
+        $('shop-handle-text').textContent = title + ' · ' + items.length;
+        $('shop-title').textContent = title;
+        $('shop-seller').textContent = t('shopSeller') + ': ' + p.name + ' · WhatsApp ' + seller.sub;
+        const note = $('shop-note'); note.classList.toggle('hidden', !p.shopNote); note.textContent = p.shopNote || '';
+        const cur = curOf(p);
+        $('shop-list').innerHTML = items.map((it, i) => {
+            const img = it.image && MEDIA_OK.test(it.image) ? `<img src="${esc(it.image)}" alt="" loading="lazy">` : '<i class="fa-solid fa-bag-shopping"></i>';
+            const sold = !!it.soldOut;
+            return `<article class="prod${sold ? ' sold' : ''}" data-i="${i}" data-q="1">
+                <div class="prod-img">${img}</div>
+                <span class="prod-name">${esc(it.name)}</span>
+                ${it.desc ? `<span class="prod-desc">${esc(it.desc)}</span>` : ''}
+                <div class="prod-row"><span class="prod-price">${esc(money(it.price, cur))}</span>
+                  ${sold ? '' : '<span class="qty"><button type="button" data-qty="-1" aria-label="-">−</button><span>1</span><button type="button" data-qty="1" aria-label="+">+</button></span>'}</div>
+                <button type="button" class="prod-buy live" data-buy="${i}" ${sold ? 'disabled' : ''}>${sold ? esc(t('soldOut')) : '<i class="fa-brands fa-whatsapp"></i> ' + esc(t('buy'))}</button>
+            </article>`;
+        }).join('');
+        if (!shopOpen) $('shop-sheet').setAttribute('aria-hidden', 'true');
+    }
+    function setShop(open) {
+        shopOpen = open; $('shop-sheet').classList.toggle('open', open); $('shop-backdrop').classList.toggle('open', open);
+        $('shop-sheet').setAttribute('aria-hidden', String(!open)); $('shop-handle').style.visibility = open ? 'hidden' : '';
+    }
+    function openShop() { if (!$('shop-handle').classList.contains('hidden')) { haptic(12); playTone(560, 0.05, 'triangle'); setShop(true); } }
+    function closeShop() { if (shopOpen) setShop(false); }
+    function buyMessage(p, item, q) {
+        const c = curOf(p);
+        return t('buyHi').replace('{seller}', p.name) + '\n' + item.name + (q > 1 ? ' x' + q : '') + '\n'
+            + t('buyPrice') + ': ' + money(item.price, c) + (q > 1 ? ' (' + t('buyTotal') + ': ' + money(item.price * q, c) + ')' : '') + '\n'
+            + t('buyFrom') + ': ' + publicUrl();
+    }
+    function buy(i, q) {
+        const item = productsOf(P)[i], seller = sellerWa(P); if (!item || !seller || item.soldOut) return;
+        if (PREVIEW) { showToast(t('toastPreviewBuy')); return; }
+        haptic(20); playTone(880, 0.08, 'triangle');
+        const base = isUrl(seller.raw) ? seller.raw : seller.href;
+        window.open(waWithText(base, buyMessage(P, item, q)), '_blank', 'noopener');
+    }
+    function swipe(el, { up, down, tap }) {
+        let y0 = null;
+        el.addEventListener('pointerdown', (e) => { y0 = e.clientY; try { el.setPointerCapture(e.pointerId); } catch {} });
+        el.addEventListener('pointerup', (e) => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; if (dy < -36 && up) up(); else if (dy > 48 && down) down(); else if (Math.abs(dy) < 8 && tap) tap(); });
+        el.addEventListener('pointercancel', () => { y0 = null; });
+    }
+    swipe($('shop-handle'), { up: openShop });
+    swipe($('shop-grab'), { down: closeShop });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeShop(); });
+
+    // ---------- music panel (Spotify player or built-in lofi) + volume / mute ----------
+    const SPOTIFY_RE = /^https:\/\/open\.spotify\.com\/(playlist|album|track|artist|show|episode)\/([A-Za-z0-9]{22})$/;
+    function spotifyEmbed(url) {
+        const m = SPOTIFY_RE.exec(url || ''); if (!m) return null;
+        return { src: 'https://open.spotify.com/embed/' + m[1] + '/' + m[2] + '?utm_source=generator&theme=0', h: (m[1] === 'track' || m[1] === 'episode') ? 152 : 352 };
+    }
+    let panelOpen = false, embedKey = '', lofiOn = false, lofiTimer = null, expanded = false;
+    function buildEmbed() {
+        const sp = P ? spotifyEmbed(P.spotify) : null, box = $('mp-embed');
+        const h = sp ? (expanded ? sp.h : Math.min(sp.h, 152)) : 0;
+        const key = sp ? sp.src + '|' + h + (muted ? '|m' : '') : '';
+        if (key === embedKey) return;
+        embedKey = key; box.innerHTML = ''; if (!sp) return;
+        box.style.minHeight = h + 'px';
+        if (muted) { const d = document.createElement('div'); d.className = 'mp-muted'; d.style.minHeight = h + 'px'; d.textContent = t('mutedNote'); box.appendChild(d); return; }
+        const f = document.createElement('iframe'); f.title = 'Spotify player'; f.src = sp.src; f.width = '100%'; f.height = String(h);
+        f.setAttribute('frameborder', '0'); f.allow = 'autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'; f.loading = 'lazy';
+        f.style.cssText = 'border:0;border-radius:14px;display:block;background:#121212'; box.appendChild(f);
+    }
+    function syncSoundUi() {
+        const icon = $('mp-mute').querySelector('i'); icon.className = 'fa-solid ' + (muted || vol === 0 ? 'fa-volume-xmark' : vol < 40 ? 'fa-volume-low' : 'fa-volume-high');
+        $('mp-mute').setAttribute('aria-pressed', String(muted)); $('mp-mute').setAttribute('aria-label', t(muted ? 'unmute' : 'mute'));
+        $('mp-range').value = String(vol); $('mp-pct').textContent = (muted ? 0 : vol) + '%';
+        $('music-btn').classList.toggle('active', panelOpen || lofiOn);
+        const sp2 = P ? spotifyEmbed(P.spotify) : null, ex = $('mp-expand');
+        ex.classList.toggle('hidden', !(sp2 && sp2.h > 152)); ex.textContent = t(expanded ? 'hideTracks' : 'showTracks');
+        $('lofi-toggle').querySelector('i').className = 'fa-solid ' + (lofiOn ? 'fa-stop' : 'fa-play');
+        $('lofi-label').textContent = t(lofiOn ? 'lofiStop' : 'lofiPlay'); $('lofi-label').dataset.i18n = lofiOn ? 'lofiStop' : 'lofiPlay';
+    }
+    function setMuted(m) {
+        muted = m; try { localStorage.setItem(MUTE_KEY, m ? '1' : '0'); } catch {}
+        applyVolume(); if (panelOpen) buildEmbed(); syncSoundUi();
+    }
+    function setVolume(v) {
+        vol = Math.min(100, Math.max(0, v)); try { localStorage.setItem(VOL_KEY, String(vol)); } catch {}
+        if (vol > 0 && muted) { muted = false; try { localStorage.setItem(MUTE_KEY, '0'); } catch {} if (panelOpen) buildEmbed(); }
+        applyVolume(); syncSoundUi();
+    }
+    function renderMusic(p) {
+        const sp = !!spotifyEmbed(p.spotify);
+        $('mp-spotify').classList.toggle('hidden', !sp); $('mp-lofi').classList.toggle('hidden', sp);
+        if (panelOpen) buildEmbed(); syncSoundUi();
+    }
+    function togglePanel(open) {
+        panelOpen = typeof open === 'boolean' ? open : !panelOpen;
+        $('music-panel').hidden = !panelOpen;
+        if (panelOpen) buildEmbed();
+        syncSoundUi();
+    }
+    function toggleLofi() {
+        lofiOn = !lofiOn;
+        if (lofiOn) {
+            if (muted) setMuted(false);
+            const notes = [261.63, 329.63, 392.00, 523.25, 587.33];
+            lofiTimer = setInterval(() => playTone(notes[Math.floor(Math.random() * notes.length)], 0.35, 'sine', true), 800);
+            showToast(t('toastLofiOn'));
+        } else { clearInterval(lofiTimer); showToast(t('toastLofiOff')); }
+        syncSoundUi();
+    }
+    $('music-btn').addEventListener('click', () => { haptic(10); playTone(620, 0.05); togglePanel(); });
+    $('lofi-toggle').addEventListener('click', toggleLofi);
+    $('mp-mute').addEventListener('click', () => { haptic(10); setMuted(!muted); showToast(t(muted ? 'toastMuted' : 'toastUnmuted')); });
+    $('mp-range').addEventListener('input', (e) => setVolume(parseInt(e.target.value, 10) || 0));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panelOpen) togglePanel(false); });
+
     // header buttons
-    let musicPlaying = false, musicInterval;
-    $('music-btn').addEventListener('click', function () {
-        musicPlaying = !musicPlaying; this.classList.toggle('active', musicPlaying);
-        this.querySelector('i').className = musicPlaying ? 'fa-solid fa-music' : 'fa-solid fa-volume-xmark';
-        if (musicPlaying) { showToast(t('toastLofiOn')); const notes = [261.63, 329.63, 392.00, 523.25, 587.33]; musicInterval = setInterval(() => playTone(notes[Math.floor(Math.random() * notes.length)], 0.35, 'sine'), 800); }
-        else { showToast(t('toastLofiOff')); clearInterval(musicInterval); }
-    });
     $('sfx-btn').addEventListener('click', function () {
         sfxEnabled = !sfxEnabled; this.classList.toggle('active', sfxEnabled);
         this.querySelector('i').className = sfxEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
