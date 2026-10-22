@@ -30,11 +30,29 @@
     'sociabuzzColor','sociabuzzTextColor','gaming','channels',
     // layout + star-layout options
     'layout','accent','accent2','cardTag','statusText','statusMode','specs','footerText','bannerGray','bannerDim',
-    'avatarShape','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid'];
-  const BOOLS = ['showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid'];
+    'avatarShape','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid',
+    'spotify','musicAuto','shopEnabled','shopTitle','shopNote','currency','products'];
+  const BOOLS = ['showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid','musicAuto','shopEnabled'];
+  const CURRENCIES = ['auto','MYR','SGD','IDR','BND','PHP','THB','USD'];
   const HEX_RE = /^#[0-9a-f]{6}$/i;
   const clampInt = (v, lo, hi, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; };
   const str = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
+  function cleanSpotify(v) {
+    v = String(v || '').trim();
+    const m = v.match(/^spotify:(playlist|album|track|artist|show|episode):([A-Za-z0-9]{22})$/)
+      || v.match(/^https?:\/\/open\.spotify\.com\/(?:intl-[a-z]{2,5}\/)?(?:embed\/)?(playlist|album|track|artist|show|episode)\/([A-Za-z0-9]{22})(?:[?#\/].*)?$/i);
+    return m ? `https://open.spotify.com/${m[1].toLowerCase()}/${m[2]}` : '';
+  }
+  const cleanRows = (a, max) => (Array.isArray(a) ? a : []).slice(0, max)
+    .map((x) => ({ platform: str(x && x.platform, 40), value: str(x && x.value, 200) })).filter((x) => x.platform && x.value);
+  function cleanProducts(a) {
+    return (Array.isArray(a) ? a : []).slice(0, 12).map((x) => {
+      let price = Number(x && x.price); if (!Number.isFinite(price) || price < 0) price = 0;
+      price = Math.round(Math.min(price, 10000000) * 100) / 100;
+      const image = str(x && x.image, 130000);
+      return { name: str(x && x.name, 60), desc: str(x && x.desc, 160), price, image: MEDIA_RE.test(image) ? image : '', soldOut: !!(x && (x.soldOut === true || x.soldOut === 'true')) };
+    }).filter((x) => x.name);
+  }
   // Coerce every layout option to a safe value (never trust what the browser sent)
   function cleanOptions(m) {
     m.layout = m.layout === 'star' ? 'star' : 'basic';
@@ -45,6 +63,13 @@
     m.footerText = str(m.footerText, 40);
     m.statusMode = ['auto','online','offline','hidden'].includes(m.statusMode) ? m.statusMode : 'auto';
     m.avatarShape = ['circle','rounded','square'].includes(m.avatarShape) ? m.avatarShape : 'circle';
+    if (m.spotify !== undefined) m.spotify = cleanSpotify(m.spotify);
+    if (m.shopTitle !== undefined) m.shopTitle = str(m.shopTitle, 24);
+    if (m.shopNote !== undefined) m.shopNote = str(m.shopNote, 120);
+    if (m.currency !== undefined) m.currency = CURRENCIES.includes(m.currency) ? m.currency : 'auto';
+    if (m.products !== undefined) m.products = cleanProducts(m.products);
+    if (m.gaming !== undefined) m.gaming = cleanRows(m.gaming, 24);
+    if (m.channels !== undefined) m.channels = cleanRows(m.channels, 24);
     m.bannerGray = clampInt(m.bannerGray, 0, 100, 75);
     m.bannerDim = clampInt(m.bannerDim, 30, 100, 72);
     for (const k of BOOLS) if (m[k] !== undefined) m[k] = m[k] === true || m[k] === 'true';
@@ -74,7 +99,7 @@
     ],
     channels: [
       { platform: 'YouTube', value: 'https://youtube.com/@w._zii?sub_confirmation=1' },
-      { platform: 'WhatsApp', value: 'https://wa.me/wzii1?text=Hi%20Maple!%20I%20just%20tapped%20your%20NFC%20card.' },
+      { platform: 'WhatsApp', value: 'https://wa.me/wzii1?s=t' },
       { platform: 'Instagram', value: 'https://www.instagram.com/wziiii._?rpxt=MTBwZXdhZzI3bXI4OA==' },
       { platform: 'TikTok', value: 'https://www.tiktok.com/@wzii._?' },
       { platform: 'Discord', value: '399869638093307904' }
@@ -84,7 +109,8 @@
     layout: 'basic', name: 'Creator', role: '', bio: '', country: 'Malaysia', city: '', avatar: '', banner: '',
     theme: 'flame', openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
     sociabuzzEnabled: false, sociabuzz: '', widgetEnabled: false, widgetCode: '',
-    gaming: [], channels: [], createdAt: new Date().toISOString().slice(0, 10)
+    gaming: [], channels: [], createdAt: new Date().toISOString().slice(0, 10),
+    shopEnabled: false, shopTitle: '', shopNote: '', currency: 'auto', products: [], spotify: '', musicAuto: true
   });
 
   // ---------- Supabase helpers ----------
@@ -329,7 +355,8 @@
     // ===== Uploads =====
     if (url.includes('/api/uploads') && method === 'POST') {
       try {
-        return json({ url: await shrinkImage(options.body) });
+        const product = url.includes('kind=product');
+        return json({ url: product ? await shrinkImage(options.body, 420, 45000) : await shrinkImage(options.body) });
       } catch {
         return json({ error: 'Upload failed. Try a different image.' }, 400);
       }
@@ -412,6 +439,7 @@
       }
       const { id, likes, visits, reactions, ...toStore } = merged;
       const packed = JSON.stringify({ __dig: 1, ...toStore, slug });
+      if (packed.length > 1500000) return json({ error: 'Your card is too large. Remove a few product photos and try again.' }, 400);
 
       const res = existing
         ? await sb(`/rest/v1/profiles?id=eq.${au.uid}`, { method: 'PATCH', token: au.token, headers: { Prefer: 'return=representation' }, body: { name: packed } })
