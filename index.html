@@ -3,8 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0b0a0f" />
-    <title>Digital ID</title>
+    <meta name="theme-color" content="#0c0708" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Maple ID" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Maple ID</title>
+    <meta name="description" content="Maple ID: one link for every game ID and social handle. Claim yours." />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -22,7 +29,7 @@
     new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
   const parse = (s) => { try { return JSON.parse(s || '{}') || {}; } catch { return {}; } };
 
-  const RESERVED_SLUGS = ['owner','studio','admin','api','assets','login','signup','www','support','help','about','static','index','digitalid'];
+  const RESERVED_SLUGS = ['owner','studio','admin','api','assets','login','signup','www','support','help','about','static','index','digitalid','mapleid'];
   const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$/;
   const MEDIA_RE = /^(https?:\/\/\S+|data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+)$/i;
   const EDITABLE = ['name','role','bio','country','city','avatar','banner','theme','openTime','closeTime','timezone',
@@ -32,8 +39,8 @@
     'layout','accent','accent2','cardTag','statusText','statusMode','specs','footerText','bannerGray','bannerDim',
     'avatarShape','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid',
     'spotify','musicAuto','shopEnabled','shopTitle','shopNote','shopWhatsApp','currency','products',
-    'donate','donateLabel','contactPhone','contactEmail','openGame','showLove'];
-  const BOOLS = ['showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid','musicAuto','shopEnabled','openGame','showLove'];
+    'donate','donateLabel','contactPhone','contactEmail','openGame','showLove','liquidGlass','glassBlur','cardStyle','bgFx'];
+  const BOOLS = ['bgFx','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid','musicAuto','shopEnabled','openGame','showLove','liquidGlass'];
   const CURRENCIES = ['auto','MYR','SGD','IDR','BND','PHP','THB','USD'];
   const HEX_RE = /^#[0-9a-f]{6}$/i;
   const clampInt = (v, lo, hi, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; };
@@ -87,6 +94,8 @@
     if (m.products !== undefined) m.products = cleanProducts(m.products);
     if (m.gaming !== undefined) m.gaming = cleanRows(m.gaming, 24);
     if (m.channels !== undefined) m.channels = cleanRows(m.channels, 24);
+    m.cardStyle = ['default','outline','solid','neon','bubble','tinted'].includes(m.cardStyle) ? m.cardStyle : 'default';
+    m.glassBlur = clampInt(m.glassBlur, 0, 40, 14);
     m.bannerGray = clampInt(m.bannerGray, 0, 100, 75);
     m.bannerDim = clampInt(m.bannerDim, 30, 100, 72);
     for (const k of BOOLS) if (m[k] !== undefined) m[k] = m[k] === true || m[k] === 'true';
@@ -101,7 +110,7 @@
   const DEFAULT_MAPLE = {
     name: 'ᴍᴀᴘʟᴇ☆', role: 'Digital Creator',
     bio: 'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.',
-    country: 'Malaysia', city: 'Masai, Johor', avatar: '', banner: '', theme: 'flame',
+    country: 'Malaysia', city: 'Masai, Johor', avatar: '', banner: '', theme: 'maple',
     layout: 'star', cardTag: 'ID / 001', statusText: 'Coding Roblox Studio mini-games & Grinding MLBB',
     specs: [
       { label: 'PHONE', value: 'Xiaomi 15 Ultra' }, { label: 'TABLET', value: 'Xiaomi Pad 6S Pro 12.4' },
@@ -448,7 +457,6 @@
       for (const k of EDITABLE) if (body[k] !== undefined) merged[k] = body[k];
       merged.name = String(merged.name || '').trim().slice(0, 80) || 'Creator';
       cleanOptions(merged);
-      if (slug === 'maple') merged.layout = 'star';
       for (const k of ['avatar', 'banner']) {
         merged[k] = String(merged[k] || '').trim();
         if (merged[k] && (merged[k].length > 600000 || !MEDIA_RE.test(merged[k]))) {
@@ -483,12 +491,29 @@
     </script>
 
     <script src="/assets/launch.js"></script>
-    <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
+    <script type="module" crossorigin src="/assets/index-maple1.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css" />
+    <link rel="stylesheet" href="/assets/maple.css?v=2" />
+    <link rel="stylesheet" href="/assets/themes.css?v=1" />
+    <link rel="stylesheet" href="/assets/maple-theme.css?v=3" />
+    <link rel="stylesheet" href="/assets/glass.css?v=3" />
+    <link rel="stylesheet" href="/assets/card-ui.css?v=1" />
+    <script src="/assets/maplefx.js?v=3" defer></script>
+    <script src="/assets/maple.js?v=1"></script>
   </head>
   <body>
-    <div id="star-intro" style="position:fixed;inset:0;z-index:99999;background:#07070a"></div>
-    <div id="boot-cover" style="position:fixed;inset:0;z-index:99998;background:#07070a;transition:opacity .2s"></div>
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="leaf-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb547"/><stop offset="1" stop-color="#ff4a2b"/></linearGradient>
+        <linearGradient id="leaf-grad-deep" x1="0.2" y1="0" x2="0.8" y2="1">
+          <stop offset="0" style="stop-color:var(--accent-2)"/><stop offset=".45" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--maple-red)"/>
+        </linearGradient>
+        <symbol id="leaf" viewBox="0 0 100 100"><path d="M50 2L57 18L64 13L62 34L80 24L76 40L96 36L84 54L90 60L62 70L64 78L53 76L53 98L47 98L47 76L36 78L38 70L10 60L16 54L4 36L24 40L20 24L38 34L36 13L43 18Z"/></symbol>
+        <symbol id="leaf-veins" viewBox="0 0 100 100"><path pathLength="1" d="M50 96V8M50 76L84 46M50 76L16 46M50 62L74 30M50 62L26 30M50 50L66 20M50 50L34 20"/></symbol>
+      </defs>
+    </svg>
+    <div id="star-intro" style="position:fixed;inset:0;z-index:99999;background:#0c0708"></div>
+    <div id="boot-cover" style="position:fixed;inset:0;z-index:99998;background:#0c0708;transition:opacity .2s"></div>
     <script>
 /* Hollow-star zoom intro: a dark cover with a star-shaped hole. The star grows until the page is revealed. */
 function createStarIntro(opts) {
@@ -498,7 +523,7 @@ function createStarIntro(opts) {
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) { el.remove(); return { go: function () {}, skip: function () {} }; }
 
-    var W = window.innerWidth, H = window.innerHeight, cx = W / 2, cy = H / 2, bg = opts.bg || '#07070a';
+    var W = window.innerWidth, H = window.innerHeight, cx = W / 2, cy = H / 2, bg = opts.bg || '#0c0708';
     el.style.background = 'transparent';
     el.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="display:block">'
         + '<defs><mask id="star-intro-mask"><rect width="' + W + '" height="' + H + '" fill="#fff"/><path id="si-hole" fill="#000"/></mask></defs>'
@@ -573,7 +598,7 @@ function createStarIntro(opts) {
       // Only on the home page / studio, once per visit. Star-layout cards play their own intro.
       if (seen || (path !== '/' && path !== '/studio' && path !== '/index.html')) { el.remove(); return; }
       try { sessionStorage.setItem('dig-intro', '1'); } catch (e) {}
-      var intro = createStarIntro({ bg: '#07070a' });
+      var intro = createStarIntro({ bg: '#0c0708' });
       var go = function () { setTimeout(function () { intro.go(); }, 250); };
       if (document.readyState === 'complete') go(); else window.addEventListener('load', go);
     })();
@@ -582,12 +607,12 @@ function createStarIntro(opts) {
     <div class="grain" aria-hidden="true"></div>
     <header class="topbar">
       <a href="/" data-link class="brand"
-        ><i class="fa-solid fa-id-card-clip"></i> Digital<b>ID</b></a
+        ><svg class="leaf-ico" aria-hidden="true"><use href="#leaf"/></svg> Maple<b>ID</b></a
       >
       <nav id="nav-actions"></nav>
     </header>
     <main id="app"></main>
-    <footer class="foot"><span>Tap · Scan · Connect</span></footer>
+    <footer class="foot"><svg class="leaf-ico" aria-hidden="true"><use href="#leaf"/></svg><span>Maple ID · Tap · Scan · Connect</span></footer>
 
     <div id="qr-modal" class="modal">
       <div class="modal-box">
