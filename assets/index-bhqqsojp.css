@@ -53,3 +53,8 @@ fieldset[hidden]{display:none}
 .save-state.dirty~#discard-btn{display:inline-flex}
 fieldset[data-star-only][hidden],[data-basic-only][hidden]{display:none}
 legend small{font-size:11px;color:var(--muted);font-weight:400;margin-left:6px}
+
+/* love button sits on the right of the name (also on phones) */
+.idcard-head{grid-template-columns:86px minmax(0,1fr) auto}
+.idcard-head .like{grid-column:3;grid-row:1;justify-self:end;align-self:start;margin-top:2px}
+@media (width<=400px){.idcard-head{grid-template-columns:70px minmax(0,1fr) auto;column-gap:12px}.idcard-head .like{grid-column:3;grid-row:1;justify-self:end;align-self:start;padding:7px 10px;font-size:12px}}
