@@ -206,20 +206,21 @@
         .mp-vol input[type=range] { flex:1; accent-color:var(--accent); height:28px; }
         .mp-pct { font-family:var(--mono); font-size:10px; color:var(--muted); min-width:34px; text-align:right; }
         .mp-link { margin-top:8px; font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); padding:6px 2px; }
-        .shop-tab { position:fixed; z-index:60; right:0; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; align-items:center; gap:10px; padding:14px 9px; border-radius:16px 0 0 16px; background:#15141c; border:1px solid var(--accent); border-right:0; color:var(--text); touch-action:none; box-shadow:-6px 8px 24px rgba(0,0,0,0.45); }
-        .shop-tab #shop-handle-text { writing-mode:vertical-rl; font-family:var(--mono); font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; }
-        .shop-tab i { color:var(--accent); font-size:13px; }
-        .shop-tab .fa-chevron-left { font-size:10px; }
-        .shop-backdrop { position:fixed; inset:0; z-index:64; background:rgba(4,4,7,0.62); opacity:0; pointer-events:none; transition:opacity 0.3s; }
-        .shop-backdrop.open { opacity:1; pointer-events:auto; }
-        .shop-drawer { position:fixed; z-index:65; top:0; right:0; height:100%; height:100dvh; width:min(92vw,430px); display:flex; flex-direction:column; background:#101016; border-left:1px solid var(--line-strong); box-shadow:-24px 0 70px rgba(0,0,0,0.6); transform:translateX(104%); transition:transform 0.4s var(--ease); touch-action:pan-y; }
-        .shop-drawer.open { transform:translateX(0); }
-        .sheet-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:max(16px, env(safe-area-inset-top)) 18px 12px; }
-        .sheet-head b { font-size:19px; font-weight:600; display:block; }
-        .sheet-head small { font-family:var(--mono); font-size:10px; color:var(--muted); display:block; margin-top:3px; }
-        .shop-note { margin:0 18px 10px; padding:9px 12px; border-radius:12px; background:var(--accent-soft); color:var(--muted); font-size:12px; line-height:1.45; }
-        .shop-list { flex:1; overflow:auto; padding:2px 14px 6px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; align-content:start; overscroll-behavior:contain; }
-        .shop-foot { padding:10px 18px max(14px, env(safe-area-inset-bottom)); text-align:center; font-family:var(--mono); font-size:9.5px; letter-spacing:0.06em; color:var(--dim); }
+        .pager { display:flex; flex-direction:column; }
+        .ptabs { position:relative; display:flex; border-bottom:1px solid var(--line-strong); margin-bottom:16px; }
+        .ptab { flex:1; padding:14px 8px 13px; font-size:15px; font-weight:500; color:var(--muted); text-align:center; transition:color 0.2s; }
+        .ptab.active { color:var(--text); }
+        .pbar { position:absolute; left:0; bottom:-1px; height:3px; width:48px; border-radius:3px 3px 0 0; background:var(--accent); will-change:transform,width; }
+        .pslides { display:flex; align-items:flex-start; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; transition:height 0.25s ease; }
+        .pslides::-webkit-scrollbar { display:none; }
+        .pslide { flex:0 0 100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
+        .pager.single .pslides { overflow:visible; height:auto !important; display:block; }
+        .shop-head { padding:2px 4px 10px; }
+        .shop-head b { font-size:19px; font-weight:600; display:block; }
+        .shop-head small { font-family:var(--mono); font-size:10px; color:var(--muted); display:block; margin-top:4px; }
+        .shop-note { margin:0 0 12px; padding:9px 12px; border-radius:12px; background:var(--accent-soft); color:var(--muted); font-size:12px; line-height:1.45; }
+        .shop-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; align-content:start; }
+        .shop-foot { padding:12px 6px 4px; text-align:center; font-family:var(--mono); font-size:9.5px; letter-spacing:0.06em; color:var(--dim); }
         .prod { display:flex; flex-direction:column; gap:7px; padding:10px; border-radius:16px; background:rgba(255,255,255,0.035); border:1px solid var(--line); min-width:0; }
         .prod-img { aspect-ratio:1/1; border-radius:11px; background:linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,0.03)); display:grid; place-items:center; overflow:hidden; color:var(--accent); font-size:26px; }
         .prod-img img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -234,6 +235,16 @@
         .prod-buy[disabled] { background:rgba(255,255,255,0.08); color:var(--dim); cursor:not-allowed; }
         .prod.sold .prod-img { filter:grayscale(1) brightness(0.6); }
         @media (max-width:340px) { .shop-list { grid-template-columns:1fr; } }
+        .identity-left { flex:1; }
+        .name-block { flex:1; }
+        .name-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .name-row .name { min-width:0; white-space:normal; overflow-wrap:anywhere; font-size:clamp(22px,6.4vw,31px); line-height:1.1; }
+        .love { flex-shrink:0; display:inline-flex; align-items:center; gap:7px; padding:8px 12px; border-radius:999px; border:1px solid var(--line-strong); background:rgba(255,255,255,0.04); font-family:var(--mono); font-size:12px; color:var(--muted); }
+        .love i { color:var(--accent); font-size:13px; }
+        .love.liked { color:var(--text); border-color:var(--accent); background:var(--accent-soft); }
+        .love.pop i { animation:lovePop 0.4s var(--ease); }
+        @keyframes lovePop { 0% { transform:scale(1); } 40% { transform:scale(1.55); } 100% { transform:scale(1); } }
+        .modal:not(.show) { backdrop-filter:none; }
         #star-intro { position:fixed; inset:0; z-index:99999; background:#07070a; }
     </style>
 </head>
@@ -289,7 +300,10 @@
                     <span id="avatar-initials" style="font-weight:600;font-size:26px"></span>
                 </div></div>
                 <div class="name-block">
-                    <h1 class="name" id="name"></h1>
+                    <div class="name-row">
+                        <h1 class="name" id="name"></h1>
+                        <button type="button" id="love-btn" class="love live" data-act="love" aria-label="Love this card"><i class="fa-solid fa-heart"></i><span id="love-count">0</span></button>
+                    </div>
                     <p class="handle" id="role"></p>
                 </div>
             </div>
@@ -318,7 +332,22 @@
         </a>
     </section>
 
-    <div style="display:flex; flex-direction:column; gap:20px;" id="sections"></div>
+    <section class="pager single" id="pager">
+        <div class="ptabs hidden" id="ptabs" role="tablist" aria-label="Sections">
+            <button type="button" role="tab" class="ptab active" data-ptab="0" aria-selected="true"><span data-i18n="tabLinks">Links</span></button>
+            <button type="button" role="tab" class="ptab" data-ptab="1" aria-selected="false"><span id="ptab-shop-text"></span></button>
+            <span class="pbar" id="pbar"></span>
+        </div>
+        <div class="pslides" id="pslides">
+            <div class="pslide" id="pane-links"><div style="display:flex; flex-direction:column; gap:20px;" id="sections"></div></div>
+            <div class="pslide hidden" id="pane-shop">
+                <div class="shop-head"><b id="shop-title"></b><small id="shop-seller"></small></div>
+                <p class="shop-note hidden" id="shop-note"></p>
+                <div class="shop-list" id="shop-list"></div>
+                <p class="shop-foot" data-i18n="shopFoot"></p>
+            </div>
+        </div>
+    </section>
 
     <a id="cta" class="cta-card live hidden" href="/#auth" target="_top">
         <span><span class="cta-tag" data-i18n="ctaTag">Digital ID</span><span class="cta-title" data-i18n="ctaTitle"></span><span class="cta-desc" data-i18n="ctaDesc"></span></span>
@@ -327,22 +356,6 @@
 
     <footer style="display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); padding:0 6px;"><span data-i18n="footer">Tap · Scan · Connect</span><span id="footer-right"></span></footer>
 </div>
-
-<button id="shop-handle" class="shop-tab hidden" type="button" data-act="shop-open" aria-label="Open shop">
-    <i class="fa-solid fa-bag-shopping"></i>
-    <span id="shop-handle-text"></span>
-    <i class="fa-solid fa-chevron-left"></i>
-</button>
-<div id="shop-backdrop" class="shop-backdrop" data-act="shop-close"></div>
-<aside id="shop-sheet" class="shop-drawer" aria-hidden="true" role="dialog" aria-label="Shop">
-    <div class="sheet-head" id="shop-grab">
-        <div><b id="shop-title"></b><small id="shop-seller"></small></div>
-        <button type="button" class="x-btn" data-act="shop-close" aria-label="Close"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-    <p class="shop-note hidden" id="shop-note"></p>
-    <div class="shop-list" id="shop-list"></div>
-    <p class="shop-foot" data-i18n="shopFoot"></p>
-</aside>
 
 <div id="qr-modal" class="modal">
     <div class="modal-card">
@@ -364,6 +377,7 @@
 
 <div id="toast"></div>
 
+<script src="/assets/launch.js"></script>
 <script>
 (function () {
     'use strict';
@@ -388,7 +402,7 @@
         sfx: true, music: true, themeSwitch: true, grid: true,
         gaming: [], channels: [], openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
         shopEnabled: false, shopTitle: '', shopNote: '', shopWhatsApp: '', currency: 'auto', products: [], spotify: '', musicAuto: true,
-        donate: '', donateLabel: '', contactPhone: '', contactEmail: ''
+        donate: '', donateLabel: '', contactPhone: '', contactEmail: '', openGame: true, showLove: true
     };
     const MAPLE_DEFAULTS = {
         cardTag: 'ID / 001',
@@ -475,10 +489,10 @@
     }
     function gameInfo({ platform: e, value: t }) {
         t = normGame(e, t); const n = 'fa-solid fa-gamepad';
-        if (isUrl(t)) return { label: e, sub: 'Open profile', href: t, icon: n, kind: 'game' };
-        if (e === 'Roblox') return { label: e, sub: t, href: /^\d+$/.test(t) ? 'https://www.roblox.com/users/' + t + '/profile' : 'https://www.roblox.com/search/users?keyword=' + encodeURIComponent(t), copy: t, icon: n, kind: 'game' };
-        if (e === 'Minecraft') return { label: e, sub: t, copy: t, icon: 'fa-solid fa-cube', kind: 'game' };
-        return { label: e, sub: /^\d+$/.test(t) ? 'ID ' + t : t, copy: t, icon: n, kind: 'game' };
+        if (isUrl(t)) return { label: e, sub: 'Open profile', href: t, icon: n, kind: 'game', game: e };
+        if (e === 'Roblox') return { label: e, sub: t, href: /^\d+$/.test(t) ? 'https://www.roblox.com/users/' + t + '/profile' : 'https://www.roblox.com/search/users?keyword=' + encodeURIComponent(t), copy: t, icon: n, kind: 'game', game: e };
+        if (e === 'Minecraft') return { label: e, sub: t, copy: t, icon: 'fa-solid fa-cube', kind: 'game', game: e };
+        return { label: e, sub: /^\d+$/.test(t) ? 'ID ' + t : t, copy: t, icon: n, kind: 'game', game: e };
     }
 
     // ---------- translations (interface only; your own text is shown as you wrote it) ----------
@@ -489,7 +503,7 @@
             gaming: 'Gaming', channels: 'Channels', subscribe: 'Subscribe', chat: 'Chat', follow: 'Follow', add: 'Add', open: 'Open', copyId: 'Copy ID', copied: 'Copied',
             footer: 'Tap · Scan · Connect', noteHead: 'Quick WhatsApp Note', notePlaceholder: 'Type your note…', noteSend: 'Send via WhatsApp', noteHi: 'Hi', noteDefault: 'I just tapped your card.',
             toastSaved: 'Contact saved', toastLink: 'Link copied', toastAll: 'All handles copied!', toastId: 'ID copied', toastLang: 'Language: English', toastTheme: 'Theme', toastLofiOn: 'Lofi Beats: ON 🎧', toastLofiOff: 'Lofi Beats: OFF', toastSfxOn: 'UI Sound: ON', toastSfxOff: 'UI Sound: OFF', toastReact: 'Reacted', toastReacted: 'You already reacted 🙂',
-            mail: 'Email', call: 'Call', shopTitle: 'Shop', shopSeller: 'Seller', shopFoot: 'Tap Buy to chat with the seller on WhatsApp. Your order details are filled in for you.', buy: 'Buy', soldOut: 'Sold out',
+            toastLoved: 'Thanks for the love', toastLoved2: 'You already loved this card', tabLinks: 'Links', toastOpening: 'ID copied. Opening {game}…', mail: 'Email', call: 'Call', shopTitle: 'Shop', shopSeller: 'Seller', shopFoot: 'Tap Buy to chat with the seller on WhatsApp. Your order details are filled in for you.', buy: 'Buy', soldOut: 'Sold out',
             buyHi: 'Hi {seller}! I’d like to buy:', buyPrice: 'Price', buyTotal: 'total', buyFrom: 'From your Digital ID card', toastPreviewBuy: 'Preview: Buy opens WhatsApp on the live card',
             showTracks: 'Show tracks', hideTracks: 'Hide tracks',
             musicHead: 'Music', lofiPlay: 'Play lofi beats', lofiStop: 'Stop lofi beats', volume: 'Volume', mute: 'Mute', unmute: 'Unmute',
@@ -503,7 +517,7 @@
             gaming: 'Permainan', channels: 'Saluran', subscribe: 'Langgan', chat: 'Sembang', follow: 'Ikuti', add: 'Tambah', open: 'Buka', copyId: 'Salin ID', copied: 'Disalin',
             footer: 'Ketik · Imbas · Hubung', noteHead: 'Nota WhatsApp Pantas', notePlaceholder: 'Taip nota anda…', noteSend: 'Hantar melalui WhatsApp', noteHi: 'Hai', noteDefault: 'Saya baru mengetik kad anda.',
             toastSaved: 'Kenalan disimpan', toastLink: 'Pautan disalin', toastAll: 'Semua nama pengguna disalin!', toastId: 'ID disalin', toastLang: 'Bahasa: Bahasa Melayu', toastTheme: 'Tema', toastLofiOn: 'Lofi Beats: HIDUP 🎧', toastLofiOff: 'Lofi Beats: MATI', toastSfxOn: 'Bunyi UI: HIDUP', toastSfxOff: 'Bunyi UI: MATI', toastReact: 'Bertindak balas', toastReacted: 'Anda sudah bertindak balas 🙂',
-            mail: 'E-mel', call: 'Hubungi', shopTitle: 'Kedai', shopSeller: 'Penjual', shopFoot: 'Ketik Beli untuk bersembang dengan penjual di WhatsApp. Butiran pesanan diisi untuk anda.', buy: 'Beli', soldOut: 'Habis dijual',
+            toastLoved: 'Terima kasih atas sokongan', toastLoved2: 'Anda sudah menyukai kad ini', tabLinks: 'Pautan', toastOpening: 'ID disalin. Membuka {game}…', mail: 'E-mel', call: 'Hubungi', shopTitle: 'Kedai', shopSeller: 'Penjual', shopFoot: 'Ketik Beli untuk bersembang dengan penjual di WhatsApp. Butiran pesanan diisi untuk anda.', buy: 'Beli', soldOut: 'Habis dijual',
             buyHi: 'Hai {seller}! Saya ingin membeli:', buyPrice: 'Harga', buyTotal: 'jumlah', buyFrom: 'Dari kad Digital ID anda', toastPreviewBuy: 'Pratonton: Beli membuka WhatsApp pada kad sebenar',
             showTracks: 'Papar lagu', hideTracks: 'Sembunyi lagu',
             musicHead: 'Muzik', lofiPlay: 'Main lofi beats', lofiStop: 'Henti lofi beats', volume: 'Kelantangan', mute: 'Senyap', unmute: 'Buka bunyi',
@@ -754,7 +768,7 @@
             const copy = item.copy && item.kind !== 'game' ? `<button type="button" class="tile-copy live" data-copy="${esc(item.copy)}" title="Copy ID"><i class="fa-regular fa-copy"></i></button>` : '';
             return `<li>${link}${copy}</li>`;
         }
-        return `<li><button type="button" class="tile live" data-copy="${esc(item.copy)}">${left}<span class="tile-cta">${esc(t('copyId'))}</span></button></li>`;
+        return `<li><button type="button" class="tile live" data-copy="${esc(item.copy)}" data-game="${esc(item.game || '')}">${left}<span class="tile-cta">${esc(t('copyId'))}</span></button></li>`;
     }
     function renderSections(p) {
         const games = gamesOf(p), chans = chansOf(p); let html = '';
@@ -779,6 +793,22 @@
         $('support-user').textContent = host;
         const label = p.donateLabel || t('supportCta');
         tile.querySelector('.support-cta > span').textContent = label; tile.querySelector('.support-cta > span').removeAttribute('data-i18n');
+    }
+    function renderLove(p) {
+        const b = $('love-btn'); b.classList.toggle('hidden', p.showLove === false);
+        let liked = false; try { liked = !!localStorage.getItem('dig:liked:' + p.slug); } catch {}
+        b.classList.toggle('liked', liked);
+        const c = $('love-count'), v = Number(p.likes || 0).toLocaleString('en-US'); if (c.textContent !== v) c.textContent = v;
+    }
+    async function love() {
+        const b = $('love-btn'), flag = 'dig:liked:' + P.slug;
+        try { if (localStorage.getItem(flag)) { showToast(t('toastLoved2')); return; } } catch {}
+        haptic(20); playTone(760, 0.06, 'triangle');
+        const c = $('love-count'); c.textContent = (((parseInt(c.textContent.replace(/,/g, ''), 10)) || 0) + 1).toLocaleString('en-US');
+        b.classList.add('liked', 'pop'); setTimeout(() => b.classList.remove('pop'), 450); showToast(t('toastLoved'));
+        if (PREVIEW) return;                                       // Studio preview: look only, nothing is saved
+        try { localStorage.setItem(flag, '1'); } catch {}
+        try { const st = statObj(await sbJson('/rest/v1/rpc/bump_like', { method: 'POST', body: JSON.stringify({ p_slug: P.slug }) })); if (st) c.textContent = Number(st.likes).toLocaleString('en-US'); } catch {}
     }
     function renderBottom(p) {
         $('cta').classList.toggle('hidden', p.showCta === false);
@@ -807,7 +837,7 @@
         $('state').classList.add('hidden'); $('shell').hidden = false;
         applyLook(P); renderBanner(P); renderIdentity(P); renderStats(P); renderChips(P); renderTexts(P);
         renderReacts(P); renderActions(P); renderSections(P); renderSupport(P); renderBottom(P);
-        renderShop(P); renderMusic(P); applyLang(lang); renderStatus(); renderClock();
+        renderLove(P); renderShop(P); renderMusic(P); applyLang(lang); renderStatus(); renderClock();
         const mine = !PREVIEW && viewerId() && viewerId() === P.id;
         $('owner-studio-btn').classList.toggle('show', !!mine);
         if (firstRender) {
@@ -899,7 +929,16 @@
     document.addEventListener('click', (e) => {
         if (PREVIEW) { const a = e.target.closest('a'); if (a) e.preventDefault(); }
         const copyBtn = e.target.closest('[data-copy]');
-        if (copyBtn) { haptic(12); copyText(copyBtn.dataset.copy).then(() => showToast(t('toastId'))); return; }
+        if (copyBtn) {
+            haptic(12);
+            copyText(copyBtn.dataset.copy).then(() => {
+                const g = copyBtn.dataset.game;
+                if (g && P && P.openGame !== false && !PREVIEW && window.dgLaunch && window.dgLaunch.supported) {
+                    showToast(t('toastOpening').replace('{game}', g)); setTimeout(() => window.dgLaunch.open(g), 550);
+                } else showToast(t('toastId'));
+            });
+            return;
+        }
         const rb = e.target.closest('[data-react]'); if (rb) { react(rb); return; }
         const qb = e.target.closest('[data-qty]');
         if (qb) { const card = qb.closest('.prod'), q = Math.min(9, Math.max(1, (parseInt(card.dataset.q, 10) || 1) + parseInt(qb.dataset.qty, 10))); card.dataset.q = String(q); card.querySelector('.qty span').textContent = String(q); haptic(8); return; }
@@ -914,8 +953,7 @@
             case 'note': haptic(10); openModal('note-modal'); break;
             case 'close-note': closeModal('note-modal'); break;
             case 'close-music': togglePanel(false); break;
-            case 'shop-open': openShop(); break;
-            case 'shop-close': closeShop(); break;
+            case 'love': love(); break;
             case 'mp-expand': expanded = !expanded; buildEmbed(); syncSoundUi(); break;
             case 'send-note': { const n = $('custom-note').value.trim(); const msg = t('noteHi') + ' ' + P.name + '! ' + (n || t('noteDefault')); const sw = sellerWa(P); if (sw) window.open(waWithText(sw.href, msg), '_blank', 'noopener'); closeModal('note-modal'); break; }
             case 'specs': { haptic(10); playTone(480, 0.04); drawerOpen = !drawerOpen; $('specs').classList.toggle('open', drawerOpen); break; }
@@ -944,19 +982,20 @@
     ['qr-modal', 'note-modal'].forEach((id) => $(id).addEventListener('click', (e) => { if (e.target.id === id) closeModal(id); }));
 
 
-    // ---------- shop (seller section): slide-up sheet, Buy opens WhatsApp ----------
+    // ---------- shop (seller section): Buy opens WhatsApp ----------
     const CUR = { MYR: { s: 'RM ', d: 2 }, SGD: { s: 'S$', d: 2 }, BND: { s: 'B$', d: 2 }, IDR: { s: 'Rp ', d: 0 }, PHP: { s: '₱', d: 2 }, THB: { s: '฿', d: 2 }, USD: { s: '$', d: 2 } };
     const CUR_BY_COUNTRY = { Malaysia: 'MYR', Indonesia: 'IDR', Singapore: 'SGD', Brunei: 'BND', Philippines: 'PHP', Thailand: 'THB' };
     const curOf = (p) => (CUR[p.currency] ? p.currency : (CUR_BY_COUNTRY[p.country] || 'MYR'));
     const money = (n, c) => { const m = CUR[c] || CUR.MYR; return m.s + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: m.d, maximumFractionDigits: m.d }); };
     const productsOf = (p) => (p.products || []).filter((x) => x && x.name).slice(0, 12);
-    let shopOpen = false;
+    const pager = { on: false };
     function renderShop(p) {
         const items = productsOf(p), seller = sellerWa(p), on = !!(p.shopEnabled && items.length && seller);
-        $('shop-handle').classList.toggle('hidden', !on);
-        if (!on) { closeShop(); return; }
+        pager.on = on;
+        $('pager').classList.toggle('single', !on); $('ptabs').classList.toggle('hidden', !on); $('pane-shop').classList.toggle('hidden', !on);
+        if (!on) { if ($('pslides').scrollLeft) goPane(0, false); fitPager(); return; }
         const title = p.shopTitle || t('shopTitle');
-        $('shop-handle-text').textContent = title + ' · ' + items.length;
+        $('ptab-shop-text').textContent = title;
         $('shop-title').textContent = title;
         $('shop-seller').textContent = t('shopSeller') + ': ' + p.name + ' · WhatsApp ' + seller.sub;
         const note = $('shop-note'); note.classList.toggle('hidden', !p.shopNote); note.textContent = p.shopNote || '';
@@ -973,14 +1012,33 @@
                 <button type="button" class="prod-buy live" data-buy="${i}" ${sold ? 'disabled' : ''}>${sold ? esc(t('soldOut')) : '<i class="fa-brands fa-whatsapp"></i> ' + esc(t('buy'))}</button>
             </article>`;
         }).join(''));
-        if (!shopOpen) $('shop-sheet').setAttribute('aria-hidden', 'true');
+        moveBar(); fitPager();
     }
-    function setShop(open) {
-        shopOpen = open; $('shop-sheet').classList.toggle('open', open); $('shop-backdrop').classList.toggle('open', open);
-        $('shop-sheet').setAttribute('aria-hidden', String(!open)); $('shop-handle').style.visibility = open ? 'hidden' : '';
+    // Two sections under the profile: Links | Shop. Swipe sideways or tap a tab.
+    const paneEls = () => [$('pane-links'), $('pane-shop')];
+    function pagerIndex() { const sl = $('pslides'); return pager.on && sl.clientWidth ? Math.round(sl.scrollLeft / sl.clientWidth) : 0; }
+    function fitPager() {
+        const sl = $('pslides'); if (!pager.on) { sl.style.height = ''; return; }
+        const h = paneEls()[pagerIndex()].offsetHeight; if (h) sl.style.height = h + 'px';
     }
-    function openShop() { if (!$('shop-handle').classList.contains('hidden')) { haptic(12); playTone(560, 0.05, 'triangle'); setShop(true); } }
-    function closeShop() { if (shopOpen) setShop(false); }
+    function moveBar() {
+        const sl = $('pslides'), tabs = [...document.querySelectorAll('.ptab')], bar = $('pbar');
+        if (!pager.on || !sl.clientWidth || tabs.length < 2 || !tabs[0].offsetWidth) return;
+        const p = Math.min(1, Math.max(0, sl.scrollLeft / sl.clientWidth));
+        const geo = tabs.map((tb) => { const w = tb.firstElementChild.offsetWidth; return { w, x: tb.offsetLeft + (tb.offsetWidth - w) / 2 }; });
+        bar.style.width = (geo[0].w + (geo[1].w - geo[0].w) * p) + 'px';
+        bar.style.transform = 'translateX(' + (geo[0].x + (geo[1].x - geo[0].x) * p) + 'px)';
+        const i = p > 0.5 ? 1 : 0;
+        tabs.forEach((tb, k) => { tb.classList.toggle('active', k === i); tb.setAttribute('aria-selected', String(k === i)); });
+    }
+    function goPane(i, smooth = true) { const sl = $('pslides'); sl.scrollTo({ left: i * sl.clientWidth, behavior: smooth ? 'smooth' : 'auto' }); }
+    (function initPager() {
+        const sl = $('pslides'); let timer;
+        sl.addEventListener('scroll', () => { moveBar(); clearTimeout(timer); timer = setTimeout(fitPager, 90); }, { passive: true });
+        document.querySelectorAll('.ptab').forEach((tb) => tb.addEventListener('click', () => { haptic(8); playTone(600, 0.04); goPane(Number(tb.dataset.ptab)); }));
+        window.addEventListener('resize', () => { fitPager(); moveBar(); });
+        if (window.ResizeObserver) { const ro = new ResizeObserver(() => fitPager()); ro.observe($('pane-links')); ro.observe($('pane-shop')); }
+    })();
     function buyMessage(p, item, q) {
         const c = curOf(p);
         return t('buyHi').replace('{seller}', p.name) + '\n' + item.name + (q > 1 ? ' x' + q : '') + '\n'
@@ -994,28 +1052,6 @@
         const base = isUrl(seller.raw) ? seller.raw : seller.href;
         window.open(waWithText(base, buyMessage(P, item, q)), '_blank', 'noopener');
     }
-    // Slide left to open (from the tab or the right edge of the screen), slide right to close.
-    function hswipe(el, onLeft, onRight) {
-        let x0 = null, y0 = null;
-        const start = (x, y) => { x0 = x; y0 = y; };
-        const end = (x, y) => { if (x0 == null) return; const dx = x - x0, dy = y - y0; x0 = null; if (Math.abs(dy) > 70) return; if (dx < -44 && onLeft) onLeft(); else if (dx > 56 && onRight) onRight(); };
-        el.addEventListener('touchstart', (e) => start(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
-        el.addEventListener('touchend', (e) => end(e.changedTouches[0].clientX, e.changedTouches[0].clientY), { passive: true });
-        el.addEventListener('pointerdown', (e) => {
-            if (e.pointerType !== 'mouse') return; start(e.clientX, e.clientY);
-            const up = (ev) => { window.removeEventListener('pointerup', up); end(ev.clientX, ev.clientY); };   // no pointer capture: it would swallow clicks
-            window.addEventListener('pointerup', up);
-        });
-    }
-    hswipe($('shop-handle'), openShop, null);
-    hswipe($('shop-sheet'), null, closeShop);
-    (function edgeSwipe() {
-        let x0 = null, y0 = null;
-        const edge = () => Math.max(24, Math.min(40, window.innerWidth * 0.08));
-        document.addEventListener('touchstart', (e) => { const t = e.touches[0]; x0 = t.clientX > window.innerWidth - edge() ? t.clientX : null; y0 = t.clientY; }, { passive: true });
-        document.addEventListener('touchend', (e) => { if (x0 == null) return; const t = e.changedTouches[0]; const dx = t.clientX - x0, dy = t.clientY - y0; x0 = null; if (dx < -44 && Math.abs(dy) < 70) openShop(); }, { passive: true });
-    })();
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeShop(); });
 
     // ---------- music panel (Spotify player or built-in lofi) + volume / mute ----------
     const SPOTIFY_RE = /^https:\/\/open\.spotify\.com\/(playlist|album|track|artist|show|episode)\/([A-Za-z0-9]{22})$/;
