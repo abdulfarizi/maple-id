@@ -32,8 +32,8 @@
     'layout','accent','accent2','cardTag','statusText','statusMode','specs','footerText','bannerGray','bannerDim',
     'avatarShape','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid',
     'spotify','musicAuto','shopEnabled','shopTitle','shopNote','shopWhatsApp','currency','products',
-    'donate','donateLabel','contactPhone','contactEmail'];
-  const BOOLS = ['showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid','musicAuto','shopEnabled'];
+    'donate','donateLabel','contactPhone','contactEmail','openGame','showLove'];
+  const BOOLS = ['showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid','musicAuto','shopEnabled','openGame','showLove'];
   const CURRENCIES = ['auto','MYR','SGD','IDR','BND','PHP','THB','USD'];
   const HEX_RE = /^#[0-9a-f]{6}$/i;
   const clampInt = (v, lo, hi, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; };
@@ -128,7 +128,7 @@
     sociabuzzEnabled: false, sociabuzz: '', widgetEnabled: false, widgetCode: '',
     gaming: [], channels: [], createdAt: new Date().toISOString().slice(0, 10),
     shopEnabled: false, shopTitle: '', shopNote: '', shopWhatsApp: '', currency: 'auto', products: [], spotify: '', musicAuto: true,
-    donate: '', donateLabel: '', contactPhone: '', contactEmail: ''
+    donate: '', donateLabel: '', contactPhone: '', contactEmail: '', openGame: true
   });
 
   // ---------- Supabase helpers ----------
@@ -482,6 +482,7 @@
 
     </script>
 
+    <script src="/assets/launch.js"></script>
     <script type="module" crossorigin src="/assets/index-hci7haam.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css" />
   </head>
