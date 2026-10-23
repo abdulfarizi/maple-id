@@ -195,7 +195,7 @@
         .owner-studio-badge.show { display:inline-flex; }
         #toast { position:fixed; z-index:90; left:50%; bottom:28px; transform:translate(-50%,20px); opacity:0; pointer-events:none; padding:10px 18px; border-radius:999px; background:var(--text); color:var(--bg); font-family:var(--mono); font-size:11px; transition:opacity 0.35s, transform 0.35s; }
         .hidden { display:none !important; }
-        .music-panel { position:fixed; z-index:70; top:62px; left:50%; transform:translateX(-50%); width:min(94vw,380px); max-height:calc(100vh - 80px); overflow:auto; border-radius:20px; padding:14px; background:rgba(14,13,19,0.96); backdrop-filter:blur(18px); border:1px solid var(--line-strong); box-shadow:0 24px 60px rgba(0,0,0,0.55); }
+        .music-panel { position:fixed; z-index:70; top:62px; left:50%; transform:translateX(-50%); width:min(94vw,380px); max-height:calc(100vh - 80px); overflow:auto; border-radius:20px; padding:14px; background:#0f0e15; border:1px solid var(--line-strong); box-shadow:0 24px 60px rgba(0,0,0,0.55); }
         .music-panel[hidden] { display:none; }
         .mp-head { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
         .mp-hint { margin-top:8px; font-size:11px; color:var(--dim); line-height:1.45; }
@@ -206,23 +206,20 @@
         .mp-vol input[type=range] { flex:1; accent-color:var(--accent); height:28px; }
         .mp-pct { font-family:var(--mono); font-size:10px; color:var(--muted); min-width:34px; text-align:right; }
         .mp-link { margin-top:8px; font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); padding:6px 2px; }
-        .grab { display:block; width:42px; height:4px; border-radius:99px; background:rgba(255,255,255,0.28); margin:0 auto; }
-        .shop-handle { position:fixed; z-index:60; left:50%; bottom:max(14px, env(safe-area-inset-bottom)); transform:translateX(-50%); width:min(92vw,380px); padding:9px 18px 12px; border-radius:20px; background:rgba(16,15,22,0.94); backdrop-filter:blur(16px); border:1px solid color-mix(in srgb,var(--accent) 55%,transparent); box-shadow:0 14px 40px rgba(0,0,0,0.5), 0 0 28px var(--accent-soft); touch-action:none; color:var(--text); animation:handleBob 2.6s ease-in-out infinite; }
-        .shop-handle .grab { margin-bottom:8px; }
-        .shop-handle-row { display:flex; align-items:center; justify-content:center; gap:10px; font-family:var(--mono); font-size:11px; letter-spacing:0.14em; text-transform:uppercase; }
-        .shop-handle-row i { color:var(--accent); }
-        @keyframes handleBob { 0%,100% { transform:translateX(-50%) translateY(0); } 50% { transform:translateX(-50%) translateY(-4px); } }
-        .shop-backdrop { position:fixed; inset:0; z-index:64; background:rgba(4,4,7,0.6); opacity:0; pointer-events:none; transition:opacity 0.3s; }
+        .shop-tab { position:fixed; z-index:60; right:0; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; align-items:center; gap:10px; padding:14px 9px; border-radius:16px 0 0 16px; background:#15141c; border:1px solid var(--accent); border-right:0; color:var(--text); touch-action:none; box-shadow:-6px 8px 24px rgba(0,0,0,0.45); }
+        .shop-tab #shop-handle-text { writing-mode:vertical-rl; font-family:var(--mono); font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; }
+        .shop-tab i { color:var(--accent); font-size:13px; }
+        .shop-tab .fa-chevron-left { font-size:10px; }
+        .shop-backdrop { position:fixed; inset:0; z-index:64; background:rgba(4,4,7,0.62); opacity:0; pointer-events:none; transition:opacity 0.3s; }
         .shop-backdrop.open { opacity:1; pointer-events:auto; }
-        .shop-sheet { position:fixed; z-index:65; left:50%; bottom:0; width:min(100vw,520px); max-height:84vh; display:flex; flex-direction:column; border-radius:26px 26px 0 0; background:var(--panel-solid, #101016); border:1px solid var(--line-strong); border-bottom:0; box-shadow:0 -24px 70px rgba(0,0,0,0.6); transform:translate(-50%,105%); transition:transform 0.45s var(--ease); }
-        .shop-sheet.open { transform:translate(-50%,0); }
-        .sheet-grab { padding:10px 0 4px; touch-action:none; cursor:grab; }
-        .sheet-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:6px 18px 10px; }
+        .shop-drawer { position:fixed; z-index:65; top:0; right:0; height:100%; height:100dvh; width:min(92vw,430px); display:flex; flex-direction:column; background:#101016; border-left:1px solid var(--line-strong); box-shadow:-24px 0 70px rgba(0,0,0,0.6); transform:translateX(104%); transition:transform 0.4s var(--ease); touch-action:pan-y; }
+        .shop-drawer.open { transform:translateX(0); }
+        .sheet-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:max(16px, env(safe-area-inset-top)) 18px 12px; }
         .sheet-head b { font-size:19px; font-weight:600; display:block; }
         .sheet-head small { font-family:var(--mono); font-size:10px; color:var(--muted); display:block; margin-top:3px; }
         .shop-note { margin:0 18px 10px; padding:9px 12px; border-radius:12px; background:var(--accent-soft); color:var(--muted); font-size:12px; line-height:1.45; }
-        .shop-list { overflow:auto; padding:2px 14px 6px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; overscroll-behavior:contain; }
-        .shop-foot { padding:8px 18px max(14px, env(safe-area-inset-bottom)); text-align:center; font-family:var(--mono); font-size:9.5px; letter-spacing:0.06em; color:var(--dim); }
+        .shop-list { flex:1; overflow:auto; padding:2px 14px 6px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; align-content:start; overscroll-behavior:contain; }
+        .shop-foot { padding:10px 18px max(14px, env(safe-area-inset-bottom)); text-align:center; font-family:var(--mono); font-size:9.5px; letter-spacing:0.06em; color:var(--dim); }
         .prod { display:flex; flex-direction:column; gap:7px; padding:10px; border-radius:16px; background:rgba(255,255,255,0.035); border:1px solid var(--line); min-width:0; }
         .prod-img { aspect-ratio:1/1; border-radius:11px; background:linear-gradient(135deg,var(--accent-soft),rgba(255,255,255,0.03)); display:grid; place-items:center; overflow:hidden; color:var(--accent); font-size:26px; }
         .prod-img img { width:100%; height:100%; object-fit:cover; display:block; }
@@ -236,7 +233,6 @@
         .prod-buy { height:38px; border-radius:11px; background:var(--accent); color:#fff; font-size:12.5px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:7px; }
         .prod-buy[disabled] { background:rgba(255,255,255,0.08); color:var(--dim); cursor:not-allowed; }
         .prod.sold .prod-img { filter:grayscale(1) brightness(0.6); }
-        body.has-shop .shell { padding-bottom:96px; }
         @media (max-width:340px) { .shop-list { grid-template-columns:1fr; } }
         #star-intro { position:fixed; inset:0; z-index:99999; background:#07070a; }
     </style>
@@ -311,15 +307,15 @@
 
         <div class="actions" id="actions"></div>
 
-        <button id="support-tile" class="support live hidden" type="button" aria-label="Give support">
+        <a id="support-tile" class="support live hidden" href="#" target="_blank" rel="noopener noreferrer" aria-label="Give support">
             <span class="money" aria-hidden="true">
                 <span style="--x:10%;--delay:0s">$</span><span style="--x:26%;--delay:1.2s">¢</span>
                 <span style="--x:44%;--delay:0.6s">$</span><span style="--x:62%;--delay:1.9s">RM</span>
             </span>
             <span class="support-top"><span class="support-tag"><span class="dot"></span><span data-i18n="supportTag">Support · 00</span></span><span class="support-coin"><i class="fa-solid fa-coins"></i></span></span>
             <span><span class="support-title"><span data-i18n="supportTitle">Give Support to</span> <span class="hl" id="support-name"></span></span><span class="support-desc" data-i18n="supportDesc"></span></span>
-            <span class="support-bottom"><span class="support-via"><span data-i18n="supportVia">via SociaBuzz</span> · <span id="support-user"></span></span><span class="support-cta"><span data-i18n="supportCta">Give Support</span> <i class="fa-solid fa-arrow-right"></i></span></span>
-        </button>
+            <span class="support-bottom"><span class="support-via"><span id="support-user"></span></span><span class="support-cta"><span data-i18n="supportCta">Give Support</span> <i class="fa-solid fa-arrow-right"></i></span></span>
+        </a>
     </section>
 
     <div style="display:flex; flex-direction:column; gap:20px;" id="sections"></div>
@@ -332,16 +328,16 @@
     <footer style="display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); padding:0 6px;"><span data-i18n="footer">Tap · Scan · Connect</span><span id="footer-right"></span></footer>
 </div>
 
-<button id="shop-handle" class="shop-handle hidden" type="button" data-act="shop-open" aria-label="Open shop">
-    <span class="grab"></span>
-    <span class="shop-handle-row"><i class="fa-solid fa-bag-shopping"></i> <span id="shop-handle-text"></span> <i class="fa-solid fa-chevron-up"></i></span>
+<button id="shop-handle" class="shop-tab hidden" type="button" data-act="shop-open" aria-label="Open shop">
+    <i class="fa-solid fa-bag-shopping"></i>
+    <span id="shop-handle-text"></span>
+    <i class="fa-solid fa-chevron-left"></i>
 </button>
 <div id="shop-backdrop" class="shop-backdrop" data-act="shop-close"></div>
-<aside id="shop-sheet" class="shop-sheet" aria-hidden="true" role="dialog" aria-label="Shop">
-    <div class="sheet-grab" id="shop-grab"><span class="grab"></span></div>
-    <div class="sheet-head">
+<aside id="shop-sheet" class="shop-drawer" aria-hidden="true" role="dialog" aria-label="Shop">
+    <div class="sheet-head" id="shop-grab">
         <div><b id="shop-title"></b><small id="shop-seller"></small></div>
-        <button type="button" class="x-btn" data-act="shop-close" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+        <button type="button" class="x-btn" data-act="shop-close" aria-label="Close"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
     <p class="shop-note hidden" id="shop-note"></p>
     <div class="shop-list" id="shop-list"></div>
@@ -377,6 +373,7 @@
     const EMBED = qs.get('embed') === '1';
     const PREVIEW = qs.get('preview') === '1';
     const $ = (id) => document.getElementById(id);
+    const setHtml = (el, html) => { if (el.__h !== html) { el.innerHTML = html; el.__h = html; } };   // only touch the DOM when something really changed (no flicker)
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const HEX = /^#[0-9a-f]{6}$/i;
     const MEDIA_OK = /^(https?:\/\/\S+|data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+)$/i;
@@ -390,7 +387,8 @@
         showVisits: true, showTime: true, showReactions: true, showCta: true, intro: true, confetti: true,
         sfx: true, music: true, themeSwitch: true, grid: true,
         gaming: [], channels: [], openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
-        shopEnabled: false, shopTitle: '', shopNote: '', currency: 'auto', products: [], spotify: '', musicAuto: true
+        shopEnabled: false, shopTitle: '', shopNote: '', shopWhatsApp: '', currency: 'auto', products: [], spotify: '', musicAuto: true,
+        donate: '', donateLabel: '', contactPhone: '', contactEmail: ''
     };
     const MAPLE_DEFAULTS = {
         cardTag: 'ID / 001',
@@ -404,8 +402,8 @@
     const MAPLE_PROFILE = {
         slug: 'maple', name: 'ᴍᴀᴘʟᴇ☆', role: 'Digital Creator',
         bio: 'Assalamualaikum & hello. Welcome to my digital card — tap a link below to connect, or save my contact in one tap.',
-        country: 'Malaysia', city: 'Masai, Johor', avatar: '', banner: '', theme: 'flame',
-        openTime: '00:00', closeTime: '00:00', timezone: 'Asia/Kuala_Lumpur', sociabuzzEnabled: true, sociabuzz: 'wzii_',
+        country: 'Malaysia', city: 'Masai, Johor', avatar: '', banner: '', theme: 'flame', donate: 'https://sociabuzz.com/wzii_/donate',
+        openTime: '00:00', closeTime: '00:00', timezone: 'Asia/Kuala_Lumpur',
         gaming: [
             { platform: 'Roblox', value: 'https://www.roblox.com/share?code=4adad911d156734abe482fec0cb93fc7&type=Profile&source=ProfileShare&stamp=1792399648738' },
             { platform: 'Mobile Legends', value: '37704847' }
@@ -421,7 +419,7 @@
     const normalize = (p) => ({ ...DEFAULTS, ...(p.slug === 'maple' ? MAPLE_DEFAULTS : {}), ...p });
 
     // ---------- link builders (same rules as the basic layout) ----------
-    const ICONS = { YouTube: 'fa-brands fa-youtube', TikTok: 'fa-brands fa-tiktok', Instagram: 'fa-brands fa-instagram', Discord: 'fa-brands fa-discord', WhatsApp: 'fa-brands fa-whatsapp', X: 'fa-brands fa-x-twitter', Facebook: 'fa-brands fa-facebook', Twitch: 'fa-brands fa-twitch', Telegram: 'fa-brands fa-telegram', Website: 'fa-solid fa-globe' };
+    const ICONS = { Spotify: 'fa-brands fa-spotify', GitHub: 'fa-brands fa-github', LinkedIn: 'fa-brands fa-linkedin', Snapchat: 'fa-brands fa-snapchat', Threads: 'fa-brands fa-threads', Steam: 'fa-brands fa-steam', Email: 'fa-solid fa-envelope', Phone: 'fa-solid fa-phone', Link: 'fa-solid fa-link', YouTube: 'fa-brands fa-youtube', TikTok: 'fa-brands fa-tiktok', Instagram: 'fa-brands fa-instagram', Discord: 'fa-brands fa-discord', WhatsApp: 'fa-brands fa-whatsapp', X: 'fa-brands fa-x-twitter', Facebook: 'fa-brands fa-facebook', Twitch: 'fa-brands fa-twitch', Telegram: 'fa-brands fa-telegram', Website: 'fa-solid fa-globe' };
     const clean = (v) => String(v || '').replace(/^@/, '').replace(/\s+/g, '');
     // WhatsApp: phone number (with country code), wa.me link, or a WhatsApp username
     function waInfo(v) {
@@ -454,6 +452,15 @@
             case 'Twitch': return { label: e, sub: r, href: 'https://www.twitch.tv/' + r, icon: n, kind: e };
             case 'Telegram': return { label: e, sub: '@' + r, href: 'https://t.me/' + r, icon: n, kind: e };
             case 'WhatsApp': return { label: e, sub: t, copy: t, icon: n, kind: e };
+            case 'Spotify': return { label: e, sub: r, href: 'https://open.spotify.com/user/' + encodeURIComponent(r), icon: n, kind: e };
+            case 'GitHub': return { label: e, sub: '@' + r, href: 'https://github.com/' + r, icon: n, kind: e };
+            case 'LinkedIn': return { label: e, sub: r, href: 'https://www.linkedin.com/in/' + r, icon: n, kind: e };
+            case 'Snapchat': return { label: e, sub: '@' + r, href: 'https://www.snapchat.com/add/' + r, icon: n, kind: e };
+            case 'Threads': return { label: e, sub: '@' + r, href: 'https://www.threads.net/@' + r, icon: n, kind: e };
+            case 'Steam': return { label: e, sub: r, href: /^\d{17}$/.test(r) ? 'https://steamcommunity.com/profiles/' + r : 'https://steamcommunity.com/id/' + r, icon: n, kind: e };
+            case 'Email': return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r) ? { label: e, sub: r, href: 'mailto:' + r, icon: n, kind: e } : { label: e, sub: t, copy: t, icon: n, kind: e };
+            case 'Phone': { const d = t.replace(/[^\d+]/g, ''); return d.length >= 6 ? { label: e, sub: t, href: 'tel:' + d, icon: n, kind: e } : { label: e, sub: t, copy: t, icon: n, kind: e }; }
+            case 'Link': return { label: 'Link', sub: t, href: 'https://' + t, icon: n, kind: e };
             case 'Discord': return /^\d{15,21}$/.test(r) ? { label: e, sub: 'ID ' + r, href: 'https://discord.com/users/' + r, copy: r, icon: n, kind: e } : { label: e, sub: '@' + r, copy: r, icon: n, kind: e };
             case 'Website': return { label: 'Website', sub: t, href: 'https://' + t, icon: n, kind: e };
             default: return { label: e, sub: t, copy: t, icon: n, kind: e };
@@ -478,11 +485,11 @@
     const I18N = {
         en: { card: 'Digital Card', studio: 'Studio', loading: 'Loading…', statusOnline: 'Online', statusOffline: 'Offline', basedIn: 'Based in', visits: 'Visits', localTime: 'Time',
             chipGaming: 'Gaming', chipRig: 'Gear', copyAll: 'Copy All', save: 'Save contact', copyLink: 'Copy link', qrHead: 'Scan Digital Card', qrSub: 'Point your camera to open this card', shareBtn: 'Share Card',
-            supportTag: 'Support · 00', supportTitle: 'Give Support to', supportDesc: 'Enjoy the content? Fuel the next one with a small tip.', supportVia: 'via SociaBuzz', supportCta: 'Give Support',
+            supportTag: 'Support · 00', supportTitle: 'Give Support to', supportDesc: 'Enjoy the content? Fuel the next one with a small tip.', supportVia: '', supportCta: 'Give Support',
             gaming: 'Gaming', channels: 'Channels', subscribe: 'Subscribe', chat: 'Chat', follow: 'Follow', add: 'Add', open: 'Open', copyId: 'Copy ID', copied: 'Copied',
             footer: 'Tap · Scan · Connect', noteHead: 'Quick WhatsApp Note', notePlaceholder: 'Type your note…', noteSend: 'Send via WhatsApp', noteHi: 'Hi', noteDefault: 'I just tapped your card.',
             toastSaved: 'Contact saved', toastLink: 'Link copied', toastAll: 'All handles copied!', toastId: 'ID copied', toastLang: 'Language: English', toastTheme: 'Theme', toastLofiOn: 'Lofi Beats: ON 🎧', toastLofiOff: 'Lofi Beats: OFF', toastSfxOn: 'UI Sound: ON', toastSfxOff: 'UI Sound: OFF', toastReact: 'Reacted', toastReacted: 'You already reacted 🙂',
-            shopTitle: 'Shop', shopSeller: 'Seller', shopFoot: 'Tap Buy to chat with the seller on WhatsApp. Your order details are filled in for you.', buy: 'Buy', soldOut: 'Sold out',
+            mail: 'Email', call: 'Call', shopTitle: 'Shop', shopSeller: 'Seller', shopFoot: 'Tap Buy to chat with the seller on WhatsApp. Your order details are filled in for you.', buy: 'Buy', soldOut: 'Sold out',
             buyHi: 'Hi {seller}! I’d like to buy:', buyPrice: 'Price', buyTotal: 'total', buyFrom: 'From your Digital ID card', toastPreviewBuy: 'Preview: Buy opens WhatsApp on the live card',
             showTracks: 'Show tracks', hideTracks: 'Hide tracks',
             musicHead: 'Music', lofiPlay: 'Play lofi beats', lofiStop: 'Stop lofi beats', volume: 'Volume', mute: 'Mute', unmute: 'Unmute',
@@ -496,7 +503,7 @@
             gaming: 'Permainan', channels: 'Saluran', subscribe: 'Langgan', chat: 'Sembang', follow: 'Ikuti', add: 'Tambah', open: 'Buka', copyId: 'Salin ID', copied: 'Disalin',
             footer: 'Ketik · Imbas · Hubung', noteHead: 'Nota WhatsApp Pantas', notePlaceholder: 'Taip nota anda…', noteSend: 'Hantar melalui WhatsApp', noteHi: 'Hai', noteDefault: 'Saya baru mengetik kad anda.',
             toastSaved: 'Kenalan disimpan', toastLink: 'Pautan disalin', toastAll: 'Semua nama pengguna disalin!', toastId: 'ID disalin', toastLang: 'Bahasa: Bahasa Melayu', toastTheme: 'Tema', toastLofiOn: 'Lofi Beats: HIDUP 🎧', toastLofiOff: 'Lofi Beats: MATI', toastSfxOn: 'Bunyi UI: HIDUP', toastSfxOff: 'Bunyi UI: MATI', toastReact: 'Bertindak balas', toastReacted: 'Anda sudah bertindak balas 🙂',
-            shopTitle: 'Kedai', shopSeller: 'Penjual', shopFoot: 'Ketik Beli untuk bersembang dengan penjual di WhatsApp. Butiran pesanan diisi untuk anda.', buy: 'Beli', soldOut: 'Habis dijual',
+            mail: 'E-mel', call: 'Hubungi', shopTitle: 'Kedai', shopSeller: 'Penjual', shopFoot: 'Ketik Beli untuk bersembang dengan penjual di WhatsApp. Butiran pesanan diisi untuk anda.', buy: 'Beli', soldOut: 'Habis dijual',
             buyHi: 'Hai {seller}! Saya ingin membeli:', buyPrice: 'Harga', buyTotal: 'jumlah', buyFrom: 'Dari kad Digital ID anda', toastPreviewBuy: 'Pratonton: Beli membuka WhatsApp pada kad sebenar',
             showTracks: 'Papar lagu', hideTracks: 'Sembunyi lagu',
             musicHead: 'Muzik', lofiPlay: 'Main lofi beats', lofiStop: 'Henti lofi beats', volume: 'Kelantangan', mute: 'Senyap', unmute: 'Buka bunyi',
@@ -510,7 +517,7 @@
     const t = (k) => (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k;
     function applyLang(next) {
         lang = I18N[next] ? next : 'en'; document.documentElement.lang = lang;
-        document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+        document.querySelectorAll('[data-i18n]').forEach((el) => { const v = t(el.dataset.i18n); if (el.textContent !== v) el.textContent = v; });
         document.querySelectorAll('.lang button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
         const note = $('custom-note'); if (note) note.placeholder = t('notePlaceholder');
         if (P) { renderStatus(); renderClock(); }
@@ -660,11 +667,14 @@
         if (p.sfx === false) sfxEnabled = false;
     }
     function renderBanner(p) {
-        const b = $('banner'); b.querySelectorAll('video,img').forEach((n) => n.remove());
-        if (p.banner && MEDIA_OK.test(p.banner)) {
+        const b = $('banner'), want = (p.banner && MEDIA_OK.test(p.banner)) ? p.banner : '';
+        if (b.__src !== want) {
+        b.__src = want; b.querySelectorAll('video,img').forEach((n) => n.remove());
+        if (want) {
             const vid = /\.(mp4|webm|mov)([?#]|$)/i.test(p.banner); const el = document.createElement(vid ? 'video' : 'img');
             if (vid) { el.autoplay = true; el.muted = true; el.loop = true; el.playsInline = true; el.setAttribute('aria-hidden', 'true'); } else { el.alt = ''; }
             el.src = p.banner; el.onerror = () => el.remove(); b.prepend(el);
+        }
         }
         $('banner-tag').textContent = p.cardTag || ('ID / ' + String(p.slug || '').toUpperCase());
     }
@@ -674,7 +684,7 @@
         if (p.avatar && MEDIA_OK.test(p.avatar)) {
             img.onload = () => { img.hidden = false; ini.style.display = 'none'; };
             img.onerror = () => { img.hidden = true; ini.style.display = ''; };
-            img.alt = p.name || ''; img.src = p.avatar;
+            img.alt = p.name || ''; if (img.getAttribute('src') !== p.avatar) img.src = p.avatar;
         } else { img.hidden = true; img.removeAttribute('src'); ini.style.display = ''; }
         const nm = String(p.name || '');
         $('name').innerHTML = nm.endsWith('☆') ? esc(nm.slice(0, -1)) + '<span class="star">☆</span>' : esc(nm);
@@ -689,7 +699,7 @@
         if (where) cells.push(`<div><dt data-i18n="basedIn">${esc(t('basedIn'))}</dt><dd>${esc(where)}</dd></div>`);
         if (p.showVisits !== false) cells.push(`<div><dt data-i18n="visits">${esc(t('visits'))}</dt><dd class="mono">${esc(Number(p.visits || 0).toLocaleString('en-US'))} 👁️</dd></div>`);
         if (p.showTime !== false) cells.push(`<div><dt data-i18n="localTime">${esc(t('localTime'))}</dt><dd class="mono" id="local-clock">--:--</dd></div>`);
-        const dl = $('stats'); dl.innerHTML = cells.join(''); dl.classList.toggle('hidden', !cells.length);
+        const dl = $('stats'); setHtml(dl, cells.join('')); dl.classList.toggle('hidden', !cells.length);
         dl.style.gridTemplateColumns = `repeat(${cells.length || 1},1fr)`;
     }
     const gamesOf = (p) => (p.gaming || []).filter((x) => x && x.value).slice(0, 12).map(gameInfo);
@@ -701,8 +711,8 @@
         if (games.length) out.push(`<span class="chip"><i class="fa-solid fa-gamepad"></i> <span data-i18n="chipGaming">${esc(t('chipGaming'))}</span></span>`);
         if (specs.length) out.push(`<button type="button" class="chip chip-btn" data-act="specs"><i class="fa-solid fa-microchip"></i> <span data-i18n="chipRig">${esc(t('chipRig'))}</span> <i class="fa-solid fa-chevron-down" style="font-size:7px"></i></button>`);
         if (copyables.length) out.push(`<button type="button" class="chip chip-accent" data-act="copy-all"><i class="fa-solid fa-copy" style="color:inherit"></i> <span data-i18n="copyAll">${esc(t('copyAll'))}</span></button>`);
-        const c = $('chips'); c.innerHTML = out.join(''); c.classList.toggle('hidden', !out.length);
-        $('specs-box').innerHTML = specs.slice(0, 12).map((s) => `<div><span>${esc(s.label)}</span><b>${esc(s.value)}</b></div>`).join('');
+        const c = $('chips'); setHtml(c, out.join('')); c.classList.toggle('hidden', !out.length);
+        setHtml($('specs-box'), specs.slice(0, 12).map((s) => `<div><span>${esc(s.label)}</span><b>${esc(s.value)}</b></div>`).join(''));
         $('specs').classList.toggle('hidden', !specs.length);
         $('specs').classList.toggle('open', drawerOpen && !!specs.length);
     }
@@ -713,27 +723,29 @@
     const REACTS = [['fire', '🔥'], ['hundred', '💯'], ['rocket', '🚀'], ['star', '⭐']];
     function renderReacts(p) {
         const box = $('reacts'); box.classList.toggle('hidden', p.showReactions === false);
-        box.innerHTML = REACTS.map(([k, e]) => { let done = false; try { done = !!localStorage.getItem('dig:react:' + p.slug + ':' + k); } catch {} return `<button type="button" data-react="${k}" class="${done ? 'done' : ''}">${e} <span>${Number((p.reactions || {})[k] || 0)}</span></button>`; }).join('');
+        setHtml(box, REACTS.map(([k, e]) => { let done = false; try { done = !!localStorage.getItem('dig:react:' + p.slug + ':' + k); } catch {} return `<button type="button" data-react="${k}" class="${done ? 'done' : ''}">${e} <span>${Number((p.reactions || {})[k] || 0)}</span></button>`; }).join(''));
     }
     function waNumber(p) { const w = chansOf(p).find((c) => c.wa); return w ? w.wa : ''; }
     // Seller / chat target: the first WhatsApp channel (phone number, username or wa.me link)
     function sellerWa(p) {
-        const c = (p.channels || []).find((x) => x && x.platform === 'WhatsApp' && x.value);
-        const w = c ? waInfo(c.value) : null; return w ? { ...w, raw: c.value } : null;
+        if (p.shopWhatsApp) { const w0 = waInfo(p.shopWhatsApp); if (w0) return { ...w0, raw: p.shopWhatsApp }; }
+        for (const c of (p.channels || [])) { if (c && c.platform === 'WhatsApp' && c.value) { const w = waInfo(c.value); if (w) return { ...w, raw: c.value }; } }
+        return null;
     }
     function waWithText(href, text) { try { const u = new URL(href); u.searchParams.delete('text'); return u.origin + u.pathname + (u.search ? u.search + '&' : '?') + 'text=' + encodeURIComponent(text) + u.hash; } catch { return href; } }
     function renderActions(p) {
         const wa = waNumber(p); const cols = ['1fr', wa ? 'auto' : '', 'auto', 'auto'].filter(Boolean).join(' ');
         const a = $('actions'); a.style.gridTemplateColumns = cols;
-        a.innerHTML = `<button class="btn live" data-act="vcard"><i class="fa-solid fa-plus"></i><span data-i18n="save">${esc(t('save'))}</span></button>`
+        setHtml(a, `<button class="btn live" data-act="vcard"><i class="fa-solid fa-plus"></i><span data-i18n="save">${esc(t('save'))}</span></button>`
             + (wa ? `<button class="btn btn-square live" data-act="note" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>` : '')
             + `<button class="btn btn-square live" data-act="copy-link" title="Copy link"><i class="fa-regular fa-copy"></i></button>`
-            + `<button class="btn btn-square live" data-act="qr" title="QR"><i class="fa-solid fa-qrcode"></i></button>`;
+            + `<button class="btn btn-square live" data-act="qr" title="QR"><i class="fa-solid fa-qrcode"></i></button>`);
     }
     function cta(item) {
         if (item.kind === 'WhatsApp') return t('chat'); if (item.kind === 'YouTube') return t('subscribe');
         if (item.kind === 'game') return item.href ? t('add') : t('copyId');
-        if (item.kind === 'Website') return t('open'); if (item.href) return t('follow'); return t('copyId');
+        if (item.kind === 'Website' || item.kind === 'Link') return t('open'); if (item.kind === 'Email') return t('mail'); if (item.kind === 'Phone') return t('call');
+        if (item.href) return t('follow'); return t('copyId');
     }
     function tile(item, i) {
         const left = `<span class="tile-left"><span class="tile-no">${String(i + 1).padStart(2, '0')}</span><span class="tile-ico"><i class="${esc(item.icon)}"></i></span><span class="tile-text"><span class="tile-title">${esc(item.label)}</span><span class="tile-sub">${esc(item.sub)}</span></span></span>`;
@@ -748,26 +760,25 @@
         const games = gamesOf(p), chans = chansOf(p); let html = '';
         if (games.length) html += `<section><div class="section-label"><span data-i18n="gaming">${esc(t('gaming'))}</span><b>${String(games.length).padStart(2, '0')}</b></div><ul class="list">${games.map(tile).join('')}</ul></section>`;
         if (chans.length) html += `<section><div class="section-label"><span data-i18n="channels">${esc(t('channels'))}</span><b>${String(chans.length).padStart(2, '0')}</b></div><ul class="list">${chans.map(tile).join('')}</ul></section>`;
-        $('sections').innerHTML = html;
+        setHtml($('sections'), html);
     }
-    let sbLoaded = false;
+    // Donation: the tile is just a link to the donation page (SociaBuzz, Saweria, Ko-fi, ...)
+    function donateUrl(p) {
+        const d = String(p.donate || '').trim();
+        if (/^https?:\/\/\S+$/i.test(d)) return d;
+        if (p.sociabuzzEnabled && /^[A-Za-z0-9_.-]{1,60}$/.test(p.sociabuzz || '')) return 'https://sociabuzz.com/' + p.sociabuzz + '/donate';
+        return '';
+    }
     function renderSupport(p) {
-        const on = !!(p.sociabuzzEnabled && /^[A-Za-z0-9_.-]{1,60}$/.test(p.sociabuzz || ''));
-        $('support-tile').classList.toggle('hidden', !on);
-        if (!on) return;
-        $('support-name').textContent = p.name; $('support-user').textContent = p.sociabuzz;
-        if (!sbLoaded && !PREVIEW) {
-            sbLoaded = true;
-            const s = document.createElement('script'); s.src = 'https://storage.sociabuzz.com/storage/js/main/buttononwebsite/index.min.js'; s.async = true;
-            s.onload = () => {
-                if (!window.sbBoW) return;
-                const label = /^[A-Za-z0-9+\/=]{4,80}$/.test(p.sociabuzzLabel || '') ? p.sociabuzzLabel : 'R2l2ZSBTdXBwb3J0';
-                const pos = /^position-[a-z-]{3,30}$/.test(p.sociabuzzPosition || '') ? p.sociabuzzPosition : 'position-bottom-right';
-                const c1 = HEX.test(p.sociabuzzColor || '') ? p.sociabuzzColor : '#cc0000', c2 = HEX.test(p.sociabuzzTextColor || '') ? p.sociabuzzTextColor : '#FFFFFF';
-                try { window.sbBoW.draw(p.sociabuzz, label, pos, c1, c2); } catch {}
-            };
-            document.body.appendChild(s);
-        }
+        const url = donateUrl(p), tile = $('support-tile');
+        tile.classList.toggle('hidden', !url);
+        if (!url) return;
+        tile.href = url;
+        $('support-name').textContent = p.name;
+        let host = ''; try { host = new URL(url).host.replace(/^www\./, ''); } catch {}
+        $('support-user').textContent = host;
+        const label = p.donateLabel || t('supportCta');
+        tile.querySelector('.support-cta > span').textContent = label; tile.querySelector('.support-cta > span').removeAttribute('data-i18n');
     }
     function renderBottom(p) {
         $('cta').classList.toggle('hidden', p.showCta === false);
@@ -855,7 +866,13 @@
         if (P.role) lines.push('TITLE:' + vc(P.role));
         if (P.city || P.country) lines.push('ADR;TYPE=HOME:;;;' + vc(P.city) + ';;;' + vc(P.country));
         lines.push('URL:' + publicUrl());
-        chansOf(P).filter((c) => c.href).forEach((c) => lines.push('URL;TYPE=' + String(c.label).replace(/[^A-Za-z]/g, '') + ':' + c.href));
+        if (P.contactPhone) lines.push('TEL;TYPE=CELL:' + vc(P.contactPhone));
+        if (P.contactEmail) lines.push('EMAIL:' + vc(P.contactEmail));
+        chansOf(P).filter((c) => c.href).forEach((c) => {
+            if (c.href.indexOf('mailto:') === 0) lines.push('EMAIL:' + vc(c.href.slice(7)));
+            else if (c.href.indexOf('tel:') === 0) lines.push('TEL:' + vc(c.href.slice(4)));
+            else lines.push('URL;TYPE=' + String(c.label).replace(/[^A-Za-z]/g, '') + ':' + c.href);
+        });
         lines.push('END:VCARD'); return lines.join('\r\n');
     }
     function downloadVCard() {
@@ -910,15 +927,14 @@
         }
     });
     $('support-tile').addEventListener('click', function (e) {
-        haptic(20); playTone(880, 0.08, 'triangle'); const glyphs = ['💸', '💰', '🪙', '💵'], r = this.getBoundingClientRect();
-        const x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
-        for (let i = 0; i < 10; i++) {
-            const g = document.createElement('span'), a = Math.random() * Math.PI * 2, d = 50 + Math.random() * 60;
+        haptic(20); playTone(880, 0.08, 'triangle'); const glyphs = ['💸', '💰', '🪙', '💵'];
+        const x = e.clientX || window.innerWidth / 2, y = e.clientY || window.innerHeight / 2;
+        for (let i = 0; i < 8; i++) {
+            const g = document.createElement('span'), an = Math.random() * Math.PI * 2, d = 50 + Math.random() * 60;
             g.className = 'money-burst'; g.textContent = glyphs[i % glyphs.length]; g.style.left = x + 'px'; g.style.top = y + 'px';
-            g.style.setProperty('--bx', Math.cos(a) * d + 'px'); g.style.setProperty('--by', Math.sin(a) * d - 30 + 'px');
+            g.style.setProperty('--bx', Math.cos(an) * d + 'px'); g.style.setProperty('--by', Math.sin(an) * d - 30 + 'px');
             document.body.appendChild(g); setTimeout(() => g.remove(), 900);
         }
-        const open = document.getElementById('btnModal'); if (open) setTimeout(() => open.click(), 350);
     });
     document.addEventListener('pointermove', (e) => {
         const el = e.target.closest && e.target.closest('.live'); if (!el) return;
@@ -937,7 +953,7 @@
     let shopOpen = false;
     function renderShop(p) {
         const items = productsOf(p), seller = sellerWa(p), on = !!(p.shopEnabled && items.length && seller);
-        $('shop-handle').classList.toggle('hidden', !on); document.body.classList.toggle('has-shop', on);
+        $('shop-handle').classList.toggle('hidden', !on);
         if (!on) { closeShop(); return; }
         const title = p.shopTitle || t('shopTitle');
         $('shop-handle-text').textContent = title + ' · ' + items.length;
@@ -945,7 +961,7 @@
         $('shop-seller').textContent = t('shopSeller') + ': ' + p.name + ' · WhatsApp ' + seller.sub;
         const note = $('shop-note'); note.classList.toggle('hidden', !p.shopNote); note.textContent = p.shopNote || '';
         const cur = curOf(p);
-        $('shop-list').innerHTML = items.map((it, i) => {
+        setHtml($('shop-list'), items.map((it, i) => {
             const img = it.image && MEDIA_OK.test(it.image) ? `<img src="${esc(it.image)}" alt="" loading="lazy">` : '<i class="fa-solid fa-bag-shopping"></i>';
             const sold = !!it.soldOut;
             return `<article class="prod${sold ? ' sold' : ''}" data-i="${i}" data-q="1">
@@ -956,7 +972,7 @@
                   ${sold ? '' : '<span class="qty"><button type="button" data-qty="-1" aria-label="-">−</button><span>1</span><button type="button" data-qty="1" aria-label="+">+</button></span>'}</div>
                 <button type="button" class="prod-buy live" data-buy="${i}" ${sold ? 'disabled' : ''}>${sold ? esc(t('soldOut')) : '<i class="fa-brands fa-whatsapp"></i> ' + esc(t('buy'))}</button>
             </article>`;
-        }).join('');
+        }).join(''));
         if (!shopOpen) $('shop-sheet').setAttribute('aria-hidden', 'true');
     }
     function setShop(open) {
@@ -978,14 +994,27 @@
         const base = isUrl(seller.raw) ? seller.raw : seller.href;
         window.open(waWithText(base, buyMessage(P, item, q)), '_blank', 'noopener');
     }
-    function swipe(el, { up, down, tap }) {
-        let y0 = null;
-        el.addEventListener('pointerdown', (e) => { y0 = e.clientY; try { el.setPointerCapture(e.pointerId); } catch {} });
-        el.addEventListener('pointerup', (e) => { if (y0 == null) return; const dy = e.clientY - y0; y0 = null; if (dy < -36 && up) up(); else if (dy > 48 && down) down(); else if (Math.abs(dy) < 8 && tap) tap(); });
-        el.addEventListener('pointercancel', () => { y0 = null; });
+    // Slide left to open (from the tab or the right edge of the screen), slide right to close.
+    function hswipe(el, onLeft, onRight) {
+        let x0 = null, y0 = null;
+        const start = (x, y) => { x0 = x; y0 = y; };
+        const end = (x, y) => { if (x0 == null) return; const dx = x - x0, dy = y - y0; x0 = null; if (Math.abs(dy) > 70) return; if (dx < -44 && onLeft) onLeft(); else if (dx > 56 && onRight) onRight(); };
+        el.addEventListener('touchstart', (e) => start(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+        el.addEventListener('touchend', (e) => end(e.changedTouches[0].clientX, e.changedTouches[0].clientY), { passive: true });
+        el.addEventListener('pointerdown', (e) => {
+            if (e.pointerType !== 'mouse') return; start(e.clientX, e.clientY);
+            const up = (ev) => { window.removeEventListener('pointerup', up); end(ev.clientX, ev.clientY); };   // no pointer capture: it would swallow clicks
+            window.addEventListener('pointerup', up);
+        });
     }
-    swipe($('shop-handle'), { up: openShop });
-    swipe($('shop-grab'), { down: closeShop });
+    hswipe($('shop-handle'), openShop, null);
+    hswipe($('shop-sheet'), null, closeShop);
+    (function edgeSwipe() {
+        let x0 = null, y0 = null;
+        const edge = () => Math.max(24, Math.min(40, window.innerWidth * 0.08));
+        document.addEventListener('touchstart', (e) => { const t = e.touches[0]; x0 = t.clientX > window.innerWidth - edge() ? t.clientX : null; y0 = t.clientY; }, { passive: true });
+        document.addEventListener('touchend', (e) => { if (x0 == null) return; const t = e.changedTouches[0]; const dx = t.clientX - x0, dy = t.clientY - y0; x0 = null; if (dx < -44 && Math.abs(dy) < 70) openShop(); }, { passive: true });
+    })();
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeShop(); });
 
     // ---------- music panel (Spotify player or built-in lofi) + volume / mute ----------
