@@ -31,12 +31,24 @@
     // layout + star-layout options
     'layout','accent','accent2','cardTag','statusText','statusMode','specs','footerText','bannerGray','bannerDim',
     'avatarShape','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid',
-    'spotify','musicAuto','shopEnabled','shopTitle','shopNote','currency','products'];
+    'spotify','musicAuto','shopEnabled','shopTitle','shopNote','shopWhatsApp','currency','products',
+    'donate','donateLabel','contactPhone','contactEmail'];
   const BOOLS = ['showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid','musicAuto','shopEnabled'];
   const CURRENCIES = ['auto','MYR','SGD','IDR','BND','PHP','THB','USD'];
   const HEX_RE = /^#[0-9a-f]{6}$/i;
   const clampInt = (v, lo, hi, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; };
   const str = (v, max) => String(v == null ? '' : v).trim().slice(0, max);
+  // Donation: a full link, or just a SociaBuzz username (-> sociabuzz.com/<name>/donate)
+  function cleanDonate(v) {
+    v = String(v || '').trim().replace(/^@/, '');
+    if (!v) return '';
+    if (/^[A-Za-z0-9_.-]{1,60}$/.test(v)) return `https://sociabuzz.com/${v}/donate`;
+    try {
+      const u = new URL(/^https?:\/\//i.test(v) ? v : 'https://' + v);
+      if (!/^https?:$/.test(u.protocol) || !u.hostname.includes('.')) return '';
+      return u.toString().slice(0, 300);
+    } catch { return ''; }
+  }
   function cleanSpotify(v) {
     v = String(v || '').trim();
     const m = v.match(/^spotify:(playlist|album|track|artist|show|episode):([A-Za-z0-9]{22})$/)
@@ -64,6 +76,11 @@
     m.statusMode = ['auto','online','offline','hidden'].includes(m.statusMode) ? m.statusMode : 'auto';
     m.avatarShape = ['circle','rounded','square'].includes(m.avatarShape) ? m.avatarShape : 'circle';
     if (m.spotify !== undefined) m.spotify = cleanSpotify(m.spotify);
+    if (m.donate !== undefined) m.donate = cleanDonate(m.donate);
+    if (m.donateLabel !== undefined) m.donateLabel = str(m.donateLabel, 24);
+    if (m.shopWhatsApp !== undefined) m.shopWhatsApp = str(m.shopWhatsApp, 120);
+    if (m.contactPhone !== undefined) m.contactPhone = /^[0-9+\-()\s.]{0,30}$/.test(String(m.contactPhone || '').trim()) ? str(m.contactPhone, 30) : '';
+    if (m.contactEmail !== undefined) m.contactEmail = /^[^\s@]{1,64}@[^\s@]{1,120}\.[^\s@]{2,}$/.test(String(m.contactEmail || '').trim()) ? str(m.contactEmail, 190) : '';
     if (m.shopTitle !== undefined) m.shopTitle = str(m.shopTitle, 24);
     if (m.shopNote !== undefined) m.shopNote = str(m.shopNote, 120);
     if (m.currency !== undefined) m.currency = CURRENCIES.includes(m.currency) ? m.currency : 'auto';
@@ -92,7 +109,7 @@
       { label: 'ENGINE', value: 'Roblox Studio / Lua' }
     ],
     openTime: '00:00', closeTime: '00:00', timezone: 'Asia/Kuala_Lumpur',
-    sociabuzzEnabled: true, sociabuzz: 'wzii_', widgetEnabled: false, widgetCode: '',
+    donate: 'https://sociabuzz.com/wzii_/donate', sociabuzzEnabled: false, sociabuzz: 'wzii_', widgetEnabled: false, widgetCode: '',
     gaming: [
       { platform: 'Roblox', value: 'https://www.roblox.com/share?code=4adad911d156734abe482fec0cb93fc7&type=Profile&source=ProfileShare&stamp=1792399648738' },
       { platform: 'Mobile Legends', value: '37704847' }
@@ -110,7 +127,8 @@
     theme: 'flame', openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
     sociabuzzEnabled: false, sociabuzz: '', widgetEnabled: false, widgetCode: '',
     gaming: [], channels: [], createdAt: new Date().toISOString().slice(0, 10),
-    shopEnabled: false, shopTitle: '', shopNote: '', currency: 'auto', products: [], spotify: '', musicAuto: true
+    shopEnabled: false, shopTitle: '', shopNote: '', shopWhatsApp: '', currency: 'auto', products: [], spotify: '', musicAuto: true,
+    donate: '', donateLabel: '', contactPhone: '', contactEmail: ''
   });
 
   // ---------- Supabase helpers ----------
@@ -469,6 +487,7 @@
   </head>
   <body>
     <div id="star-intro" style="position:fixed;inset:0;z-index:99999;background:#07070a"></div>
+    <div id="boot-cover" style="position:fixed;inset:0;z-index:99998;background:#07070a;transition:opacity .2s"></div>
     <script>
 /* Hollow-star zoom intro: a dark cover with a star-shaped hole. The star grows until the page is revealed. */
 function createStarIntro(opts) {
@@ -541,6 +560,13 @@ function createStarIntro(opts) {
     (function () {
       var el = document.getElementById('star-intro');
       var path = location.pathname.replace(/\/+$/, '') || '/';
+      var cover = document.getElementById('boot-cover');
+      if (path === '/' || path === '/studio' || path === '/index.html') { if (cover) cover.remove(); }
+      else {
+        // a card page: keep the screen dark until the card (or its star frame) is ready
+        window.__bootCoverOff = function () { if (!cover) return; var c = cover; cover = null; c.style.opacity = '0'; setTimeout(function () { c.remove(); }, 220); };
+        setTimeout(function () { if (window.__bootCoverOff) window.__bootCoverOff(); }, 5000);
+      }
       var seen = false;
       try { seen = !!sessionStorage.getItem('dig-intro'); } catch (e) {}
       // Only on the home page / studio, once per visit. Star-layout cards play their own intro.
