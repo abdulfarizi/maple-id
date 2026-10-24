@@ -20,6 +20,8 @@
     star: star5,
     heart: 'M50 92C8 62 -2 34 16 16C31 3 46 13 50 27C54 13 69 3 84 16C102 34 92 62 50 92Z',
     drop: 'M50 0C72 30 92 52 50 100C8 52 28 30 50 0Z',
+    gem: 'M30 8H70L94 38L50 94L6 38Z',
+    bolt: 'M58 2L18 56H44L36 98L82 40H54Z',
     snow: 'M50 6V94M12 28L88 72M12 72L88 28M50 22L40 12M50 22L60 12M50 78L40 88M50 78L60 88'
   };
 
@@ -49,7 +51,19 @@
     grape:    { shape: 'circle', mode: 'fall',    n: 24, s: [8, 22],  sway: 1, alpha: 0.55 },
     sand:     { shape: 'circle', mode: 'fall',    n: 46, s: [2, 6],   sway: 1, alpha: 0.55 },
     lime:     { shape: 'rect',   mode: 'rise',    n: 30, s: [3, 9],   alpha: 0.7 },
-    sky:      { shape: 'circle', mode: 'rise',    n: 14, s: [40, 110], alpha: 0.14, soft: 1 }
+    sky:      { shape: 'circle', mode: 'rise',    n: 14, s: [40, 110], alpha: 0.14, soft: 1 },
+    neon:     { shape: 'spark',  mode: 'twinkle', n: 34, s: [6, 22],  alpha: 0.9, glow: 1 },
+    galaxy:   { shape: 'star',   mode: 'twinkle', n: 46, s: [4, 16],  alpha: 0.9 },
+    coral:    { shape: 'circle', mode: 'rise',    n: 24, s: [8, 28],  ring: 1, alpha: 0.5 },
+    toxic:    { shape: 'drop',   mode: 'fall',    n: 24, s: [6, 18],  flicker: 1, alpha: 0.65, glow: 1 },
+    ruby:     { shape: 'gem',    mode: 'fall',    n: 20, s: [10, 26], spin: 1, flutter: 1, alpha: 0.6 },
+    sapphire: { shape: 'gem',    mode: 'rise',    n: 20, s: [8, 24],  spin: 1, flutter: 1, alpha: 0.55, glow: 1 },
+    amber:    { shape: 'circle', mode: 'wander',  n: 28, s: [4, 10],  alpha: 0.9, glow: 1 },
+    storm:    { shape: 'bolt',   mode: 'fall',    n: 18, s: [10, 28], flicker: 1, alpha: 0.6, glow: 1 },
+    bubblegum:{ shape: 'circle', mode: 'rise',    n: 20, s: [14, 44], ring: 1, sway: 1, alpha: 0.5 },
+    cocoa:    { shape: 'round',  mode: 'fall',    n: 22, s: [8, 22],  spin: 1, flutter: 1, alpha: 0.5 },
+    retro:    { shape: 'rect',   mode: 'fall',    n: 30, s: [4, 12],  alpha: 0.7 },
+    tropical: { shape: 'slim',   mode: 'fall',    n: 24, s: [14, 38], spin: 1, flutter: 1, sway: 1, alpha: 0.55 }
   };
 
   /* ---------- the big shape behind the card ---------- */
@@ -81,13 +95,25 @@
     grape:   { rot: 0,  svg: '<path d="M50 4Q52 14 50 22" ' + S + ' stroke-width="3"/>' + [[28, 32], [50, 32], [72, 32], [39, 52], [61, 52], [50, 72], [50, 90]].map(function (c, i) { return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + (i > 4 ? 10 : 12) + '" ' + F + ' opacity="' + (0.95 - i * 0.04) + '"/>'; }).join('') + '<path d="M50 12C64 2 82 6 84 20C70 24 56 20 50 12Z" fill="var(--accent-2)" opacity=".7"/>' },
     sand:    { rot: 0,  svg: '<circle cx="50" cy="38" r="24" ' + F + '/><path d="M0 72Q25 54 50 70T100 64V100H0Z" fill="var(--accent-2)" opacity=".55"/><path d="M0 86Q30 70 60 84T100 80V100H0Z" ' + F + ' opacity=".85"/>' },
     lime:    { rot: 8,  svg: '<path d="M60 2L20 56H46L38 98L82 38H54Z" ' + F + '/><path d="M60 2L20 56H46L38 98L82 38H54Z" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width=".8"/>' },
+    neon:    { rot: 0, svg: '<g ' + S + ' stroke-width="2.2"><path d="M50 6L94 88H6Z"/><path d="M50 32L74 76H26Z" opacity=".7"/><path d="M50 52L60 70H40Z" opacity=".5"/></g><circle cx="50" cy="62" r="3" fill="var(--accent-2)"/>' },
+    galaxy:  { rot: 0, svg: '<path d="M50 50m0 0a4 4 0 0 1 8 0a11 11 0 0 1-22 0a19 19 0 0 1 38 0a28 28 0 0 1-56 0a38 38 0 0 1 76 0a46 46 0 0 1-92 0" ' + S + ' stroke-width="2.4" opacity=".8"/><circle cx="50" cy="50" r="7" ' + F + '/><circle cx="82" cy="24" r="2.4" fill="var(--accent-2)"/><circle cx="18" cy="70" r="2" fill="var(--accent-2)"/><circle cx="76" cy="84" r="1.6" fill="var(--accent-2)"/>' },
+    coral:   { rot: 0, svg: '<circle cx="36" cy="62" r="24" ' + F + ' opacity=".9"/><circle cx="68" cy="40" r="18" ' + F + ' opacity=".8"/><circle cx="64" cy="76" r="12" ' + F + ' opacity=".7"/><circle cx="26" cy="26" r="8" ' + S + ' stroke-width="1.6"/><circle cx="82" cy="70" r="6" ' + S + ' stroke-width="1.6"/>' },
+    toxic:   { rot: 0, svg: [0, 120, 240].map(function (a) { return '<path d="M50 50L50 10A40 40 0 0 1 84.6 70Z" transform="rotate(' + (a - 30) + ' 50 50)" ' + F + '/>'; }).join('') + '<circle cx="50" cy="50" r="9" fill="#0c0708"/><circle cx="50" cy="50" r="6" ' + F + '/>' },
+    ruby:    { rot: 0, svg: '<path d="' + D.gem + '" ' + F + '/><path d="M6 38H94M30 8L40 38L50 94L60 38L70 8" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1" stroke-linejoin="round"/>' },
+    sapphire:{ rot: 0, svg: '<path d="M50 4L88 30V70L50 96L12 70V30Z" ' + F + '/><path d="M50 4V96M12 30L88 70M88 30L12 70M12 30H88M12 70H88" fill="none" stroke="#fff" stroke-opacity=".3" stroke-width="1"/>' },
+    amber:   { rot: 0, svg: '<circle cx="50" cy="50" r="20" ' + F + '/><g ' + S + ' stroke-width="3">' + [0, 45, 90, 135, 180, 225, 270, 315].map(function (a) { return '<path d="M50 14V4" transform="rotate(' + a + ' 50 50)"/>'; }).join('') + '</g><circle cx="50" cy="50" r="34" ' + S + ' stroke-width=".8" opacity=".5"/>' },
+    storm:   { rot: 0, svg: '<g ' + F + ' opacity=".55"><circle cx="30" cy="40" r="18"/><circle cx="52" cy="30" r="22"/><circle cx="74" cy="42" r="16"/><rect x="26" y="40" width="54" height="18" rx="9"/></g><path d="M58 40L34 74H50L44 98L72 60H56Z" ' + F + '/>' },
+    bubblegum:{ rot: 0, svg: '<circle cx="50" cy="50" r="44" ' + F + ' opacity=".85"/><circle cx="50" cy="50" r="44" ' + S + ' stroke-width="1.4"/><path d="M26 34Q32 22 46 18" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="5" stroke-linecap="round"/><circle cx="74" cy="72" r="5" fill="#fff" opacity=".35"/>' },
+    cocoa:   { rot: 0, svg: '<ellipse cx="50" cy="50" rx="30" ry="44" ' + F + ' transform="rotate(35 50 50)"/><path d="M34 14C54 34 46 66 66 86" fill="none" stroke="#0c0708" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>' },
+    retro:   { rot: 0, svg: [0, 1, 2, 3].map(function (r) { return [0, 1, 2, 3].map(function (c) { return (r + c) % 2 ? '' : '<rect x="' + (6 + c * 22) + '" y="' + (6 + r * 22) + '" width="20" height="20" ' + F + '/>'; }).join(''); }).join('') + '<rect x="6" y="6" width="88" height="88" ' + S + ' stroke-width="1" opacity=".5"/>' },
+    tropical:{ rot: 0, svg: rot(D.slim, 7, 24, 'translate(50 96) scale(.78) translate(-50 -98)').replace(/rotate\((-?\d+) 50 50\)/g, function (m, a) { return 'rotate(' + (a - 72) + ' 50 96)'; }) },
     sky:     { rot: 0,  svg: '<g ' + F + '><circle cx="32" cy="60" r="20"/><circle cx="56" cy="46" r="26"/><circle cx="78" cy="62" r="18"/><rect x="30" y="60" width="50" height="20" rx="10"/></g><circle cx="20" cy="22" r="8" fill="var(--accent-2)" opacity=".7"/>' }
   };
 
   /* ---------- state ---------- */
   var cv, ctx, big, raf = 0, parts = [], dpr = 1, W = 0, H = 0, palette = [], running = false, theme = '', cfg, paths = {}, tick = 0;
 
-  function onHome() { var p = location.pathname.replace(/\/+$/, '') || '/'; return p === '/' || p === '/studio' || !!document.getElementById('maple-home'); }
+  function onHome() { var p = location.pathname.replace(/\/+$/, '') || '/'; return p === '/' || p === '/studio' || p === '/profile' || p === '/explore' || (!!document.body && document.body.classList.contains('pager-on')) || (!window.dgPager && !!document.getElementById('maple-home')); }
   function wanted() {
     var t = root.getAttribute('data-theme');
     return !!FX[t] && root.getAttribute('data-bgfx') !== 'off' && !onHome() && !(document.body && document.body.classList.contains('star-mode'));
@@ -160,7 +186,7 @@
 
   function build(t) {
     theme = t; cfg = FX[t];
-    ['leaf', 'petal', 'round', 'slim', 'ginkgo', 'spark', 'star', 'heart', 'drop', 'snow'].forEach(function (k) { paths[k] = P(D[k]); });
+    ['leaf', 'petal', 'round', 'slim', 'ginkgo', 'spark', 'star', 'heart', 'drop', 'snow', 'gem', 'bolt'].forEach(function (k) { paths[k] = P(D[k]); });
     paths.leaf = P(D.leaf);
     var b = BIG[t];
     big = document.createElement('div'); big.id = 'fx-big'; big.setAttribute('aria-hidden', 'true');

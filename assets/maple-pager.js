@@ -5,7 +5,7 @@
 (function () {
   'use strict';
   var NAMES = ['home', 'explore', 'profile'];
-  var URLS = ['/', '/#explore', '/studio'];
+  var URLS = ['/', '/#explore', '/profile'];
   var TITLES = ['Maple ID · one link for every handle', 'Explore · Maple ID', 'Profile · Maple ID'];
 
   var root, track, appEl, footEl, panes = {}, sections = [];
@@ -60,7 +60,7 @@
     var d = dockEl();
     if (!d) return;
     var ind = d.querySelector('.dock-ind');
-    if (!isOn) { if (ind) ind.remove(); items().forEach(function (a) { a.classList.remove('on'); a.removeAttribute('aria-current'); }); return; }
+    if (!isOn) { if (ind) ind.remove(); return; }
     if (!ind) { ind = document.createElement('i'); ind.className = 'dock-ind'; ind.setAttribute('aria-hidden', 'true'); d.insertBefore(ind, d.firstChild); }
     if (cur < 0) cur = 0;
     mark(cur); moveInd(track ? prog() : cur);
@@ -167,6 +167,8 @@
       if (!isOn) return;
       isOn = false; if (root) root.hidden = true; appEl.hidden = false;
       document.body.classList.remove('pager-on'); document.body.removeAttribute('data-page');
+      var onStudio = location.pathname.replace(/\/+$/, '') === '/studio';
+      items().forEach(function (a) { var on = onStudio && a.dataset.dock === 'profile'; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
       if (footEl && appEl.nextSibling !== footEl) appEl.parentNode.insertBefore(footEl, appEl.nextSibling);
       decorate();
     }

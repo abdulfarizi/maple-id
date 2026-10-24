@@ -16,7 +16,8 @@
     ['mono', 'Mono', '#e5e7eb', '#9ca3af'], ['midnight', 'Midnight', '#6366f1', '#38bdf8'], ['ice', 'Ice', '#7dd3fc', '#e0f2fe'], ['candy', 'Candy', '#f472b6', '#c084fc'],
     ['matcha', 'Matcha', '#a3b18a', '#dad7cd'],
     ['aurora', 'Aurora', '#2dd4bf', '#a78bfa'], ['rose', 'Rose', '#f4a6b7', '#f9d5c5'], ['lava', 'Lava', '#ff3b00', '#ffcc00'], ['mint', 'Mint', '#6ee7b7', '#d9f99d'],
-    ['grape', 'Grape', '#c026d3', '#7c3aed'], ['sand', 'Sand', '#d6a76a', '#f5e1b8'], ['lime', 'Lime', '#c6ff00', '#00e676'], ['sky', 'Sky', '#38bdf8', '#a5b4fc']
+    ['grape', 'Grape', '#c026d3', '#7c3aed'], ['sand', 'Sand', '#d6a76a', '#f5e1b8'], ['lime', 'Lime', '#c6ff00', '#00e676'], ['sky', 'Sky', '#38bdf8', '#a5b4fc'],
+    ['neon', 'Neon', '#ff2bd6', '#00f0ff'], ['galaxy', 'Galaxy', '#7c3aed', '#22d3ee'], ['coral', 'Coral', '#ff7e67', '#ffd1a9'], ['toxic', 'Toxic', '#39ff14', '#d4ff00'], ['ruby', 'Ruby', '#e11d48', '#fb7185'], ['sapphire', 'Sapphire', '#2563eb', '#60a5fa'], ['amber', 'Amber', '#ffb000', '#ff6a00'], ['storm', 'Storm', '#94a3b8', '#38bdf8'], ['bubblegum', 'Bubblegum', '#ff77e9', '#77f0ff'], ['cocoa', 'Cocoa', '#c08a5b', '#e8c9a0'], ['retro', 'Retro', '#ff6ec7', '#ffe66d'], ['tropical', 'Tropical', '#00d4aa', '#ffd23f']
   ];
   var KNOWN = THEME_LIST.map(function (t) { return t[0]; });
   var HEX = /^#[0-9a-f]{6}$/i;
