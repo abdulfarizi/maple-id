@@ -401,7 +401,8 @@
     const SB_URL = 'https://qebbuxixnqsqjuprfpyv.supabase.co';
     const SB_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
     const qs = new URLSearchParams(location.search);
-    const EMBED = qs.get('embed') === '1';
+    const OWN = qs.get('own') === '1';           // your own card on the Profile page: the full embedded page, but no intro replay / confetti / auto-music
+    const EMBED = qs.get('embed') === '1' || OWN;
     const PREVIEW = qs.get('preview') === '1';
     const $ = (id) => document.getElementById(id);
     const setHtml = (el, html) => { if (el.__h !== html) { el.innerHTML = html; el.__h = html; } };   // only touch the DOM when something really changed (no flicker)
@@ -624,7 +625,7 @@
         };
     }
     
-    const INTRO = PREVIEW ? (function () { const e = document.getElementById('star-intro'); if (e) e.remove(); return null; })() : createStarIntro({ bg: '#07070a' });
+    const INTRO = (PREVIEW || OWN) ? (function () { const e = document.getElementById('star-intro'); if (e) e.remove(); return null; })() : createStarIntro({ bg: '#07070a' });
 
     // ---------- tiny helpers ----------
     let toastTimer;
@@ -855,8 +856,8 @@
         if (firstRender) {
             firstRender = false;
             if (INTRO) { if (P.intro === false) INTRO.skip(); else INTRO.go(); }
-            if (!PREVIEW && P.confetti !== false && P.intro !== false) setTimeout(confetti, 1500);
-            if (!PREVIEW && spotifyEmbed(P.spotify) && P.musicAuto !== false && P.music !== false && !muted) setTimeout(() => { if (!panelOpen) togglePanel(true); }, P.intro === false ? 700 : 2700);
+            if (!PREVIEW && !OWN && P.confetti !== false && P.intro !== false) setTimeout(confetti, 1500);
+            if (!PREVIEW && !OWN && spotifyEmbed(P.spotify) && P.musicAuto !== false && P.music !== false && !muted) setTimeout(() => { if (!panelOpen) togglePanel(true); }, P.intro === false ? 700 : 2700);
         }
     }
     window.renderCard = renderCard;
@@ -1169,6 +1170,14 @@
             const h = sh.getBoundingClientRect().bottom + window.scrollY + (parseFloat(cs.paddingBottom) || 0); try { parent.postMessage({ maple: 'h', h }, location.origin); } catch {} };
         new ResizeObserver(reportH).observe($('shell')); window.addEventListener('load', reportH);
     }
+    // the shell tells this page when it is scrolled out of view (swiped to another page): stop the music so it never plays "behind" you
+    window.addEventListener('message', (e) => {
+        const d = e.data; if (e.origin !== location.origin || !d || d.maple !== 'visible' || d.v) return;
+        try { if (music.playing()) music.stop(); } catch {}
+        try { if (panelOpen) togglePanel(false); } catch {}
+    });
+    // inside the app, go to the Studio through the shell (no page reload); standalone it stays a normal link
+    $('owner-studio-btn').addEventListener('click', (e) => { if (window.parent !== window) { e.preventDefault(); try { parent.postMessage({ maple: 'go', href: '/studio' }, location.origin); } catch { location.href = '/studio'; } } });
     setInterval(renderClock, 15000); setInterval(() => { if (P) renderStatus(); }, 60000);
     applyLang(lang);
     if (!PREVIEW && !EMBED) loadStandalone();
