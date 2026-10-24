@@ -208,13 +208,23 @@
         .mp-vol { margin-top:12px; display:flex; align-items:center; gap:12px; }
         .mp-vol input[type=range] { flex:1; accent-color:var(--accent); height:28px; }
         .mp-pct { font-family:var(--mono); font-size:10px; color:var(--muted); min-width:34px; text-align:right; }
+        .mp-theme { font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+        .mp-theme b { color:var(--accent); font-weight:400; }
+        .mp-ctrl { display:flex; align-items:center; gap:8px; }
+        .mp-ctrl .mp-lofi-btn { flex:1; }
+        .mp-tracks { list-style:none; margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+        .mp-tracks button { width:100%; display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:12px; border:1px solid var(--line); background:rgba(255,255,255,0.03); font-size:12.5px; color:var(--muted); transition:border-color .2s,color .2s,background .2s; }
+        .mp-tracks button small { margin-left:auto; font-family:var(--mono); font-size:9.5px; color:var(--dim); }
+        .mp-tracks button i { width:12px; color:var(--dim); font-size:10px; }
+        .mp-tracks button.on { color:var(--text); border-color:var(--accent); background:var(--accent-soft); }
+        .mp-tracks button.on i { color:var(--accent); }
         .mp-link { margin-top:8px; font-family:var(--mono); font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); padding:6px 2px; }
         .pager { display:flex; flex-direction:column; }
         .ptabs { position:relative; display:flex; border-bottom:1px solid var(--line-strong); margin-bottom:16px; }
         .ptab { flex:1; padding:14px 8px 13px; font-size:15px; font-weight:500; color:var(--muted); text-align:center; transition:color 0.2s; }
         .ptab.active { color:var(--text); }
         .pbar { position:absolute; left:0; bottom:-1px; height:3px; width:48px; border-radius:3px 3px 0 0; background:var(--accent); will-change:transform,width; }
-        .pslides { display:flex; align-items:flex-start; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; transition:height 0.25s ease; }
+        .pslides { scroll-behavior:auto; display:flex; align-items:flex-start; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; transition:height 0.25s ease; }
         .pslides::-webkit-scrollbar { display:none; }
         .pslide { flex:0 0 100%; min-width:0; scroll-snap-align:start; scroll-snap-stop:always; }
         .pager.single .pslides { overflow:visible; height:auto !important; display:block; }
@@ -290,7 +300,13 @@
             <p class="mp-hint" data-i18n="spotifyHint"></p>
         </div>
         <div id="mp-lofi" class="hidden">
-            <button type="button" class="btn live mp-lofi-btn" id="lofi-toggle"><i class="fa-solid fa-play"></i> <span id="lofi-label" data-i18n="lofiPlay">Play lofi beats</span></button>
+            <p class="mp-theme"><span data-i18n="themeMusic">Theme music</span> · <b id="mp-theme-name"></b></p>
+            <div class="mp-ctrl">
+                <button type="button" class="icon-pill" id="mp-prev" aria-label="Previous track"><i class="fa-solid fa-backward-step"></i></button>
+                <button type="button" class="btn live mp-lofi-btn" id="lofi-toggle"><i class="fa-solid fa-play"></i> <span id="lofi-label" data-i18n="lofiPlay">Play theme music</span></button>
+                <button type="button" class="icon-pill" id="mp-next" aria-label="Next track"><i class="fa-solid fa-forward-step"></i></button>
+            </div>
+            <ul class="mp-tracks" id="mp-tracks"></ul>
         </div>
         <div class="mp-vol">
             <button type="button" class="icon-pill" id="mp-mute" aria-label="Mute"><i class="fa-solid fa-volume-high"></i></button>
@@ -377,7 +393,8 @@
 
 <div id="toast"></div>
 
-<script src="/assets/launch.js"></script>
+<script src="/assets/launch.js?v=2"></script>
+<script src="/assets/maple-music.js?v=1"></script>
 <script>
 (function () {
     'use strict';
@@ -502,11 +519,11 @@
             supportTag: 'Support · 00', supportTitle: 'Give Support to', supportDesc: 'Enjoy the content? Fuel the next one with a small tip.', supportVia: '', supportCta: 'Give Support',
             gaming: 'Gaming', channels: 'Channels', subscribe: 'Subscribe', chat: 'Chat', follow: 'Follow', add: 'Add', open: 'Open', copyId: 'Copy ID', copied: 'Copied',
             footer: 'Tap · Scan · Connect', noteHead: 'Quick WhatsApp Note', notePlaceholder: 'Type your note…', noteSend: 'Send via WhatsApp', noteHi: 'Hi', noteDefault: 'I just tapped your card.',
-            toastSaved: 'Contact saved', toastSaveReady: 'Contact ready to save', qrSave: 'Save image', qrShare: 'Share', toastQrSaved: 'QR image saved', toastLink: 'Link copied', toastAll: 'All handles copied!', toastId: 'ID copied', toastLang: 'Language: English', toastTheme: 'Theme', toastLofiOn: 'Lofi Beats: ON 🎧', toastLofiOff: 'Lofi Beats: OFF', toastSfxOn: 'UI Sound: ON', toastSfxOff: 'UI Sound: OFF', toastReact: 'Reacted', toastReacted: 'You already reacted 🙂',
+            toastSaved: 'Contact saved', toastSaveReady: 'Contact ready to save', qrSave: 'Save image', qrShare: 'Share', toastQrSaved: 'QR image saved', toastLink: 'Link copied', toastAll: 'All handles copied!', toastId: 'ID copied', toastLang: 'Language: English', toastTheme: 'Theme', toastLofiOn: 'Music: ON 🎧', toastLofiOff: 'Music: OFF', toastSfxOn: 'UI Sound: ON', toastSfxOff: 'UI Sound: OFF', toastReact: 'Reacted', toastReacted: 'You already reacted 🙂',
             toastLoved: 'Thanks for the love', toastLoved2: 'You already loved this card', tabLinks: 'Links', toastOpening: 'ID copied. Opening {game}…', mail: 'Email', call: 'Call', shopTitle: 'Shop', shopSeller: 'Seller', shopFoot: 'Tap Buy to chat with the seller on WhatsApp. Your order details are filled in for you.', buy: 'Buy', soldOut: 'Sold out',
             buyHi: 'Hi {seller}! I’d like to buy:', buyPrice: 'Price', buyTotal: 'total', buyFrom: 'From your Maple ID card', toastPreviewBuy: 'Preview: Buy opens WhatsApp on the live card',
             showTracks: 'Show tracks', hideTracks: 'Hide tracks',
-            musicHead: 'Music', lofiPlay: 'Play lofi beats', lofiStop: 'Stop lofi beats', volume: 'Volume', mute: 'Mute', unmute: 'Unmute',
+            musicHead: 'Music', lofiPlay: 'Play theme music', lofiStop: 'Stop music', themeMusic: 'Theme music', trackLabel: 'Track', volume: 'Volume', mute: 'Mute', unmute: 'Unmute',
             spotifyHint: 'Tap ▶ in the player to start. Browsers don’t allow music to start by itself. Spotify’s own volume follows your device volume; the slider and mute control this card’s sounds and stop the player.',
             mutedNote: 'Muted. Tap the speaker to turn the sound back on.', toastMuted: 'Muted', toastUnmuted: 'Sound on',
             ctaTag: 'Maple ID', ctaTitle: 'Want your own Maple ID?', ctaDesc: 'Claim your free link and build a card like this in minutes.', ctaBtn: 'Create yours',
@@ -516,11 +533,11 @@
             supportTag: 'Sokongan · 00', supportTitle: 'Beri Sokongan kepada', supportDesc: 'Suka kandungan ini? Sokong karya seterusnya dengan sedikit sumbangan.', supportVia: 'melalui SociaBuzz', supportCta: 'Beri Sokongan',
             gaming: 'Permainan', channels: 'Saluran', subscribe: 'Langgan', chat: 'Sembang', follow: 'Ikuti', add: 'Tambah', open: 'Buka', copyId: 'Salin ID', copied: 'Disalin',
             footer: 'Ketik · Imbas · Hubung', noteHead: 'Nota WhatsApp Pantas', notePlaceholder: 'Taip nota anda…', noteSend: 'Hantar melalui WhatsApp', noteHi: 'Hai', noteDefault: 'Saya baru mengetik kad anda.',
-            toastSaved: 'Kenalan disimpan', toastSaveReady: 'Kenalan sedia disimpan', qrSave: 'Simpan imej', qrShare: 'Kongsi', toastQrSaved: 'Imej QR disimpan', toastLink: 'Pautan disalin', toastAll: 'Semua nama pengguna disalin!', toastId: 'ID disalin', toastLang: 'Bahasa: Bahasa Melayu', toastTheme: 'Tema', toastLofiOn: 'Lofi Beats: HIDUP 🎧', toastLofiOff: 'Lofi Beats: MATI', toastSfxOn: 'Bunyi UI: HIDUP', toastSfxOff: 'Bunyi UI: MATI', toastReact: 'Bertindak balas', toastReacted: 'Anda sudah bertindak balas 🙂',
+            toastSaved: 'Kenalan disimpan', toastSaveReady: 'Kenalan sedia disimpan', qrSave: 'Simpan imej', qrShare: 'Kongsi', toastQrSaved: 'Imej QR disimpan', toastLink: 'Pautan disalin', toastAll: 'Semua nama pengguna disalin!', toastId: 'ID disalin', toastLang: 'Bahasa: Bahasa Melayu', toastTheme: 'Tema', toastLofiOn: 'Muzik: HIDUP 🎧', toastLofiOff: 'Muzik: MATI', toastSfxOn: 'Bunyi UI: HIDUP', toastSfxOff: 'Bunyi UI: MATI', toastReact: 'Bertindak balas', toastReacted: 'Anda sudah bertindak balas 🙂',
             toastLoved: 'Terima kasih atas sokongan', toastLoved2: 'Anda sudah menyukai kad ini', tabLinks: 'Pautan', toastOpening: 'ID disalin. Membuka {game}…', mail: 'E-mel', call: 'Hubungi', shopTitle: 'Kedai', shopSeller: 'Penjual', shopFoot: 'Ketik Beli untuk bersembang dengan penjual di WhatsApp. Butiran pesanan diisi untuk anda.', buy: 'Beli', soldOut: 'Habis dijual',
             buyHi: 'Hai {seller}! Saya ingin membeli:', buyPrice: 'Harga', buyTotal: 'jumlah', buyFrom: 'Dari kad Maple ID anda', toastPreviewBuy: 'Pratonton: Beli membuka WhatsApp pada kad sebenar',
             showTracks: 'Papar lagu', hideTracks: 'Sembunyi lagu',
-            musicHead: 'Muzik', lofiPlay: 'Main lofi beats', lofiStop: 'Henti lofi beats', volume: 'Kelantangan', mute: 'Senyap', unmute: 'Buka bunyi',
+            musicHead: 'Muzik', lofiPlay: 'Main muzik tema', lofiStop: 'Henti muzik', themeMusic: 'Muzik tema', trackLabel: 'Lagu', volume: 'Kelantangan', mute: 'Senyap', unmute: 'Buka bunyi',
             spotifyHint: 'Ketik ▶ pada pemain untuk mula. Pelayar tidak membenarkan muzik bermula sendiri. Kelantangan Spotify mengikut kelantangan peranti anda; peluncur dan butang senyap mengawal bunyi kad ini dan menghentikan pemain.',
             mutedNote: 'Senyap. Ketik pembesar suara untuk buka bunyi.', toastMuted: 'Senyap', toastUnmuted: 'Bunyi dihidupkan',
             ctaTag: 'Maple ID', ctaTitle: 'Mahu Maple ID anda sendiri?', ctaDesc: 'Tuntut pautan percuma anda dan bina kad seperti ini dalam beberapa minit.', ctaBtn: 'Cipta sekarang',
@@ -692,7 +709,7 @@
             el.src = p.banner; el.onerror = () => el.remove(); b.prepend(el);
         }
         }
-        $('banner-tag').textContent = p.cardTag || ('ID / ' + String(p.slug || '').toUpperCase());
+        $('banner-tag').textContent = (p.cardTag || '').trim() || (Number(p.cardNo) > 0 ? 'ID / ' + String(Number(p.cardNo)).padStart(3, '0') : 'ID / ' + String(p.slug || '').toUpperCase());
     }
     function renderIdentity(p) {
         const img = $('avatar-img'), ini = $('avatar-initials');
@@ -855,7 +872,8 @@
         let extra = {}, name = row.name || 'Creator';
         if (typeof row.name === 'string' && row.name.indexOf('{"__dig":') === 0) { try { extra = JSON.parse(row.name); name = extra.name || 'Creator'; } catch {} }
         const { likes, visits, reactions, __dig, ...rest } = extra;
-        return { ...rest, id: row.id, slug: row.slug, name };
+        const dbNo = Number(row.card_no), packedNo = Number(rest.cardNo);
+        return { ...rest, id: row.id, slug: row.slug, name, cardNo: dbNo > 0 ? dbNo : (packedNo > 0 ? packedNo : (row.slug === 'maple' ? 1 : 0)) };
     }
     async function sbJson(path, opts) {
         const r = await fetch(SB_URL + path, { ...(opts || {}), headers: { apikey: SB_KEY, 'Content-Type': 'application/json', ...((opts && opts.headers) || {}) } });
@@ -1012,10 +1030,26 @@
         const i = p > 0.5 ? 1 : 0;
         tabs.forEach((tb, k) => { tb.classList.toggle('active', k === i); tb.setAttribute('aria-selected', String(k === i)); });
     }
-    function goPane(i, smooth = true) { const sl = $('pslides'); sl.scrollTo({ left: i * sl.clientWidth, behavior: smooth ? 'smooth' : 'auto' }); }
+    let paneAnim = null;
+    function goPane(i, smooth = true) {
+        const sl = $('pslides'), to = i * sl.clientWidth, from = sl.scrollLeft;
+        if (paneAnim) { cancelAnimationFrame(paneAnim.id); paneAnim = null; sl.style.scrollSnapType = ''; }
+        const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (pager.on) { const h = paneEls()[i].offsetHeight; if (h) sl.style.height = h + 'px'; }   // height eases while the slide runs
+        if (!smooth || reduce || Math.abs(to - from) < 1) { sl.scrollLeft = to; return; }
+        sl.style.scrollSnapType = 'none';
+        let t0 = 0; const a = paneAnim = { id: 0 };
+        const step = (now) => {
+            if (paneAnim !== a) return; if (!t0) t0 = now;
+            const u = Math.min(1, (now - t0) / 320); sl.scrollLeft = from + (to - from) * (1 - Math.pow(1 - u, 3));
+            if (u < 1) a.id = requestAnimationFrame(step); else { paneAnim = null; sl.style.scrollSnapType = ''; sl.scrollLeft = to; fitPager(); }
+        };
+        a.id = requestAnimationFrame(step);
+    }
     (function initPager() {
         const sl = $('pslides'); let timer;
-        sl.addEventListener('scroll', () => { moveBar(); clearTimeout(timer); timer = setTimeout(fitPager, 90); }, { passive: true });
+        sl.addEventListener('scroll', () => { moveBar(); clearTimeout(timer); timer = setTimeout(() => { if (!paneAnim) fitPager(); }, 90); }, { passive: true });
+        ['touchstart', 'wheel'].forEach((ev) => sl.addEventListener(ev, () => { if (paneAnim) { cancelAnimationFrame(paneAnim.id); paneAnim = null; sl.style.scrollSnapType = ''; } }, { passive: true }));
         document.querySelectorAll('.ptab').forEach((tb) => tb.addEventListener('click', () => { haptic(8); playTone(600, 0.04); goPane(Number(tb.dataset.ptab)); }));
         window.addEventListener('resize', () => { fitPager(); moveBar(); });
         if (window.ResizeObserver) { const ro = new ResizeObserver(() => fitPager()); ro.observe($('pane-links')); ro.observe($('pane-shop')); }
@@ -1040,7 +1074,18 @@
         const m = SPOTIFY_RE.exec(url || ''); if (!m) return null;
         return { src: 'https://open.spotify.com/embed/' + m[1] + '/' + m[2] + '?utm_source=generator&theme=0', h: (m[1] === 'track' || m[1] === 'episode') ? 152 : 352 };
     }
-    let panelOpen = false, embedKey = '', lofiOn = false, lofiTimer = null, expanded = false;
+    let panelOpen = false, embedKey = '', expanded = false;
+    const music = window.MapleMusic.create({ ctx: () => { ensureAudio(); return audioCtx; }, dest: () => master });
+    const lofiOn = () => music.playing();
+    const curTheme = () => document.documentElement.getAttribute('data-theme') || 'flame';
+    function renderTracks() {
+        const th = curTheme(), list = music.tracks(th), cur = music.current();
+        $('mp-theme-name').textContent = th;
+        $('mp-tracks').innerHTML = list.map((tr) => `<li><button type="button" data-track="${tr.id}" class="${cur.on && cur.theme === th && cur.index === tr.id ? 'on' : ''}"><i class="fa-solid ${cur.on && cur.theme === th && cur.index === tr.id ? 'fa-volume-high' : 'fa-play'}"></i>${esc(tr.title)}<small>${esc(tr.mood)} · ${tr.bpm}</small></button></li>`).join('');
+    }
+    music.onchange = () => { renderTracks(); syncSoundUi(); };
+    // the card theme changed (visitor taps the palette, or Studio changes it): the music follows
+    new MutationObserver(() => { music.setTheme(curTheme()); renderTracks(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     function buildEmbed() {
         const sp = P ? spotifyEmbed(P.spotify) : null, box = $('mp-embed');
         const h = sp ? (expanded ? sp.h : Math.min(sp.h, 152)) : 0;
@@ -1057,11 +1102,11 @@
         const icon = $('mp-mute').querySelector('i'); icon.className = 'fa-solid ' + (muted || vol === 0 ? 'fa-volume-xmark' : vol < 40 ? 'fa-volume-low' : 'fa-volume-high');
         $('mp-mute').setAttribute('aria-pressed', String(muted)); $('mp-mute').setAttribute('aria-label', t(muted ? 'unmute' : 'mute'));
         $('mp-range').value = String(vol); $('mp-pct').textContent = (muted ? 0 : vol) + '%';
-        $('music-btn').classList.toggle('active', panelOpen || lofiOn);
+        $('music-btn').classList.toggle('active', panelOpen || lofiOn());
         const sp2 = P ? spotifyEmbed(P.spotify) : null, ex = $('mp-expand');
         ex.classList.toggle('hidden', !(sp2 && sp2.h > 152)); ex.textContent = t(expanded ? 'hideTracks' : 'showTracks');
-        $('lofi-toggle').querySelector('i').className = 'fa-solid ' + (lofiOn ? 'fa-stop' : 'fa-play');
-        $('lofi-label').textContent = t(lofiOn ? 'lofiStop' : 'lofiPlay'); $('lofi-label').dataset.i18n = lofiOn ? 'lofiStop' : 'lofiPlay';
+        $('lofi-toggle').querySelector('i').className = 'fa-solid ' + (lofiOn() ? 'fa-stop' : 'fa-play');
+        $('lofi-label').textContent = t(lofiOn() ? 'lofiStop' : 'lofiPlay'); $('lofi-label').dataset.i18n = lofiOn() ? 'lofiStop' : 'lofiPlay';
     }
     function setMuted(m) {
         muted = m; try { localStorage.setItem(MUTE_KEY, m ? '1' : '0'); } catch {}
@@ -1075,7 +1120,7 @@
     function renderMusic(p) {
         const sp = !!spotifyEmbed(p.spotify);
         $('mp-spotify').classList.toggle('hidden', !sp); $('mp-lofi').classList.toggle('hidden', sp);
-        if (panelOpen) buildEmbed(); syncSoundUi();
+        if (panelOpen) buildEmbed(); renderTracks(); syncSoundUi();
     }
     function togglePanel(open) {
         panelOpen = typeof open === 'boolean' ? open : !panelOpen;
@@ -1084,17 +1129,15 @@
         syncSoundUi();
     }
     function toggleLofi() {
-        lofiOn = !lofiOn;
-        if (lofiOn) {
-            if (muted) setMuted(false);
-            const notes = [261.63, 329.63, 392.00, 523.25, 587.33];
-            lofiTimer = setInterval(() => playTone(notes[Math.floor(Math.random() * notes.length)], 0.35, 'sine', true), 800);
-            showToast(t('toastLofiOn'));
-        } else { clearInterval(lofiTimer); showToast(t('toastLofiOff')); }
+        if (music.playing()) { music.stop(); showToast(t('toastLofiOff')); }
+        else { if (muted) setMuted(false); music.play(curTheme(), 0); showToast(t('toastLofiOn')); }
         syncSoundUi();
     }
     $('music-btn').addEventListener('click', () => { haptic(10); playTone(620, 0.05); togglePanel(); });
     $('lofi-toggle').addEventListener('click', toggleLofi);
+    $('mp-next').addEventListener('click', () => { haptic(8); if (!music.playing()) { if (muted) setMuted(false); music.play(curTheme(), 1); } else music.next(); });
+    $('mp-prev').addEventListener('click', () => { haptic(8); if (!music.playing()) { if (muted) setMuted(false); music.play(curTheme(), 2); } else music.prev(); });
+    $('mp-tracks').addEventListener('click', (e) => { const b = e.target.closest('[data-track]'); if (!b) return; haptic(8); if (muted) setMuted(false); music.play(curTheme(), Number(b.dataset.track)); });
     $('mp-mute').addEventListener('click', () => { haptic(10); setMuted(!muted); showToast(t(muted ? 'toastMuted' : 'toastUnmuted')); });
     $('mp-range').addEventListener('input', (e) => setVolume(parseInt(e.target.value, 10) || 0));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && panelOpen) togglePanel(false); });
@@ -1121,6 +1164,11 @@
         { id: 'home', href: '/', icon: 'fa-house', label: 'Home' },
         { id: 'explore', href: '/#explore', icon: 'fa-compass', label: 'Explore' },
         { id: 'card', href: location.pathname, icon: 'fa-id-card', label: 'Card', active: true }]);
+    if (PREVIEW && window.parent !== window && window.ResizeObserver) {
+        const reportH = () => { const sh = $('shell'); if (!sh || sh.hidden) return; const cs = getComputedStyle(document.body);
+            const h = sh.getBoundingClientRect().bottom + window.scrollY + (parseFloat(cs.paddingBottom) || 0); try { parent.postMessage({ maple: 'h', h }, location.origin); } catch {} };
+        new ResizeObserver(reportH).observe($('shell')); window.addEventListener('load', reportH);
+    }
     setInterval(renderClock, 15000); setInterval(() => { if (P) renderStatus(); }, 60000);
     applyLang(lang);
     if (!PREVIEW && !EMBED) loadStandalone();
