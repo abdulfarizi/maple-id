@@ -1,4 +1,4 @@
-/* Maple ID · swipe pager + sliding dock highlight */
+/* Maple ID · swipe pager + sliding dock highlight + page layer */
 #app[hidden]{display:none}
 .pager{position:fixed;inset:0;z-index:1}
 .pager[hidden]{display:none}
@@ -24,6 +24,27 @@ body.pager-on .toast,body.pager-on #toast{bottom:calc(var(--dock-space) + 4px)!i
 /* page-specific floating bars only belong to their own page */
 body.pager-on:not([data-page=profile]) .savebar{opacity:0;pointer-events:none}
 
+/* the layer: a public card or the Studio, sitting on top of the (still alive) strip */
+.pg-layer{position:fixed;inset:0;z-index:2;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;
+  scrollbar-width:none;background:var(--bg,#0c0708)}
+.pg-layer::-webkit-scrollbar{display:none}
+.pg-layer[hidden]{display:none}
+.pg-layer::before{content:'';display:block;height:var(--tb-h,64px)}
+.pg-layer::after{content:'';display:block;height:var(--dock-space,100px)}
+.pg-layer-main{min-height:calc(100% - var(--tb-h,64px) - var(--dock-space,100px))}
+body.star-mode .pg-layer{overflow:hidden;background:#07070a}
+body.star-mode .pg-layer::before,body.star-mode .pg-layer::after{display:none}
+body.star-mode .pg-layer-main{min-height:0;height:100%}
+.pg-layer.in{animation:pg-in .42s cubic-bezier(.22,1,.36,1) both;will-change:transform,opacity}
+.pg-layer.out{animation:pg-out .28s cubic-bezier(.4,0,.6,1) both;will-change:transform,opacity;pointer-events:none}
+.pg-layer.swap{animation:pg-swap .26s ease-out both}
+@keyframes pg-in{from{opacity:0;transform:translate3d(36px,0,0) scale(.985)}to{opacity:1;transform:none}}
+@keyframes pg-out{from{opacity:1;transform:none}to{opacity:0;transform:translate3d(36px,0,0) scale(.985)}}
+@keyframes pg-swap{from{opacity:0}to{opacity:1}}
+/* the star frame already fills its parent; inside the layer it must not escape it */
+.pg-layer .star-frame{position:absolute;inset:0;z-index:1}
+body.has-dock.star-mode .pg-layer .star-frame{bottom:0;height:calc(100% - var(--dock-space,100px))}
+
 /* the dock: three equal tabs with one glass highlight that slides between them */
 body.pager-on .dock{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 body.pager-on .dock.dragging{cursor:grabbing}
@@ -33,6 +54,6 @@ body.pager-on .dock-i.on{color:var(--accent)}
 .dock-ind{position:absolute;left:0;top:6px;bottom:6px;width:84px;border-radius:24px;pointer-events:none;z-index:0;
   background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 24%,transparent),color-mix(in srgb,var(--accent) 12%,transparent));
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 34%,transparent),inset 0 1px 0 #ffffff26,0 6px 22px -8px var(--accent-glow,transparent);
-  transform-origin:center;will-change:transform,width}
+  transform-origin:center;will-change:transform,width;transition:opacity .22s ease}
 .dock.dragging .dock-ind{filter:brightness(1.15)}
-@media (prefers-reduced-motion:reduce){.pager-track{scroll-behavior:auto}}
+@media (prefers-reduced-motion:reduce){.pager-track{scroll-behavior:auto}.pg-layer.in,.pg-layer.out,.pg-layer.swap{animation:none}}

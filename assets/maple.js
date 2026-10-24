@@ -46,6 +46,7 @@
   }
   function frame() {
     if (!document.getElementById('maple-home') || (window.dgPager && !dgPager.active())) return teardown();
+    if (window.dgPager && dgPager.layered && dgPager.layered()) { raf = requestAnimationFrame(frame); return; }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
     for (var i = 0; i < parts.length; i++) {
