@@ -244,7 +244,9 @@
     }
     const { likes, visits, reactions, __dig, ...rest } = extra;
     const base = row.slug === 'maple' ? { ...defaultNew(), ...DEFAULT_MAPLE } : defaultNew();
-    return { ...base, ...rest, id: row.id, slug: row.slug, name,
+    const dbNo = Number(row.card_no), packedNo = Number(rest.cardNo);
+    const cardNo = dbNo > 0 ? dbNo : (packedNo > 0 ? packedNo : (row.slug === 'maple' ? 1 : 0));
+    return { ...base, ...rest, id: row.id, slug: row.slug, name, cardNo,
       gaming: rest.gaming || [], channels: rest.channels || [] };
   }
   function withStats(profile, stats) {
@@ -262,6 +264,11 @@
     let d = await r.json().catch(() => null);
     if (Array.isArray(d)) d = d[0];
     return d && d.slug ? d : null;
+  }
+  async function nextCardNo() {
+    const r = await sb('/rest/v1/profiles?select=id&limit=1', { headers: { Prefer: 'count=exact' } });
+    const m = r && /\/(\d+)$/.exec(r.headers.get('content-range') || '');
+    return m ? Number(m[1]) + 1 : 0;
   }
   async function getOwnRow(au) {
     const r = await sb(`/rest/v1/profiles?select=*&id=eq.${au.uid}`, { token: au.token });
@@ -500,7 +507,10 @@
           return json({ error: `${k === 'avatar' ? 'Avatar' : 'Banner'} must be a full https:// link or an uploaded image` }, 400);
         }
       }
+      if (!existing) merged.cardNo = slug === 'maple' ? 1 : await nextCardNo();
+      else merged.cardNo = Number(current.cardNo) > 0 ? Number(current.cardNo) : undefined;
       const { id, likes, visits, reactions, ...toStore } = merged;
+      if (!(toStore.cardNo > 0)) delete toStore.cardNo;
       const packed = JSON.stringify({ __dig: 1, ...toStore, slug });
       if (packed.length > 1500000) return json({ error: 'Your card is too large. Remove a few product photos and try again.' }, 400);
 
@@ -536,9 +546,9 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <script src="/assets/qr-lib.js"></script>
     <script src="/assets/maple-ui.js?v=3"></script>
     <script src="/assets/maple-explore.js?v=2"></script>
-    <script src="/assets/maple-pager.js?v=2"></script>
-    <script src="/assets/launch.js"></script>
-    <script type="module" crossorigin src="/assets/index-maple1.js?v=6"></script>
+    <script src="/assets/maple-pager.js?v=3"></script>
+    <script src="/assets/launch.js?v=2"></script>
+    <script type="module" crossorigin src="/assets/index-maple1.js?v=7"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css" />
     <link rel="stylesheet" href="/assets/maple.css?v=2" />
     <link rel="stylesheet" href="/assets/themes.css?v=3" />
@@ -546,9 +556,11 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <link rel="stylesheet" href="/assets/glass.css?v=3" />
     <link rel="stylesheet" href="/assets/card-ui.css?v=1" />
     <link rel="stylesheet" href="/assets/maple-ui.css?v=3" />
-    <link rel="stylesheet" href="/assets/maple-pager.css?v=2" />
+    <link rel="stylesheet" href="/assets/maple-pager.css?v=3" />
+    <link rel="stylesheet" href="/assets/studio.css?v=1" />
+    <script src="/assets/maple-studio.js?v=1" defer></script>
     <script src="/assets/maplefx.js?v=5" defer></script>
-    <script src="/assets/maple.js?v=2"></script>
+    <script src="/assets/maple.js?v=3"></script>
   </head>
   <body>
     <svg class="sprite" aria-hidden="true" focusable="false">
