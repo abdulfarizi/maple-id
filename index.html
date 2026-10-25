@@ -39,8 +39,9 @@
     'layout','accent','accent2','cardTag','statusText','statusMode','specs','footerText','bannerGray','bannerDim',
     'avatarShape','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid',
     'spotify','musicAuto','shopEnabled','shopTitle','shopNote','shopWhatsApp','currency','products',
+    'payEnabled','payQr','payFg','payBg','payDots','payIcon',
     'donate','donateLabel','contactPhone','contactEmail','openGame','showLove','liquidGlass','glassBlur','cardStyle','bgFx','listed'];
-  const BOOLS = ['bgFx','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid','musicAuto','shopEnabled','openGame','showLove','liquidGlass','listed'];
+  const BOOLS = ['bgFx','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid','musicAuto','shopEnabled','payEnabled','openGame','showLove','liquidGlass','listed'];
   const CURRENCIES = ['auto','MYR','SGD','IDR','BND','PHP','THB','USD'];
   const HEX_RE = /^#[0-9a-f]{6}$/i;
   const clampInt = (v, lo, hi, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt; };
@@ -72,6 +73,27 @@
       return { name: str(x && x.name, 60), desc: str(x && x.desc, 160), price, image: MEDIA_RE.test(image) ? image : '', soldOut: !!(x && (x.soldOut === true || x.soldOut === 'true')) };
     }).filter((x) => x.name);
   }
+  // QR checkout: keep only a well-formed bank payment QR (EMV text with a correct checksum). Anything else is dropped.
+  function crc16(s) {
+    let crc = 0xFFFF;
+    for (let i = 0; i < s.length; i++) { crc ^= s.charCodeAt(i) << 8; for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) & 0xFFFF : (crc << 1) & 0xFFFF; }
+    return ('0000' + crc.toString(16).toUpperCase()).slice(-4);
+  }
+  function cleanPayQr(v) {
+    v = String(v || '').trim();
+    if (v.length < 30 || v.length > 600 || !/^[\x20-\x7e]+$/.test(v) || v.indexOf('000201') !== 0) return '';
+    let i = 0, last = '';
+    while (i < v.length) {
+      const id = v.slice(i, i + 2), ln = v.slice(i + 2, i + 4);
+      if (!/^\d{2}$/.test(id) || !/^\d{2}$/.test(ln)) return '';
+      const n = parseInt(ln, 10);
+      if (i + 4 + n > v.length) return '';
+      last = id;
+      if (id === '63' && (n !== 4 || i + 4 + n !== v.length)) return '';
+      i += 4 + n;
+    }
+    return last === '63' && crc16(v.slice(0, -4)) === v.slice(-4).toUpperCase() ? v : '';
+  }
   // Coerce every layout option to a safe value (never trust what the browser sent)
   function cleanOptions(m) {
     m.layout = m.layout === 'star' ? 'star' : 'basic';
@@ -92,6 +114,11 @@
     if (m.shopNote !== undefined) m.shopNote = str(m.shopNote, 120);
     if (m.currency !== undefined) m.currency = CURRENCIES.includes(m.currency) ? m.currency : 'auto';
     if (m.products !== undefined) m.products = cleanProducts(m.products);
+    if (m.payQr !== undefined) m.payQr = cleanPayQr(m.payQr);
+    if (m.payFg !== undefined) m.payFg = HEX_RE.test(m.payFg || '') ? m.payFg : '';
+    if (m.payBg !== undefined) m.payBg = HEX_RE.test(m.payBg || '') ? m.payBg : '';
+    if (m.payDots !== undefined) m.payDots = ['square','rounded','dots'].includes(m.payDots) ? m.payDots : 'rounded';
+    if (m.payIcon !== undefined) m.payIcon = m.payIcon === 'none' ? 'none' : 'star';
     if (m.gaming !== undefined) m.gaming = cleanRows(m.gaming, 24);
     if (m.channels !== undefined) m.channels = cleanRows(m.channels, 24);
     m.cardStyle = ['default','outline','solid','neon','bubble','tinted'].includes(m.cardStyle) ? m.cardStyle : 'default';
@@ -99,6 +126,7 @@
     m.bannerGray = clampInt(m.bannerGray, 0, 100, 75);
     m.bannerDim = clampInt(m.bannerDim, 30, 100, 72);
     for (const k of BOOLS) if (m[k] !== undefined) m[k] = m[k] === true || m[k] === 'true';
+    if (m.payEnabled && !m.payQr) m.payEnabled = false;      // no valid QR, nothing to show
     if (m.specs !== undefined) {
       m.specs = (Array.isArray(m.specs) ? m.specs : []).slice(0, 12)
         .map((x) => ({ label: str(x && x.label, 24), value: str(x && x.value, 60) }))
@@ -137,6 +165,7 @@
     sociabuzzEnabled: false, sociabuzz: '', widgetEnabled: false, widgetCode: '',
     gaming: [], channels: [], createdAt: new Date().toISOString().slice(0, 10),
     shopEnabled: false, shopTitle: '', shopNote: '', shopWhatsApp: '', currency: 'auto', products: [], spotify: '', musicAuto: true,
+    payEnabled: false, payQr: '', payFg: '', payBg: '', payDots: 'rounded', payIcon: 'star',
     donate: '', donateLabel: '', contactPhone: '', contactEmail: '', openGame: true
   });
 
@@ -546,9 +575,10 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <script src="/assets/qr-lib.js"></script>
     <script src="/assets/maple-ui.js?v=3"></script>
     <script src="/assets/maple-explore.js?v=2"></script>
+    <script src="/assets/maple-pay.js?v=1" defer></script>
     <script src="/assets/maple-pager.js?v=6"></script>
     <script src="/assets/launch.js?v=2"></script>
-    <script type="module" crossorigin src="/assets/index-maple1.js?v=9"></script>
+    <script type="module" crossorigin src="/assets/index-maple1.js?v=10"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css" />
     <link rel="stylesheet" href="/assets/maple.css?v=2" />
     <link rel="stylesheet" href="/assets/themes.css?v=3" />
@@ -556,6 +586,7 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <link rel="stylesheet" href="/assets/glass.css?v=3" />
     <link rel="stylesheet" href="/assets/card-ui.css?v=1" />
     <link rel="stylesheet" href="/assets/maple-ui.css?v=4" />
+    <link rel="stylesheet" href="/assets/maple-pay.css?v=1" />
     <link rel="stylesheet" href="/assets/maple-pager.css?v=5" />
     <link rel="stylesheet" href="/assets/studio.css?v=2" />
     <script src="/assets/maple-studio.js?v=1" defer></script>
