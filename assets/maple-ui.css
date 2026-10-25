@@ -184,7 +184,7 @@ body.has-dock{padding-bottom:var(--dock-space)}
 /* things that normally sit at the bottom move up above the dock */
 body.has-dock .toast,body.has-dock #toast{bottom:calc(var(--dock-space) + 4px)!important}
 body.has-dock .savebar{bottom:calc(var(--dock-space) - 8px)}
-body.has-dock.star-mode .star-frame{bottom:auto;height:calc(100vh - var(--dock-space));height:calc(100dvh - var(--dock-space))}
+body.has-dock.star-mode .star-frame{bottom:auto;height:100vh;height:100dvh}
 body.has-dock.star-mode{background:#07070a}
 html[data-glass=on] .dock{background:#ffffff12}
 

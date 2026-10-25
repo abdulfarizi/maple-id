@@ -42,7 +42,7 @@ body.pager-on:not([data-page=profile]) .savebar{opacity:0;pointer-events:none}
 .pg.is-full{background:#07070a;overflow:hidden}
 .pg.is-full::before,.pg.is-full::after{display:none}
 .pg.is-full > .pg-main{min-height:0;height:100%;position:relative}
-.pg .star-frame{position:absolute;inset:0;width:100%;height:calc(100% - var(--dock-space,100px));border:0;border-radius:0;z-index:1;
+.pg .star-frame{position:absolute;inset:0;width:100%;height:100%;border:0;border-radius:0;z-index:1;
   background:#07070a;opacity:0;transition:opacity .28s ease}
 .pg .star-frame.ready{opacity:1}
 body.pager-on.star-mode .topbar{display:flex!important;opacity:0;visibility:hidden;pointer-events:none}
@@ -54,12 +54,14 @@ body.pager-on.star-mode{background:#07070a}
   background:#0b0a0fcc;border:1px solid #ffffff24;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 26px -10px #000}
 .pf-fab a:active,.pf-fab button:active{transform:scale(.94)}
 
-/* the dock: three equal tabs with one glass highlight that slides between them */
+/* the dock: equal tabs (a fourth, "Card", appears while someone's link is open) with one glass highlight that slides between them */
 body.pager-on .dock{touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 body.pager-on .dock.dragging{cursor:grabbing}
 body.pager-on .dock-i{position:relative;z-index:1;flex:1 1 0;min-width:84px;
   background:none!important;box-shadow:none!important;-webkit-tap-highlight-color:transparent}
 body.pager-on .dock-i.on{color:var(--accent)}
+body.pager-on .dock.four .dock-i{min-width:72px;padding:0 6px}
+body.pager-on .dock-i span{max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dock-ind{position:absolute;left:0;top:6px;bottom:6px;width:84px;border-radius:24px;pointer-events:none;z-index:0;
   background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 24%,transparent),color-mix(in srgb,var(--accent) 12%,transparent));
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 34%,transparent),inset 0 1px 0 #ffffff26,0 6px 22px -8px var(--accent-glow,transparent);

@@ -10,14 +10,13 @@
 (function () {
   'use strict';
   var ALL = ['home', 'explore', 'card', 'profile'];
-  var TABS = ['home', 'explore', 'profile'];                       // what the dock shows
-  var DOCKPOS = { home: 0, explore: 1, card: 1, profile: 2 };      // the card pane lights "Explore"
+  // The dock mirrors the strip: Home · Explore · [ Card ] · Profile. The Card tab only exists while someone's link is open.
   var URLS = { home: '/', explore: '/#explore', profile: '/profile' };
   var TITLES = { home: 'Maple ID · one link for every handle', explore: 'Explore · Maple ID', profile: 'Profile · Maple ID' };
   var REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
 
   var root, track, appEl, footEl, panes = {}, sections = {}, ro = null;
-  var isOn = false, cur = '', cardOn = false, cardSlug = '', cardUrl = '/', cardTitle = 'Maple ID';
+  var isOn = false, cur = '', cardOn = false, cardSlug = '', cardUrl = '/', cardTitle = 'Maple ID', cardLabel = 'Card';
   var full = { card: false, profile: false };
   var raf = 0, settleT = 0, dragging = false, swallow = false;
   var layer, layerMain, layerKind = '', layerTimer = 0;
@@ -29,7 +28,8 @@
   var prog = function () { return track ? track.scrollLeft / width() : 0; };
   var dockEl = function () { return document.querySelector('.dock'); };
   var reduced = function () { return !!(REDUCE && REDUCE.matches); };
-  var toName = function (n) { return typeof n === 'number' ? TABS[clamp(n, 0, 2)] : n; };
+  var toName = function (n) { var v = vis(); return typeof n === 'number' ? v[clamp(n, 0, v.length - 1)] : n; };
+  var urlOf = function (n) { return n === 'card' ? cardUrl : URLS[n]; };
 
   /* ───── one tween for every horizontal move ───── */
   var easeOut = function (t) { return 1 - Math.pow(1 - t, 3); };
@@ -102,15 +102,9 @@
     ind.style.width = w + 'px';
     ind.style.transform = 'translate3d(' + x + 'px,0,0) scale(' + (1 + 0.14 * s).toFixed(3) + ',' + (1 - 0.06 * s).toFixed(3) + ')';
   }
-  function dockProg(p) {                       // strip progress -> dock progress
-    var v = vis(), a = clamp(Math.floor(p), 0, v.length - 1), b = Math.min(a + 1, v.length - 1);
-    return lerp(DOCKPOS[v[a]], DOCKPOS[v[b]], clamp(p - a, 0, 1));
-  }
-  function dockToStrip(d) {                    // dock progress -> strip progress (for dragging the dock)
-    var a = clamp(Math.floor(d), 0, 2), b = Math.min(a + 1, 2);
-    return lerp(idx(TABS[a]), idx(TABS[b]), clamp(d - a, 0, 1));
-  }
-  function litDock() { return layerKind === 'studio' ? 2 : cur ? DOCKPOS[cur] : 0; }
+  function dockProg(p) { return clamp(p, 0, vis().length - 1); }      // dock tabs == strip panes, so progress is the same
+  function dockToStrip(d) { return clamp(d, 0, vis().length - 1); }   // (for dragging the dock)
+  function litDock() { return layerKind === 'studio' ? vis().length - 1 : cur ? Math.max(0, idx(cur)) : 0; }
   function paint() {
     var lit = litDock(), d = dockEl(), ind = d && d.querySelector('.dock-ind');
     items().forEach(function (a, i) {
@@ -121,8 +115,23 @@
     document.body.dataset.page = layerKind === 'studio' ? 'profile' : (cur || 'home');
     document.body.classList.toggle('star-mode', !layerKind && !!full[cur]);
   }
+  /* the Card tab: sits between Explore and Profile while someone's card is open */
+  function syncCardTab() {
+    var d = dockEl(); if (!d) return;
+    var el = d.querySelector('.dock-i[data-dock="card"]'), want = isOn && cardOn;
+    d.classList.toggle('four', want);
+    if (!want) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement('a'); el.className = 'dock-i'; el.dataset.dock = 'card'; el.setAttribute('data-link', '');
+      el.innerHTML = '<i class="fa-solid fa-id-card"></i><span></span>';
+      d.insertBefore(el, d.querySelector('.dock-i[data-dock="profile"]'));
+    }
+    el.setAttribute('href', cardUrl); el.title = cardLabel;
+    var sp = el.querySelector('span'); if (sp.textContent !== cardLabel) sp.textContent = cardLabel;
+  }
   function decorate() {
     var d = dockEl(); if (!d) return;
+    syncCardTab();
     var ind = d.querySelector('.dock-ind');
     if (!isOn) { if (ind) ind.remove(); return; }
     if (!ind) { ind = document.createElement('i'); ind.className = 'dock-ind'; ind.setAttribute('aria-hidden', 'true'); d.insertBefore(ind, d.firstChild); }
@@ -161,7 +170,7 @@
     var v = vis(), n = v[clamp(Math.round(prog()), 0, v.length - 1)];
     if (n !== cur) setCur(n);
     document.title = n === 'card' ? cardTitle : TITLES[n];
-    var want = n === 'card' ? cardUrl : URLS[n], have = location.pathname + location.hash;
+    var want = urlOf(n), have = location.pathname + location.hash;
     if (want !== have && !(n === 'home' && location.pathname === '/' && !location.hash)) { try { history.replaceState(history.state, '', want); } catch (e) {} }
   }
 
@@ -179,6 +188,7 @@
     if (cardOn === on) return;
     var keep = cur; cardOn = on; sections.card.hidden = !on;
     if (isOn && keep) jump(idx(keep) * width());     // the strip changed length: stay on the same pane
+    if (isOn) decorate();
   }
   function cardOpen(slug) {
     ensure();
@@ -187,6 +197,7 @@
     if (layerKind) hideLayerNow();
     showCardPane(true);
     cardSlug = slug; cardUrl = location.pathname;
+    if (!same) cardLabel = slug;
     if (!same) { panes.card.replaceChildren(); delete panes.card.dataset.ready; setFullNow('card', false); sections.card.scrollTop = 0; }
     go('card', !wasOn || reduced());
     return same ? null : panes.card;
@@ -270,7 +281,7 @@
     if (!moved) return;
     swallow = true; setTimeout(function () { swallow = false; }, 350);
     dragging = false; track.classList.remove('is-dragging');
-    var name = TABS[clamp(Math.round(p), 0, 2)];
+    var name = toName(Math.round(p));
     if (layerKind) navigate(name); else go(name);
   }
   document.addEventListener('pointerup', endDrag, true);
@@ -278,7 +289,7 @@
 
   // from the Studio the dock goes through the router (it rebuilds Profile, asks about unpublished changes, closes the layer)
   function navigate(name) {
-    var want = URLS[name];
+    var want = urlOf(name);
     if (window.dgNavigate) window.dgNavigate(want);
     else { closeLayer(name); try { history.pushState(null, '', want); } catch (e) {} }
   }
@@ -287,7 +298,7 @@
     if (swallow) { e.preventDefault(); e.stopImmediatePropagation(); swallow = false; return; }
     if (!isOn || !e.target.closest) return;
     var a = e.target.closest('.dock-i'); if (!a) return;
-    var name = a.dataset.dock; if (TABS.indexOf(name) < 0) return;
+    var name = a.dataset.dock; if (vis().indexOf(name) < 0) return;
     e.preventDefault(); e.stopImmediatePropagation();
     if (layerKind) navigate(name);
     else if (name === cur) sections[name].scrollTo({ top: 0, behavior: 'smooth' });
@@ -313,7 +324,12 @@
     cardOpen: cardOpen,
     cardReset: cardReset,
     cardSlug: function () { return cardSlug; },
-    cardMeta: function (title) { panes.card.dataset.ready = '1'; cardTitle = title || cardTitle; if (cur === 'card' && !layerKind) document.title = cardTitle; },
+    cardMeta: function (title) {
+      panes.card.dataset.ready = '1'; cardTitle = title || cardTitle;
+      var nm = String(cardTitle).replace(/\s*\u00b7\s*Maple ID\s*$/, '').trim(); if (nm) cardLabel = nm;
+      if (cur === 'card' && !layerKind) document.title = cardTitle;
+      if (isOn) syncCardTab();
+    },
     setFull: function (name, on) { setFullNow(name, on); if (isOn) paint(); },
     go: go,
     decorate: decorate,
