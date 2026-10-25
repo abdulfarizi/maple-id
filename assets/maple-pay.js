@@ -78,7 +78,7 @@
   }
   /* returns the parsed fields when `p` is a well-formed EMV payment QR with a correct checksum, else null */
   function validateEmv(p) {
-    if (typeof p !== 'string' || p.length < 30 || p.length > 600 || !/^[\x20-\x7e]+$/.test(p) || p.indexOf('000201') !== 0) return null;
+    if (typeof p !== 'string' || p.length < 30 || p.length > 600 || !/^[\x20-\x7e]+$/.test(p) || !/^00020[12]/.test(p)) return null;     // format code 01 (EMVCo) or 02 (Touch 'n Go / Malaysia National QR)
     var tlv = parseTlv(p);
     if (!tlv || tlv[0][0] !== '00') return null;
     var last = tlv[tlv.length - 1];
