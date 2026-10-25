@@ -357,12 +357,13 @@
     + '<div class="two"><div class="field"><label>Style</label><select data-mp-dots><option value="rounded">Rounded</option><option value="square">Square</option><option value="dots">Round dots</option></select></div>'
     + '<div class="field"><label>Centre icon</label><select data-mp-icon><option value="star">Hollow star</option><option value="none">None</option></select></div></div>'
     + '<div class="mpay-ed-row"><button type="button" class="btn btn-sm" data-mp-auto><i class="fa-solid fa-wand-magic-sparkles"></i> Match my theme</button>'
+    + '<button type="button" class="btn btn-sm" data-mp-plain><i class="fa-solid fa-qrcode"></i> Plain (best compatibility)</button>'
     + '<button type="button" class="btn btn-sm" data-mp-test><i class="fa-solid fa-camera"></i> Test scan</button></div>'
     + '<p class="mpay-ed-contrast" data-mp-contrast role="status"></p><p class="mpay-ed-test" data-mp-testres role="status"></p>'
     + '</div></div>'
     + '<label class="toggle"><input type="checkbox" name="payAmount" data-mp-amt><span></span> Fill in the amount automatically (experimental)</label>'
     + '<p class="hint">Off is safest: buyers scan your QR exactly as your bank or wallet made it, then type the total shown. On: the QR carries the total, but some wallets and banks reject that. Test with your own apps first.</p>'
-    + '<p class="hint">Money goes straight to your account. The site never holds it and cannot see it, so check every payment in your banking app before you send the order. Colours follow your card theme unless you change them. Dark dots on a light background scan best.</p>'
+    + '<p class="hint">Money goes straight to your account. The site never holds it and cannot see it, so check every payment in your banking app before you send the order. You cannot test with the same wallet or bank account that owns this QR, because that app refuses to pay itself. Scan it with a friend’s phone or a different account. Colours follow your card theme unless you change them; dark dots on a light background scan best.</p>'
     + '</div></div>';
 
   function mountEditor(root) {
@@ -423,6 +424,7 @@
     selD.addEventListener('change', function () { S.dots = selD.value; paint(true); });
     selI.addEventListener('change', function () { S.icon = selI.value; paint(true); });
     $('[data-mp-auto]').addEventListener('click', function () { S.fg = ''; S.bg = ''; paint(true); });
+    $('[data-mp-plain]').addEventListener('click', function () { S.fg = '#000000'; S.bg = '#ffffff'; S.dots = 'square'; S.icon = 'none'; paint(true); });
     $('[data-mp-test]').addEventListener('click', async function () {
       if (!S.qr) { testRes.textContent = 'Upload your QR first.'; testRes.className = 'mpay-ed-test bad'; return; }
       testRes.textContent = 'Testing…'; testRes.className = 'mpay-ed-test';
