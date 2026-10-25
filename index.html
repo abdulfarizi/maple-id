@@ -81,7 +81,7 @@
   }
   function cleanPayQr(v) {
     v = String(v || '').trim();
-    if (v.length < 30 || v.length > 600 || !/^[\x20-\x7e]+$/.test(v) || v.indexOf('000201') !== 0) return '';
+    if (v.length < 30 || v.length > 600 || !/^[\x20-\x7e]+$/.test(v) || !/^00020[12]/.test(v)) return '';
     let i = 0, last = '';
     while (i < v.length) {
       const id = v.slice(i, i + 2), ln = v.slice(i + 2, i + 4);
