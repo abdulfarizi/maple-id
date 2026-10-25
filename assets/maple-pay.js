@@ -224,7 +224,7 @@
       check: 'Before you confirm, check the amount and that the name shown in your app is {seller}.',
       save: 'Save QR', saved: 'QR saved', done: 'I’ve paid · send proof on WhatsApp', other: 'Pay another way · chat with the seller',
       note: 'Your money goes straight to the seller. They confirm your payment by hand before sending your order.',
-      ref: 'Order ref', free: 'This QR has no fixed amount, so type {total} in your app.', close: 'Close',
+      ref: 'Order ref', free: 'After scanning, enter {total} in your app.', close: 'Close',
       hi: 'Hi {seller}! I’ve paid by QR:', buy: 'Hi {seller}! I’d like to buy:', paidVia: 'Paid via DuitNow QR. I’ll send the screenshot here.', from: 'From your Maple ID card'
     },
     ms: {
@@ -232,20 +232,23 @@
       check: 'Sebelum mengesahkan, semak jumlah dan pastikan nama dalam aplikasi anda ialah {seller}.',
       save: 'Simpan QR', saved: 'QR disimpan', done: 'Sudah bayar · hantar bukti di WhatsApp', other: 'Bayar cara lain · sembang dengan penjual',
       note: 'Wang anda terus ke penjual. Penjual akan semak pembayaran sebelum menghantar pesanan.',
-      ref: 'Rujukan', free: 'QR ini tiada jumlah tetap, jadi taip {total} dalam aplikasi anda.', close: 'Tutup',
+      ref: 'Rujukan', free: 'Selepas mengimbas, masukkan {total} dalam aplikasi anda.', close: 'Tutup',
       hi: 'Hai {seller}! Saya sudah bayar melalui QR:', buy: 'Hai {seller}! Saya ingin membeli:', paidVia: 'Dibayar melalui DuitNow QR. Saya hantar tangkapan skrin di sini.', from: 'Dari kad Maple ID anda'
     }
   };
   function tr(lang) { var d = TXT[lang] || TXT.en; return function (k, v) { var s = d[k] || TXT.en[k] || k; if (v) for (var n in v) s = s.split('{' + n + '}').join(v[n]); return s; }; }
 
   /* ───────── buyer checkout sheet ───────── */
-  var sheet = null, lastFocus = null;
+  var sheet = null, lastFocus = null, closeTimer = 0;
+  var CLOSE_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function reduced() { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
   function ensureSheet() {
     if (sheet) return sheet;
     var back = el('div', 'mpay-back'); back.hidden = true;
-    var box = el('div', 'mpay-sheet'); box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true');
-    var x = el('button', 'mpay-x', '×'); x.type = 'button';
+    var box = el('div', 'mpay-sheet'); box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.tabIndex = -1;
+    var x = el('button', 'mpay-x'); x.type = 'button'; x.innerHTML = CLOSE_ICON;       // pinned to the sheet, outside the scrolling part
+    var scroll = el('div', 'mpay-scroll');
     var eyebrow = el('p', 'mpay-eyebrow'), title = el('h3', 'mpay-title'), amount = el('p', 'mpay-amount');
     var qr = el('div', 'mpay-qr'), scan = el('p', 'mpay-scan'), check = el('p', 'mpay-check'), free = el('p', 'mpay-free');
     var acts = el('div', 'mpay-acts'), save = el('button', 'mpay-btn mpay-ghost'); save.type = 'button';
@@ -253,18 +256,24 @@
     var other = el('button', 'mpay-link'); other.type = 'button';
     var note = el('p', 'mpay-note'), ref = el('p', 'mpay-ref');
     acts.appendChild(done); acts.appendChild(save);
-    [x, eyebrow, title, amount, qr, scan, free, check, acts, other, note, ref].forEach(function (n) { box.appendChild(n); });
-    back.appendChild(box); document.body.appendChild(back);
+    [eyebrow, title, amount, qr, scan, free, check, acts, other, note, ref].forEach(function (n) { scroll.appendChild(n); });
+    box.appendChild(scroll); box.appendChild(x); back.appendChild(box); document.body.appendChild(back);
     back.addEventListener('click', function (e) { if (e.target === back) close(); });
     x.addEventListener('click', close);
     document.addEventListener('keydown', function (e) { if (!back.hidden && e.key === 'Escape') close(); });
-    sheet = { back: back, box: box, x: x, eyebrow: eyebrow, title: title, amount: amount, qr: qr, scan: scan, free: free, check: check, save: save, done: done, other: other, note: note, ref: ref };
+    sheet = { back: back, box: box, scroll: scroll, x: x, eyebrow: eyebrow, title: title, amount: amount, qr: qr, scan: scan, free: free, check: check, save: save, done: done, other: other, note: note, ref: ref };
     return sheet;
   }
+  /* slide down, then hide (instead of vanishing) */
   function close() {
-    if (!sheet || sheet.back.hidden) return;
-    sheet.back.classList.remove('in'); sheet.back.hidden = true; document.documentElement.classList.remove('mpay-lock');
-    if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch (e) { /* ignore */ }
+    if (!sheet || sheet.back.hidden || !sheet.back.classList.contains('in')) return;
+    var s = sheet;
+    s.back.classList.remove('in');
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(function () {
+      s.back.hidden = true; document.documentElement.classList.remove('mpay-lock');
+      if (lastFocus && lastFocus.focus) try { lastFocus.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+    }, reduced() ? 0 : 380);
   }
   function waLink(base, text) {
     try {
@@ -294,7 +303,9 @@
       if (u0) window.open(u0, '_blank', 'noopener');
       return false;
     }
-    var fixed = v.currency === '458' && total > 0 && (o.cur || 'MYR') === 'MYR';
+    // The seller's QR is shown exactly as their bank/wallet made it. Only if they switch on "fill in the amount" do we rewrite it with the total
+    // (some apps reject that), otherwise the buyer types the total shown on the sheet.
+    var fixed = cfg.amount === true && v.currency === '458' && total > 0 && (o.cur || 'MYR') === 'MYR';
     var payload = fixed ? withAmount(cfg.qr, total) : cfg.qr;
     var col = effective(cfg, o.accent), svg = qrSvg(payload, { fg: col.fg, bg: col.bg, dots: cfg.dots, icon: cfg.icon });
     var s = ensureSheet();
@@ -321,8 +332,11 @@
         s.save.textContent = t('saved');
       } catch (e) { /* user cancelled the share sheet */ }
     };
+    clearTimeout(closeTimer);
+    s.scroll.scrollTop = 0;
     s.back.hidden = false; document.documentElement.classList.add('mpay-lock');
-    requestAnimationFrame(function () { s.back.classList.add('in'); s.done.focus(); });
+    void s.box.offsetHeight;                                                       // commit the off-screen start position first
+    requestAnimationFrame(function () { requestAnimationFrame(function () { s.back.classList.add('in'); try { s.box.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }); });
     return true;
   }
 
@@ -346,6 +360,8 @@
     + '<button type="button" class="btn btn-sm" data-mp-test><i class="fa-solid fa-camera"></i> Test scan</button></div>'
     + '<p class="mpay-ed-contrast" data-mp-contrast role="status"></p><p class="mpay-ed-test" data-mp-testres role="status"></p>'
     + '</div></div>'
+    + '<label class="toggle"><input type="checkbox" name="payAmount" data-mp-amt><span></span> Fill in the amount automatically (experimental)</label>'
+    + '<p class="hint">Off is safest: buyers scan your QR exactly as your bank or wallet made it, then type the total shown. On: the QR carries the total, but some wallets and banks reject that. Test with your own apps first.</p>'
     + '<p class="hint">Money goes straight to your account. The site never holds it and cannot see it, so check every payment in your banking app before you send the order. Colours follow your card theme unless you change them. Dark dots on a light background scan best.</p>'
     + '</div></div>';
 
@@ -354,14 +370,14 @@
     var S = {
       on: root.getAttribute('data-enabled') === '1', qr: root.getAttribute('data-qr') || '',
       fg: root.getAttribute('data-fg') || '', bg: root.getAttribute('data-bg') || '',
-      dots: root.getAttribute('data-dots') || 'rounded', icon: root.getAttribute('data-icon') || 'star'
+      dots: root.getAttribute('data-dots') || 'rounded', icon: root.getAttribute('data-icon') || 'star', amt: root.getAttribute('data-amount') === '1'
     };
     if (!validateEmv(S.qr)) S.qr = '';
     root.innerHTML = EDITOR_HTML;
     var $ = function (s) { return root.querySelector(s); };
     var chk = $('[name=payEnabled]'), body = $('.mpay-ed-body'), file = $('[data-mp-file]'), status = $('[data-mp-status]'),
       prev = $('[data-mp-prev]'), cFg = $('[data-mp-fg]'), cBg = $('[data-mp-bg]'), selD = $('[data-mp-dots]'), selI = $('[data-mp-icon]'),
-      contrast = $('[data-mp-contrast]'), testRes = $('[data-mp-testres]'), hid = {
+      amt = $('[data-mp-amt]'), contrast = $('[data-mp-contrast]'), testRes = $('[data-mp-testres]'), hid = {
         qr: $('[name=payQr]'), fg: $('[name=payFg]'), bg: $('[name=payBg]'), dots: $('[name=payDots]'), icon: $('[name=payIcon]')
       };
     var accent = function () {
@@ -372,7 +388,7 @@
     function paint(fire) {
       var col = effective(S, accent());
       hid.qr.value = S.qr; hid.fg.value = S.fg; hid.bg.value = S.bg; hid.dots.value = S.dots; hid.icon.value = S.icon;
-      chk.checked = S.on; body.hidden = !S.on; selD.value = S.dots; selI.value = S.icon; cFg.value = col.fg; cBg.value = col.bg;
+      chk.checked = S.on; amt.checked = S.amt; body.hidden = !S.on; selD.value = S.dots; selI.value = S.icon; cFg.value = col.fg; cBg.value = col.bg;
       testRes.textContent = ''; testRes.className = 'mpay-ed-test';
       if (S.qr && window.dgQRLib) {
         try { prev.innerHTML = qrSvg(S.qr, { fg: col.fg, bg: col.bg, dots: S.dots, icon: S.icon }); } catch (e) { prev.textContent = 'Preview unavailable'; }
@@ -391,6 +407,7 @@
       return true;
     }
     chk.addEventListener('change', function () { S.on = chk.checked; paint(true); });
+    amt.addEventListener('change', function () { S.amt = amt.checked; });
     file.addEventListener('change', async function () {
       var f = file.files && file.files[0]; file.value = ''; if (!f) return;
       note('Reading…');
@@ -432,7 +449,7 @@
     open({
       seller: d.seller, item: d.item, qty: 1, total: d.price, totalText: d.text, cur: d.cur, wa: d.wa,
       shopUrl: location.origin + '/' + d.slug, lang: document.documentElement.lang === 'ms' ? 'ms' : 'en', accent: pageAccent(),
-      cfg: { qr: d.qr, fg: d.fg, bg: d.bg, dots: d.dots, icon: d.icon }
+      cfg: { qr: d.qr, fg: d.fg, bg: d.bg, dots: d.dots, icon: d.icon, amount: d.amount === true }
     });
   }
   if (typeof document !== 'undefined') {
