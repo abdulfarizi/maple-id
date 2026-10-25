@@ -266,11 +266,11 @@
     <link rel="stylesheet" href="/assets/glass.css?v=3">
     <link rel="stylesheet" href="/assets/card-ui.css?v=1">
     <link rel="stylesheet" href="/assets/maple-ui.css?v=2">
-    <link rel="stylesheet" href="/assets/maple-pay.css?v=1">
+    <link rel="stylesheet" href="/assets/maple-pay.css?v=2">
     <script src="/assets/maplefx.js?v=5" defer></script>
     <script src="/assets/qr-lib.js"></script>
     <script src="/assets/maple-ui.js?v=3"></script>
-    <script src="/assets/maple-pay.js?v=1" defer></script>
+    <script src="/assets/maple-pay.js?v=3" defer></script>
 </head>
 <body>
 <div id="star-intro"></div>
@@ -425,7 +425,7 @@
         sfx: true, music: true, themeSwitch: true, grid: true,
         gaming: [], channels: [], openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
         shopEnabled: false, shopTitle: '', shopNote: '', shopWhatsApp: '', currency: 'auto', products: [], spotify: '', musicAuto: true,
-        payEnabled: false, payQr: '', payFg: '', payBg: '', payDots: 'rounded', payIcon: 'star',
+        payEnabled: false, payQr: '', payFg: '', payBg: '', payDots: 'rounded', payIcon: 'star', payAmount: false,
         donate: '', donateLabel: '', contactPhone: '', contactEmail: '', openGame: true, showLove: true
     };
     const MAPLE_DEFAULTS = {
@@ -1077,7 +1077,7 @@
             const c = curOf(P), tot = Number(item.price || 0) * q;
             window.MaplePay.open({ seller: P.name, item: item.name, qty: q, total: tot, totalText: money(tot, c), cur: c, wa: base, shopUrl: publicUrl(), lang,
                 accent: getComputedStyle(document.documentElement).getPropertyValue('--accent'),
-                cfg: { qr: P.payQr, fg: P.payFg, bg: P.payBg, dots: P.payDots, icon: P.payIcon } });
+                cfg: { qr: P.payQr, fg: P.payFg, bg: P.payBg, dots: P.payDots, icon: P.payIcon, amount: P.payAmount === true } });
             return;
         }
         window.open(waWithText(base, buyMessage(P, item, q)), '_blank', 'noopener');
