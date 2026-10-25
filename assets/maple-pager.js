@@ -28,7 +28,8 @@
   var prog = function () { return track ? track.scrollLeft / width() : 0; };
   var dockEl = function () { return document.querySelector('.dock'); };
   var reduced = function () { return !!(REDUCE && REDUCE.matches); };
-  var toName = function (n) { var v = vis(); return typeof n === 'number' ? v[clamp(n, 0, v.length - 1)] : n; };
+  var TABS = ['home', 'explore', 'profile'];          // numeric route targets: 0 Home · 1 Explore · 2 Profile (never the Card tab)
+  var toName = function (n) { return typeof n === 'number' ? TABS[clamp(n, 0, 2)] : n; };
   var urlOf = function (n) { return n === 'card' ? cardUrl : URLS[n]; };
 
   /* ───── one tween for every horizontal move ───── */
