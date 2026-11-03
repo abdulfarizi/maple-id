@@ -29,7 +29,7 @@
     new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
   const parse = (s) => { try { return JSON.parse(s || '{}') || {}; } catch { return {}; } };
 
-  const RESERVED_SLUGS = ['owner','studio','admin','api','assets','login','signup','www','support','help','about','static','index','digitalid','mapleid','explore','profile'];
+  const RESERVED_SLUGS = ['owner','studio','admin','api','assets','login','signup','www','support','help','about','static','index','digitalid','mapleid','explore','profile','builder'];
   const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])$/;
   const MEDIA_RE = /^(https?:\/\/\S+|data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+)$/i;
   const EDITABLE = ['name','role','bio','country','city','avatar','banner','theme','openTime','closeTime','timezone',
@@ -40,7 +40,7 @@
     'avatarShape','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid',
     'spotify','musicAuto','shopEnabled','shopTitle','shopNote','shopWhatsApp','currency','products',
     'payEnabled','payQr','payFg','payBg','payDots','payIcon','payAmount',
-    'donate','donateLabel','contactPhone','contactEmail','openGame','showLove','liquidGlass','glassBlur','cardStyle','bgFx','listed'];
+    'donate','donateLabel','contactPhone','contactEmail','openGame','showLove','liquidGlass','glassBlur','cardStyle','bgFx','listed','blocks','page'];
   const BOOLS = ['bgFx','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid','musicAuto','shopEnabled','payEnabled','payAmount','openGame','showLove','liquidGlass','listed'];
   const CURRENCIES = ['auto','MYR','SGD','IDR','BND','PHP','THB','USD'];
   const HEX_RE = /^#[0-9a-f]{6}$/i;
@@ -94,9 +94,32 @@
     }
     return last === '63' && crc16(v.slice(0, -4)) === v.slice(-4).toUpperCase() ? v : '';
   }
+  // Free-canvas builder: every block is rebuilt from known fields only
+  const BTYPES = ['text','img','btn','shape','emoji','avatar','ask'];
+  const hexOr = (v, d) => (HEX_RE.test(v || '') ? v : d);
+  const linkOk = (v) => { v = str(v, 300); return /^(https?:\/\/\S+|mailto:\S+|tel:[0-9+\-()\s.]+)$/i.test(v) ? v : (/^[\w.-]+\.[a-z]{2,}\S*$/i.test(v) ? 'https://' + v : ''); };
+  const srcOk = (v) => { v = String(v || '').trim(); return v.length <= 150000 && /^(https:\/\/\S+|data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+)$/i.test(v) ? v : ''; };
+  function cleanBlocks(a) {
+    return (Array.isArray(a) ? a : []).slice(0, 80).filter((x) => x && BTYPES.includes(x.t)).map((x) => ({
+      id: str(x.id, 16).replace(/[^\w-]/g, '') || Math.random().toString(36).slice(2, 8), t: x.t,
+      x: clampInt(x.x, -200, 600, 20), y: clampInt(x.y, -100, 3000, 20), w: clampInt(x.w, 10, 600, 120), h: clampInt(x.h, 10, 3000, 40),
+      r: clampInt(x.r, -180, 180, 0), o: Math.min(1, Math.max(0, Number(x.o) || 0)) || (Number(x.o) === 0 ? 0 : 1),
+      txt: str(x.txt, 600), src: srcOk(x.src), url: linkOk(x.url), fs: clampInt(x.fs, 6, 120, 18),
+      fw: ['400','700','900'].includes(String(x.fw)) ? String(x.fw) : '400', al: ['left','center','right'].includes(x.al) ? x.al : 'left',
+      c: hexOr(x.c, '#b3122e'), bg: hexOr(x.bg, '#e11d48'), bc: hexOr(x.bc, '#b3122e'), rad: clampInt(x.rad, 0, 300, 12), bd: clampInt(x.bd, 0, 20, 0), lb: str(x.lb, 24)
+    }));
+  }
+  function cleanPage(p) {
+    p = p && typeof p === 'object' ? p : {};
+    const bi = String(p.bgImg || '').trim();
+    return { bg1: hexOr(p.bg1, '#ffe3e8'), bg2: hexOr(p.bg2, '#ffb3c1'), ang: clampInt(p.ang, 0, 360, 160), h: clampInt(p.h, 300, 3000, 720),
+      font: ['sans','serif','mono','fun','bold'].includes(p.font) ? p.font : 'sans', bgImg: bi && srcOk(bi) ? bi : '' };
+  }
   // Coerce every layout option to a safe value (never trust what the browser sent)
   function cleanOptions(m) {
-    m.layout = m.layout === 'star' ? 'star' : 'basic';
+    m.layout = ['star','builder'].includes(m.layout) ? m.layout : 'basic';
+    if (m.blocks !== undefined) m.blocks = cleanBlocks(m.blocks);
+    if (m.page !== undefined) m.page = cleanPage(m.page);
     m.accent = HEX_RE.test(m.accent || '') ? m.accent : '';
     m.accent2 = HEX_RE.test(m.accent2 || '') ? m.accent2 : '';
     m.cardTag = str(m.cardTag, 24);
@@ -415,6 +438,38 @@
       return json({ code: 404, msg: 'Not supported' }, 404);
     }
 
+    // ===== Anonymous messages (text + drawing) =====
+    if (url.includes('/api/messages')) {
+      const rest = url.split('/api/messages')[1].split('?')[0].replace(/^\/+|\/+$/g, '');
+      if (method === 'POST' && rest) {
+        const slug = normSlug(decodeURIComponent(rest));
+        const body = parse(options.body);
+        const text = str(body.text, 500);
+        let drawing = String(body.drawing || '').trim();
+        if (drawing && (drawing.length > 60000 || !/^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+\/=]+$/.test(drawing))) drawing = '';
+        if (!text && !drawing) return json({ error: 'Write or draw something first.' }, 400);
+        if (!SLUG_RE.test(slug)) return json({ error: 'Card not found.' }, 404);
+        const pr = await sb(`/rest/v1/profiles?select=id&slug=eq.${encodeURIComponent(slug)}`);
+        const prow = pr && pr.ok ? await pr.json().catch(() => []) : [];
+        if (!Array.isArray(prow) || !prow.length) return json({ error: 'Card not found.' }, 404);
+        const ins = await sb('/rest/v1/anon_messages', { method: 'POST', headers: { Prefer: 'return=minimal' }, body: { owner: prow[0].id, body: text, drawing } });
+        if (!ins || !ins.ok) return json({ error: 'Could not send right now. Try again later.' }, 503);
+        return json({ ok: true });
+      }
+      const au = await authUser();
+      if (!au) return json({ error: 'Log in first.' }, 401);
+      if (method === 'GET' && !rest) {
+        const r = await sb('/rest/v1/anon_messages?select=id,body,drawing,created_at&order=created_at.desc&limit=100', { token: au.token });
+        if (!r || !r.ok) return json({ error: 'Could not load messages.' }, 503);
+        return json({ messages: await r.json().catch(() => []) });
+      }
+      if (method === 'DELETE' && /^[0-9a-f-]{36}$/i.test(rest)) {
+        const r = await sb(`/rest/v1/anon_messages?id=eq.${rest}`, { method: 'DELETE', token: au.token });
+        return json({ ok: !!(r && r.ok) }, r && r.ok ? 200 : 503);
+      }
+      return json({ error: 'Not supported' }, 404);
+    }
+
     // ===== Uploads =====
     if (url.includes('/api/uploads') && method === 'POST') {
       try {
@@ -578,7 +633,7 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <script src="/assets/maple-pay.js?v=4" defer></script>
     <script src="/assets/maple-pager.js?v=6"></script>
     <script src="/assets/launch.js?v=2"></script>
-    <script type="module" crossorigin src="/assets/index-maple1.js?v=11"></script>
+    <script type="module" crossorigin src="/assets/index-maple1.js?v=12"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css" />
     <link rel="stylesheet" href="/assets/maple.css?v=2" />
     <link rel="stylesheet" href="/assets/themes.css?v=3" />
@@ -590,6 +645,7 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <link rel="stylesheet" href="/assets/maple-pager.css?v=5" />
     <link rel="stylesheet" href="/assets/studio.css?v=2" />
     <script src="/assets/maple-studio.js?v=1" defer></script>
+    <script src="/assets/maple-builder.js?v=2" defer></script>
     <script src="/assets/maplefx.js?v=5" defer></script>
     <script src="/assets/maple.js?v=3"></script>
   </head>
