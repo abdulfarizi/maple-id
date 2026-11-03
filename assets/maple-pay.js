@@ -121,9 +121,9 @@
     var q = lib.create(text, { errorCorrectionLevel: 'H' }), n = q.modules.size, d = q.modules.data;
     var fg = HEX.test(o.fg || '') ? o.fg : '#1a1214', bg = HEX.test(o.bg || '') ? o.bg : '#ffffff';
     var style = o.dots === 'square' || o.dots === 'dots' ? o.dots : 'rounded';
-    var icon = o.icon === 'none' ? 'none' : 'star';
+    var icon = window.dgQRIcons ? window.dgQRIcons.norm(o.icon, 'star') : (o.icon === 'none' ? 'none' : 'star');
     var M = 4, size = n + M * 2;
-    var hole = icon === 'star' ? (Math.round(n * 0.2) | 1) : 0, lo = Math.floor((n - hole) / 2), hi = lo + hole;
+    var hole = icon !== 'none' ? (Math.round(n * 0.2) | 1) : 0, lo = Math.floor((n - hole) / 2), hi = lo + hole;
     var inEye = function (x, y) { return (x < 7 && y < 7) || (x >= n - 7 && y < 7) || (x < 7 && y >= n - 7); };
     var sq = '', other = '', x, y;
     for (y = 0; y < n; y++) for (x = 0; x < n; x++) {
@@ -144,7 +144,7 @@
     if (hole) {
       var half = hole / 2 + 0.2;
       logo = '<rect x="' + (mid - half) + '" y="' + (mid - half) + '" width="' + half * 2 + '" height="' + half * 2 + '" rx="' + (style === 'square' ? 0.6 : 1.6) + '" fill="' + bg + '"/>'
-        + '<polygon points="' + starPoints(mid, mid + hole * 0.03, hole * 0.4) + '" fill="none" stroke="' + fg + '" stroke-width="' + (hole * 0.075).toFixed(2) + '" stroke-linejoin="round"/>';
+        + (window.dgQRIcons ? window.dgQRIcons.draw(icon, mid, mid, hole * (icon.indexOf('t:') === 0 ? 0.74 : 0.8), fg) : '<polygon points="' + starPoints(mid, mid + hole * 0.03, hole * 0.4) + '" fill="none" stroke="' + fg + '" stroke-width="' + (hole * 0.075).toFixed(2) + '" stroke-linejoin="round"/>');
     }
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" shape-rendering="geometricPrecision">'
       + '<rect width="' + size + '" height="' + size + '" rx="1.2" fill="' + bg + '"/>'
@@ -355,7 +355,7 @@
     + '<div class="mpay-ed-prev"><div class="mpay-ed-qr" data-mp-prev></div><div class="mpay-ed-ctl">'
     + '<div class="two"><div class="field"><label>Dots</label><input type="color" data-mp-fg></div><div class="field"><label>Background</label><input type="color" data-mp-bg></div></div>'
     + '<div class="two"><div class="field"><label>Style</label><select data-mp-dots><option value="rounded">Rounded</option><option value="square">Square</option><option value="dots">Round dots</option></select></div>'
-    + '<div class="field"><label>Centre icon</label><select data-mp-icon><option value="star">Hollow star</option><option value="none">None</option></select></div></div>'
+    + '<div class="field"><label>Centre symbol</label><select data-mp-icon>' + (window.dgQRIcons ? window.dgQRIcons.options(0, true) : '<option value="star">Hollow star</option><option value="none">None</option>') + '</select><input type="text" data-mp-char maxlength="4" placeholder="Type or paste: 👟" hidden style="margin-top:6px" aria-label="Custom symbol"></div></div>'
     + '<div class="mpay-ed-row"><button type="button" class="btn btn-sm" data-mp-auto><i class="fa-solid fa-wand-magic-sparkles"></i> Match my theme</button>'
     + '<button type="button" class="btn btn-sm" data-mp-plain><i class="fa-solid fa-qrcode"></i> Plain (best compatibility)</button>'
     + '<button type="button" class="btn btn-sm" data-mp-test><i class="fa-solid fa-camera"></i> Test scan</button></div>'
@@ -377,7 +377,7 @@
     root.innerHTML = EDITOR_HTML;
     var $ = function (s) { return root.querySelector(s); };
     var chk = $('[name=payEnabled]'), body = $('.mpay-ed-body'), file = $('[data-mp-file]'), status = $('[data-mp-status]'),
-      prev = $('[data-mp-prev]'), cFg = $('[data-mp-fg]'), cBg = $('[data-mp-bg]'), selD = $('[data-mp-dots]'), selI = $('[data-mp-icon]'),
+      prev = $('[data-mp-prev]'), cFg = $('[data-mp-fg]'), cBg = $('[data-mp-bg]'), selD = $('[data-mp-dots]'), selI = $('[data-mp-icon]'), charI = $('[data-mp-char]'),
       amt = $('[data-mp-amt]'), contrast = $('[data-mp-contrast]'), testRes = $('[data-mp-testres]'), hid = {
         qr: $('[name=payQr]'), fg: $('[name=payFg]'), bg: $('[name=payBg]'), dots: $('[name=payDots]'), icon: $('[name=payIcon]')
       };
@@ -389,7 +389,7 @@
     function paint(fire) {
       var col = effective(S, accent());
       hid.qr.value = S.qr; hid.fg.value = S.fg; hid.bg.value = S.bg; hid.dots.value = S.dots; hid.icon.value = S.icon;
-      chk.checked = S.on; amt.checked = S.amt; body.hidden = !S.on; selD.value = S.dots; selI.value = S.icon; cFg.value = col.fg; cBg.value = col.bg;
+      chk.checked = S.on; amt.checked = S.amt; body.hidden = !S.on; selD.value = S.dots; var cu = S.icon.indexOf('t:') === 0; selI.value = cu ? 'custom' : S.icon; charI.hidden = !cu; if (cu && document.activeElement !== charI) charI.value = S.icon.slice(2); cFg.value = col.fg; cBg.value = col.bg;
       testRes.textContent = ''; testRes.className = 'mpay-ed-test';
       if (S.qr && window.dgQRLib) {
         try { prev.innerHTML = qrSvg(S.qr, { fg: col.fg, bg: col.bg, dots: S.dots, icon: S.icon }); } catch (e) { prev.textContent = 'Preview unavailable'; }
@@ -422,7 +422,8 @@
     cFg.addEventListener('input', function () { S.fg = cFg.value; paint(true); });
     cBg.addEventListener('input', function () { S.bg = cBg.value; paint(true); });
     selD.addEventListener('change', function () { S.dots = selD.value; paint(true); });
-    selI.addEventListener('change', function () { S.icon = selI.value; paint(true); });
+    selI.addEventListener('change', function () { if (selI.value === 'custom') { S.icon = 't:' + (Array.from(charI.value.trim()).slice(0, 2).join('') || '👟'); charI.hidden = false; charI.value = S.icon.slice(2); } else S.icon = selI.value; paint(true); });
+    charI.addEventListener('input', function () { var v = Array.from(charI.value.trim()).slice(0, 2).join(''); S.icon = v ? 't:' + v : 'star'; paint(true); });
     $('[data-mp-auto]').addEventListener('click', function () { S.fg = ''; S.bg = ''; paint(true); });
     $('[data-mp-plain]').addEventListener('click', function () { S.fg = '#000000'; S.bg = '#ffffff'; S.dots = 'square'; S.icon = 'none'; paint(true); });
     $('[data-mp-test]').addEventListener('click', async function () {

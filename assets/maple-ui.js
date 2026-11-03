@@ -162,9 +162,10 @@
     var size = n + M * 2, fg = o.fg || '#120b0c', eye = o.eye || fg, bg = o.bg || '#ffffff', mid = size / 2, hole = Math.max(5, Math.round(n * 0.2)) | 0;
     var inEye = function (x, y) { return (x < 7 && y < 7) || (x >= n - 7 && y < 7) || (x < 7 && y >= n - 7); };
     var inHole = function (x, y) { return Math.abs(x + M + .5 - mid) < hole / 2 + .6 && Math.abs(y + M + .5 - mid) < hole / 2 + .6; };
+    var hole0 = !(window.dgQRIcons && window.dgQRIcons.norm(o.icon, 'leaf') === 'none');
     var dots = '', on = function (x, y) { return x >= 0 && y >= 0 && x < n && y < n && d[y * n + x]; };
     for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) {
-      if (!on(x, y) || inEye(x, y) || inHole(x, y)) continue;
+      if (!on(x, y) || inEye(x, y) || (hole0 && inHole(x, y))) continue;
       dots += '<rect x="' + (x + M + .04) + '" y="' + (y + M + .04) + '" width=".92" height=".92" rx=".3"/>';
     }
     var eyes = '';
@@ -173,8 +174,10 @@
       eyes += '<rect x="' + (ex + .5) + '" y="' + (ey + .5) + '" width="6" height="6" rx=".4" fill="none" stroke="' + eye + '" stroke-width="1"/>'
         + '<rect x="' + (ex + 2) + '" y="' + (ey + 2) + '" width="3" height="3" rx=".6" fill="' + eye + '"/>';
     });
-    var s = hole * .62, lx = mid - s / 2, ly = mid - s / 2;
-    var logo = '<circle cx="' + mid + '" cy="' + mid + '" r="' + (hole / 2 + .3) + '" fill="' + bg + '"/>'
+    var s = hole * .62, lx = mid - s / 2, ly = mid - s / 2, ic = (window.dgQRIcons ? window.dgQRIcons.norm(o.icon, 'leaf') : 'leaf');
+    var logo = ic === 'none' ? '' : ic.indexOf('t:') === 0 ? '<circle cx="' + mid + '" cy="' + mid + '" r="' + (hole / 2 + .3) + '" fill="' + bg + '"/>' + window.dgQRIcons.draw(ic, mid, mid, hole * .72, fg)
+      : ic !== 'leaf' ? '<circle cx="' + mid + '" cy="' + mid + '" r="' + (hole / 2 + .3) + '" fill="' + bg + '"/><circle cx="' + mid + '" cy="' + mid + '" r="' + (hole / 2 - .35) + '" fill="url(#qg)"/>' + window.dgQRIcons.draw(ic, mid, mid, hole * .68, '#ffffff')
+      : '<circle cx="' + mid + '" cy="' + mid + '" r="' + (hole / 2 + .3) + '" fill="' + bg + '"/>'
       + '<circle cx="' + mid + '" cy="' + mid + '" r="' + (hole / 2 - .35) + '" fill="url(#qg)"/>'
       + '<path d="' + LEAF + '" fill="#fff" transform="translate(' + (mid - s * .42) + ' ' + (mid - s * .44) + ') scale(' + (s * .0084) + ')"/>';
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" shape-rendering="geometricPrecision">'
@@ -209,7 +212,7 @@
       if (!window.dgQRLib) { toast('QR is not available'); return; }
       closeSheet();
       var url = o.url, name = o.name || '', L = o.labels || {};
-      var svg; try { svg = qrSvg(url, qrColors()); } catch (e) { toast('Could not make the QR code'); return; }
+      var cols = Object.assign(qrColors(), { icon: o.icon }), svg; try { svg = qrSvg(url, cols); } catch (e) { toast('Could not make the QR code'); return; }
       var host = String(url).replace(/^https?:\/\//, '');
       var s = document.createElement('div'); s.className = 'qs'; s.setAttribute('role', 'dialog'); s.setAttribute('aria-modal', 'true'); s.setAttribute('aria-label', L.title || 'QR code');
       s.innerHTML = '<div class="qs-back"></div>'
@@ -234,7 +237,7 @@
           await copyText(url); toast(L.copied || 'Link copied');
         } else if (k === 'save') {
           try {
-            var png = await svgToPng(qrSvg(url, qrColors()).replace('<svg ', '<svg width="1024" height="1024" '), 1024);
+            var png = await svgToPng(qrSvg(url, cols).replace('<svg ', '<svg width="1024" height="1024" '), 1024);
             var fname = (String(url).split('/').filter(Boolean).pop() || 'maple') + '-qr.png', f = null;
             try { f = new File([png], fname, { type: 'image/png' }); } catch (er) {}
             if (f && coarse() && navigator.canShare && navigator.canShare({ files: [f] })) { try { await navigator.share({ files: [f] }); return; } catch (er) { if (er && er.name === 'AbortError') return; } }
@@ -298,7 +301,7 @@
     hide: function (v) { if (dockEl) dockEl.classList.toggle('gone', !!v); }
   };
 
-  window.dgUI = { theme: theme, themes: THEME_LIST, vcard: vcard, qr: qr, dock: dock, toast: toast, copy: copyText, haptic: haptic };
+  window.dgUI = { theme: theme, themes: THEME_LIST, vcard: vcard, qr: qr, qrSvg: function (u, i) { return qrSvg(u, Object.assign(qrColors(), { icon: i })); }, dock: dock, toast: toast, copy: copyText, haptic: haptic };
   // first paint: theme colour of the browser bar
   try { theme.meta(); } catch (e) {}
 })();
