@@ -72,22 +72,23 @@ function safeUrl(u,img){u=String(u||'').trim();if(img)return /^(https:\/\/|data:
 function num(v,lo,hi,d){v=Number(v);return isFinite(v)?Math.min(hi,Math.max(lo,v)):d}
 function norm(p){p=p||{};var pg=p.page||{},bl=Array.isArray(p.blocks)?p.blocks:[];
  P=p;PG={bg1:pg.bg1||PRESETS.berry[0],bg2:pg.bg2||PRESETS.berry[1],ang:num(pg.ang,0,360,160),h:num(pg.h,300,3000,720),font:FONTS[pg.font]?pg.font:'sans',bgImg:pg.bgImg||''};
- B=bl.map(function(b,i){return{id:b.id||('b'+i+Date.now()%1e5),t:b.t,x:num(b.x,-200,600,20),y:num(b.y,-100,3000,20),w:num(b.w,10,600,120),h:num(b.h,10,3000,40),r:num(b.r,-180,180,0),o:num(b.o,0,1,1),txt:b.txt||'',src:b.src||'',url:b.url||'',fs:num(b.fs,6,120,18),fw:b.fw||'400',al:b.al||'left',c:b.c||'#b3122e',bg:b.bg||'#e11d48',rad:num(b.rad,0,300,12),bd:num(b.bd,0,20,0),bc:b.bc||'#b3122e',lb:String(b.lb||''),pat:b.pat==='stripes'?'stripes':'',mode:['text','draw'].indexOf(b.mode)>-1?b.mode:'both'}});
+ B=bl.map(function(b,i){return{id:b.id||('b'+i+Date.now()%1e5),t:b.t,x:num(b.x,-200,600,20),y:num(b.y,-100,3000,20),w:num(b.w,10,600,120),h:num(b.h,10,3000,40),r:num(b.r,-180,180,0),o:num(b.o,0,1,1),txt:b.txt||'',src:b.src||'',url:b.url||'',fs:num(b.fs,6,120,18),fw:b.fw||'400',al:b.al||'left',c:b.c||'#b3122e',bg:b.bg||'#e11d48',rad:num(b.rad,0,300,12),bd:num(b.bd,0,20,0),bc:b.bc||'#b3122e',lb:String(b.lb||''),pat:b.pat==='stripes'?'stripes':'',bi:b.bi||'',mode:['text','draw'].indexOf(b.mode)>-1?b.mode:'both'}});
  if(!B.length&&EDIT&&!p.blocks){build('basic');panel='tpl'}}
 function starter_old(){var T=PRESETS.berry;B=[mk('avatar',{x:145,y:60,w:100,h:100}),mk('text',{x:20,y:180,w:350,h:44,txt:(P.name||'Your name'),fs:30,fw:'700',al:'center',c:T[3]}),mk('text',{x:30,y:236,w:330,h:60,txt:'Tap me, then change me in the panel below. Drag anything anywhere.',fs:15,al:'center',c:T[3]}),mk('btn',{x:60,y:320,w:270,h:50,txt:'My link',url:'https://'})]}
 function mk(t,o){var d={text:{w:200,h:40,txt:'New text',fs:20},img:{w:160,h:160},btn:{w:240,h:48,txt:'Button',url:'https://'},shape:{w:140,h:140,bg:'#ff9bb0',rad:24},emoji:{w:70,h:70,txt:'✨',fs:48},avatar:{w:100,h:100},ask:{w:330,h:240,txt:'Ask me anything',lb:'Send anonymously',fs:16,bg:'#ffffff',c:'#b3122e',rad:16,bd:2,bc:'#b3122e'}}[t]||{};
  var b={id:'b'+Math.random().toString(36).slice(2,8),t:t,x:95,y:Math.max(20,Math.round((document.getElementById('area')?document.getElementById('area').scrollTop:0)/U())+40),w:150,h:50,r:0,o:1,txt:'',src:'',url:'',fs:18,fw:'400',al:'left',c:PG.bg1&&PRESETS.berry[3],bg:'#e11d48',rad:12,bd:0,bc:'#b3122e'};
  for(var k in d)b[k]=d[k];for(k in(o||{}))b[k]=o[k];if(t==='btn'){b.c='#ffffff';b.al='center'}return b}
 function U(){var c=$('cv');return c&&c.clientWidth?c.clientWidth/390:1}
+function bgi(b){var u=safeUrl(b.bi,1);return u?'background-image:url("'+u.replace(/["\\()\n\r]/g,'')+'");background-size:cover;background-position:center;':''}
 function elHtml(b){
  var s='--x:'+b.x+';--y:'+b.y+';--w:'+b.w+';--h:'+b.h+';--r:'+b.r+';--o:'+b.o+';',inner='',cls='el',tag='div',at='';
  var fs='font-size:calc('+b.fs+'*var(--u));';
  if(b.t==='text'){cls+=' t';s+=fs+'color:'+esc(b.c)+';font-weight:'+esc(b.fw)+';text-align:'+esc(b.al)+';';inner=esc(b.txt)}
- else if(b.t==='btn'){cls+=' b';s+=fs+'color:'+esc(b.c)+';background:'+esc(b.bg)+';border-radius:calc('+b.rad+'*var(--u));';inner=esc(b.txt);var u=safeUrl(b.url);if(mode==='view'&&u){tag='a';at=' href="'+esc(u)+'" target="_blank" rel="noopener noreferrer"'}}
+ else if(b.t==='btn'){cls+=' b';s+=fs+'color:'+esc(b.c)+';background:'+esc(b.bg)+';border-radius:calc('+b.rad+'*var(--u));';inner=esc(b.txt);s+=bgi(b);var u=safeUrl(b.url);if(mode==='view'&&u){tag='a';at=' href="'+esc(u)+'" target="_blank" rel="noopener noreferrer"'}}
  else if(b.t==='img'){var im=safeUrl(b.src,1);s+='border-radius:calc('+b.rad+'*var(--u));background:#ffffff22;';inner=im?'<img src="'+esc(im)+'" alt="" draggable="false">':'';}
- else if(b.t==='avatar'){var av=safeUrl(P.avatar,1);s+='border-radius:'+(b.rad>=50?'50%':'calc('+b.rad+'*var(--u))')+';background:#ffffff33;';inner=av?'<img src="'+esc(av)+'" alt="" draggable="false">':''}
+ else if(b.t==='avatar'){var av=safeUrl(P.avatar,1);s+='border-radius:'+(b.rad>=50?'50%':'calc('+b.rad+'*var(--u))')+';background:#ffffff33;'+(b.bd>0?'border:calc('+b.bd+'*var(--u)) solid '+esc(b.bc)+';':'');inner=av?'<img src="'+esc(av)+'" alt="" draggable="false">':''}
  else if(b.t==='ask'){var md=b.mode||'both';cls+=' k m-'+md;s+=fs+'color:'+esc(b.c)+';background:'+esc(b.bg)+';border:calc('+b.bd+'*var(--u)) solid '+esc(b.bc)+';border-radius:calc('+b.rad+'*var(--u));';inner='<b>'+esc(b.txt)+'</b>'+(md==='draw'?'':'<textarea class="aq" maxlength="500" placeholder="Write a message…" aria-label="Message"></textarea>')+(md==='text'?'':'<canvas class="ac" aria-label="Drawing area"></canvas>')+'<div class="ar"><button type="button" class="as" style="background:'+esc(b.c)+';color:'+esc(b.bg)+'">'+esc(b.lb||'Send anonymously')+'</button>'+(md==='text'?'':'<button type="button" class="aclr" style="background:transparent;color:inherit;border:1px solid currentColor">Clear drawing</button>')+'<span class="ast" role="status"></span></div>'}
- else if(b.t==='shape'){s+='background:'+(b.pat==='stripes'?'repeating-linear-gradient(135deg,'+esc(b.bg)+' 0 calc(22*var(--u)),'+esc(b.bc)+' 0 calc(44*var(--u)))':esc(b.bg))+';border-radius:calc('+b.rad+'*var(--u));border:calc('+b.bd+'*var(--u)) solid '+esc(b.bc)+';'}
+ else if(b.t==='shape'){s+='background:'+(b.pat==='stripes'?'repeating-linear-gradient(135deg,'+esc(b.bg)+' 0 calc(22*var(--u)),'+esc(b.bc)+' 0 calc(44*var(--u)))':esc(b.bg))+';border-radius:calc('+b.rad+'*var(--u));border:calc('+b.bd+'*var(--u)) solid '+esc(b.bc)+';'+bgi(b)}
  else if(b.t==='emoji'){cls+=' e';s+=fs;inner=esc(b.txt)}
  else return'';
  return'<'+tag+' class="'+cls+(b.id===sel?' sel':'')+'" data-id="'+esc(b.id)+'" style="'+s+'"'+at+'>'+inner+(EDIT&&mode==='edit'?'<span class="hd" data-h="1"></span>':'')+'</'+tag+'>'}
@@ -137,13 +138,14 @@ if(panel==='tpl'){pn.innerHTML='<h4>Start from a template</h4><p class="hint" st
   +'<div class="f"><label>Top colour</label><input type="color" data-p="bg1" value="'+PG.bg1+'"></div><div class="f"><label>Bottom colour</label><input type="color" data-p="bg2" value="'+PG.bg2+'"></div>'
   +'<div class="f"><label>Angle</label><input type="number" data-p="ang" min="0" max="360" value="'+PG.ang+'"></div><div class="f"><label>Page height</label><input type="number" data-p="h" min="300" max="3000" value="'+PG.h+'"></div>'
   +sfld('Font','font',Object.keys(FONTS).map(function(k){return[k,k]}),PG).replace('data-k','data-p')
-  +'<div class="f w"><label>Background image link (https)</label><input type="text" data-p="bgImg" value="'+esc(PG.bgImg)+'" placeholder="https://…"></div></div>';return}
+  +'<div class="f w"><label>Background image or GIF link (https)</label><input type="text" data-p="bgImg" value="'+(PG.bgImg.indexOf('data:')===0?'':esc(PG.bgImg))+'" placeholder="https://…"></div><div class="f"><label>&nbsp;</label><button class="bt" data-a="upload" data-tg="bgImg">Upload background (GIF ok)</button></div></div>';return}
  var b=sel&&find(sel);
  if(!b){pn.innerHTML='<h4>Nothing selected</h4><p class="hint">Add an element above, or tap one on the page. Drag to move, pull the pink dot to resize. Use Page style for colours and font.</p>';return}
  var h='<h4>'+{text:'Text',img:'Image',btn:'Button',shape:'Shape',emoji:'Emoji',avatar:'Avatar',ask:'Message box'}[b.t]+'</h4><div class="g">';
  if(b.t==='text')h+='<div class="f w"><label>Text</label><textarea data-k="txt" rows="3">'+esc(b.txt)+'</textarea></div>'+fld('Size','fs','number','min="6" max="120"')+sfld('Weight','fw',[['400','Normal'],['700','Bold'],['900','Heavy']])+sfld('Align','al',[['left','Left'],['center','Centre'],['right','Right']])+fld('Colour','c','color');
+ if(b.t==='btn'||b.t==='shape')h+='<div class="f w"><label>Background image or GIF link</label><input type="text" data-k="bi" value="'+(String(b.bi||'').indexOf('data:')===0?'':esc(b.bi))+'" placeholder="https://…"></div><div class="f"><label>&nbsp;</label><button class="bt" data-a="upload" data-tg="bi">Upload GIF or image</button></div>';
  if(b.t==='btn')h+=fld('Label','txt')+fld('Link','url','text','placeholder="https://…"')+fld('Size','fs','number','min="6" max="80"')+fld('Fill','bg','color')+fld('Text colour','c','color')+fld('Roundness','rad','number','min="0" max="300"');
- if(b.t==='img'||b.t==='avatar'){if(b.t==='img')h+='<div class="f w"><label>Image link or upload</label><input type="text" data-k="src" value="'+(b.src.indexOf('data:')===0?'':esc(b.src))+'" placeholder="https://…"></div><div class="f"><label>&nbsp;</label><button class="bt" data-a="upload">Upload photo</button></div>';else h+='<p class="hint f w">Uses your profile photo from the Profile tab.</p>';h+=fld('Roundness (50+ = circle)','rad','number','min="0" max="300"')}
+ if(b.t==='img'||b.t==='avatar'){if(b.t==='img')h+='<div class="f w"><label>Image link or upload</label><input type="text" data-k="src" value="'+(b.src.indexOf('data:')===0?'':esc(b.src))+'" placeholder="https://…"></div><div class="f"><label>&nbsp;</label><button class="bt" data-a="upload" data-tg="src">Upload photo or GIF</button></div>';else h+='<p class="hint f w">Uses your profile photo. Make your own border: add a GIF or shape behind it, or set a border below.</p>';h+=fld('Roundness (50+ = circle)','rad','number','min="0" max="300"');if(b.t==='avatar')h+=fld('Border','bd','number','min="0" max="20"')+fld('Border colour','bc','color')}
  if(b.t==='shape')h+=sfld('Pattern','pat',[['','Solid'],['stripes','Stripes']])+fld('Fill','bg','color')+fld('Roundness','rad','number','min="0" max="300"')+fld('Border','bd','number','min="0" max="20"')+fld('Border / stripe colour','bc','color');
  if(b.t==='ask')h+=sfld('Show','mode',[['both','Text + drawing'],['text','Text only'],['draw','Drawing only']])+fld('Question','txt')+fld('Button label','lb')+fld('Text size','fs','number','min="8" max="40"')+fld('Box colour','bg','color')+fld('Text colour','c','color')+fld('Border colour','bc','color')+fld('Border','bd','number','min="0" max="20"')+fld('Roundness','rad','number','min="0" max="300"')+'<p class="hint f w">Visitors can type and draw. Messages arrive in Studio → Free canvas → Messages.</p>';
  if(b.t==='emoji')h+=fld('Emoji','txt')+fld('Size','fs','number','min="10" max="120"');
@@ -159,12 +161,15 @@ function render2(){var pn=$('pn'),ae=document.activeElement,keep=ae&&pn.contains
  cv.style.setProperty('--ph',PG.h);cv.style.fontFamily=FONTS[PG.font];
  cv.style.background=(PG.bgImg&&safeUrl(PG.bgImg,1)?'url("'+safeUrl(PG.bgImg,1).replace(/"/g,'%22')+'") center/cover,':'')+'linear-gradient('+PG.ang+'deg,'+PG.bg1+','+PG.bg2+')';
  cv.innerHTML=B.map(elHtml).join('')}
+var upTg='src';
+function setImg(o){if(upTg==='bgImg')PG.bgImg=o;else{var b=find(sel);if(b)b[upTg]=o}render();push()}
 function upload(f){
- if(!f)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){
+ if(!f)return;
+ if(f.type==='image/gif'){if(f.size>380000){alert('That GIF is over 380 KB. Use a smaller one or paste a link.');return}var gr=new FileReader();gr.onload=function(){setImg(String(gr.result))};gr.readAsDataURL(f);return}var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){
   var s=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
   var q=.78,o=c.toDataURL('image/jpeg',q);while(o.length>140000&&q>.3){q-=.1;o=c.toDataURL('image/jpeg',q)}
   if(o.length>140000){alert('Image is too big. Try a smaller one.');return}
-  var b=find(sel);if(b){b.src=o;render();push()}};im.src=r.result};r.readAsDataURL(f)}
+  setImg(o)};im.src=r.result};r.readAsDataURL(f)}
 $('file').addEventListener('change',function(e){upload(e.target.files[0]);e.target.value=''});
 document.addEventListener('click',function(e){
  var a=e.target.closest('[data-a]');if(!a||!EDIT)return;var act=a.dataset.a,b=sel&&find(sel);
@@ -175,7 +180,7 @@ document.addEventListener('click',function(e){
  else if(act==='preset'){var t=PRESETS[a.dataset.k];PG.bg1=t[0];PG.bg2=t[1];PG.ang=t[2];B.forEach(function(x){if(x.t==='text')x.c=t[3]});render();push()}
  else if(act==='prev'){mode=mode==='edit'?'view':'edit';a.classList.toggle('on',mode==='view');sel=null;render();panelRender()}
  else if(act==='done'){try{parent.postMessage({maple:'bld-close'},location.origin)}catch(x){}}
- else if(act==='upload'){$('file').click()}
+ else if(act==='upload'){upTg=a.dataset.tg||'src';$('file').click()}
  else if(b&&act==='del'){B=B.filter(function(x){return x!==b});sel=null;render();push()}
  else if(b&&act==='dup'){var c=JSON.parse(JSON.stringify(b));c.id='b'+Math.random().toString(36).slice(2,8);c.x+=16;c.y+=16;B.push(c);sel=c.id;render();push()}
  else if(b&&act==='fwd'){var i=B.indexOf(b);if(i<B.length-1){B.splice(i+1,0,B.splice(i,1)[0]);render();push()}}
@@ -184,7 +189,7 @@ document.addEventListener('click',function(e){
 var TPL=[['basic','Basic card','Clean card with banner, your IDs and links'],['star','Star card','Dark star look with tag, specs and round icons'],['pastel','Pastel collage','Soft pink and blue panels with stripes, like a scrapbook page'],['neon','Neon night','Dark with cyan glow'],['minimal','Clean minimal','Simple black and white'],['blank','Blank','Start from nothing']];
 var PAL={basic:{bg1:'#ffe3e8',bg2:'#ffb3c1',fg:'#b3122e',ac:'#e11d48',on:'#ffffff',card:'#ffffff',font:'sans',ban:1},neon:{bg1:'#0b0b1a',bg2:'#1a0b2e',fg:'#e8f0ff',ac:'#00e5ff',on:'#001018',card:'#16162e',font:'mono',ban:0},minimal:{bg1:'#fafafa',bg2:'#f0f0f4',fg:'#1a1a1a',ac:'#1a1a1a',on:'#ffffff',card:'#ffffff',font:'serif',ban:0}};
 function chn(c){var p=c.platform,v=String(c.value||'').trim(),u='';if(/^https?:\/\//i.test(v))u=v;else{var h=v.replace(/^@/,''),M={TikTok:'https://www.tiktok.com/@',Instagram:'https://www.instagram.com/',YouTube:'https://www.youtube.com/@',X:'https://x.com/',Facebook:'https://www.facebook.com/',WhatsApp:'https://wa.me/',Telegram:'https://t.me/',Twitch:'https://www.twitch.tv/',GitHub:'https://github.com/'};if(M[p]&&h)u=M[p]+h}
- return{label:p,url:u,icon:{TikTok:'♪',Instagram:'◎',YouTube:'▶',Discord:'💬',WhatsApp:'✆',X:'✕',Facebook:'f',Telegram:'✈',Twitch:'▣',Spotify:'♫'}[p]||'🔗'}}
+ return{label:p,url:u,icon:{TikTok:'🎵',Instagram:'📷',YouTube:'▶️',Discord:'💬',WhatsApp:'📞',X:'✖️',Facebook:'👍',Telegram:'✈️',Twitch:'🎮',Spotify:'🎧'}[p]||'🔗'}}
 function th(t,fs,w){var n=0;String(t).split('\n').forEach(function(l){n+=Math.max(1,Math.ceil(l.length*fs*.52/w))});return Math.ceil(n*fs*1.3)+4}
 function gv(r){var v=String(r.value||'');return/^https?:\/\//i.test(v)?'':v.slice(0,36)}
 function build(id){
@@ -267,6 +272,6 @@ if(window.ResizeObserver)new ResizeObserver(reportH).observe(document.body);
 window.addEventListener('resize',function(){});
 if(!EDIT&&!window.parent!==window){}
 /* standalone fallback so the page never looks broken */
-setTimeout(function(){if(!P.page&&!P.blocks.length&&!$('cv').innerHTML){norm({});render()}},1500);
+setTimeout(function(){if(!P.page&&!(P.blocks&&P.blocks.length)&&!$('cv').innerHTML){norm({});render()}},1500);
 })();
 </script></body></html>
