@@ -106,7 +106,7 @@
       r: clampInt(x.r, -180, 180, 0), o: Math.min(1, Math.max(0, Number(x.o) || 0)) || (Number(x.o) === 0 ? 0 : 1),
       txt: str(x.txt, 600), src: srcOk(x.src), url: linkOk(x.url), fs: clampInt(x.fs, 6, 120, 18),
       fw: ['400','700','900'].includes(String(x.fw)) ? String(x.fw) : '400', al: ['left','center','right'].includes(x.al) ? x.al : 'left',
-      c: hexOr(x.c, '#b3122e'), bg: hexOr(x.bg, '#e11d48'), bc: hexOr(x.bc, '#b3122e'), rad: clampInt(x.rad, 0, 300, 12), bd: clampInt(x.bd, 0, 20, 0), lb: str(x.lb, 24)
+      c: hexOr(x.c, '#b3122e'), bg: hexOr(x.bg, '#e11d48'), bc: hexOr(x.bc, '#b3122e'), rad: clampInt(x.rad, 0, 300, 12), bd: clampInt(x.bd, 0, 20, 0), lb: str(x.lb, 24), pat: x.pat === 'stripes' ? 'stripes' : '', mode: ['text','draw'].includes(x.mode) ? x.mode : 'both'
     }));
   }
   function cleanPage(p) {
