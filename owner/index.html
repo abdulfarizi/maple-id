@@ -269,6 +269,7 @@
     <link rel="stylesheet" href="/assets/maple-pay.css?v=2">
     <script src="/assets/maplefx.js?v=5" defer></script>
     <script src="/assets/qr-lib.js"></script>
+    <script src="/assets/qr-icons.js?v=1"></script>
     <script src="/assets/maple-ui.js?v=3"></script>
     <script src="/assets/maple-pay.js?v=4" defer></script>
 </head>
@@ -854,7 +855,7 @@
         opts = opts || {};
         P = normalize(profile || {});
         $('state').classList.add('hidden'); $('shell').hidden = false;
-        applyLook(P); renderBanner(P); renderIdentity(P); renderStats(P); renderChips(P); renderTexts(P);
+        applyLook(P); try { window.__starExtras && window.__starExtras(P); } catch (e) {} renderBanner(P); renderIdentity(P); renderStats(P); renderChips(P); renderTexts(P);
         renderReacts(P); renderActions(P); renderSections(P); renderSupport(P); renderBottom(P);
         renderLove(P); renderShop(P); renderMusic(P); applyLang(lang); renderStatus(); renderClock();
         const mine = !PREVIEW && viewerId() && viewerId() === P.id;
@@ -954,7 +955,7 @@
         switch (el.dataset.act) {
             case 'vcard': downloadVCard(); break;
             case 'copy-link': haptic(12); copyText(publicUrl()).then(() => showToast(t('toastLink'))); break;
-            case 'qr': haptic(12); window.dgUI.qr.open({ name: P.name, url: publicUrl(), labels: { title: t('qrHead'), hint: t('qrSub'), save: t('qrSave'), share: t('qrShare'), copy: t('copyLink'), copied: t('toastLink'), saved: t('toastQrSaved') } }); break;
+            case 'qr': haptic(12); window.dgUI.qr.open({ name: P.name, url: publicUrl(), icon: P.qrIcon, labels: { title: t('qrHead'), hint: t('qrSub'), save: t('qrSave'), share: t('qrShare'), copy: t('copyLink'), copied: t('toastLink'), saved: t('toastQrSaved') } }); break;
             case 'share': shareCard(); break;
             case 'note': haptic(10); openModal('note-modal'); break;
             case 'close-note': closeModal('note-modal'); break;
@@ -1197,5 +1198,6 @@
     if (!PREVIEW && !EMBED) loadStandalone();
 })();
 </script>
+<script src="/assets/star-extras.js?v=1"></script>
 </body>
 </html>
