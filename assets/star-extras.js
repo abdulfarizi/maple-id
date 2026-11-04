@@ -18,7 +18,17 @@
     if (ready) return; shell = document.getElementById('shell'); if (!shell) return; ready = true;
     st = el('style', 'bdr-style'); document.head.appendChild(st);
     var css = el('style'); css.textContent = '.gl{position:absolute;inset:0;pointer-events:none}.gl-front{z-index:30}.gl .gi{position:absolute;display:block;height:auto;max-width:none;pointer-events:none;user-select:none}#gl-bg{position:fixed;inset:0;z-index:0;pointer-events:none}'
-      + '.gedit .gl .gi{pointer-events:auto;cursor:grab;touch-action:none;outline:1px dashed #fff9}.gedit .gl .gi.sel{outline:2px solid #ff5d7e}';
+      + '.gedit .gl .gi{pointer-events:auto;cursor:grab;touch-action:none;outline:1px dashed var(--line-strong,#fff6)}.gedit .gl .gi.sel{outline:2px solid var(--accent,#ff5d7e)}'
+      /* editor runs in a light mode: no animations or blur, so it opens fast even on a phone */
+      + 'html.gedit *,html.gedit *::before,html.gedit *::after{animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}'
+      + 'html.gedit body{padding-bottom:58vh!important}html.gedit #owner-studio-btn{display:none!important}'
+      + '#gbar{position:fixed;left:0;right:0;bottom:0;z-index:99999;background:var(--panel-solid,#0d0d12);color:var(--text,#ededf0);border-top:1px solid var(--line-strong,#fff3);padding:12px 14px calc(14px + env(safe-area-inset-bottom,0px));font:400 13px/1.4 var(--sans,system-ui,sans-serif);max-height:54vh;overflow:auto;box-shadow:0 -12px 40px #0009}'
+      + '#gbar .gh{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}#gbar .gt{font:500 10.5px var(--mono,monospace);letter-spacing:.14em;text-transform:uppercase;color:var(--accent,#ff5b2e);margin-right:auto}'
+      + '#gbar button{font:500 10.5px var(--mono,monospace);letter-spacing:.1em;text-transform:uppercase;color:var(--text,#ededf0);background:var(--panel,#ffffff08);border:1px solid var(--line-strong,#fff3);border-radius:999px;padding:9px 14px;cursor:pointer}'
+      + '#gbar button.pri{background:var(--accent,#ff5b2e);border-color:transparent;color:#fff}#gbar button.on{border-color:var(--accent,#ff5b2e);box-shadow:0 0 0 1px var(--accent,#ff5b2e) inset}'
+      + '#gbar input[type=text],#gbar select{width:100%;font:400 13px var(--sans,system-ui,sans-serif);color:var(--text,#ededf0);background:var(--panel,#ffffff08);border:1px solid var(--line,#fff2);border-radius:12px;padding:9px 12px}'
+      + '#gbar input[type=range]{width:100%;accent-color:var(--accent,#ff5b2e);margin-top:6px}#gbar label{display:block;font:400 10.5px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#8a8a96)}'
+      + '#gbar .gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}#gbar .gp{color:var(--muted,#8a8a96);margin:10px 0 0;font-size:12px}#gbar select{margin-top:4px}';
     document.head.appendChild(css);
     bgEl = el('div', 'gl-bg'); document.body.insertBefore(bgEl, document.body.firstChild);
     back = el('div', 'gl-back'); back.className = 'gl gl-back'; front = el('div', 'gl-front'); front.className = 'gl gl-front';
@@ -63,7 +73,9 @@
     });
   }
   window.__starExtras = function (p) {
-    init(); if (!ready) return; borders(p);
+    init(); if (!ready) return;
+    if (GEDIT) { p.spotify = ''; p.musicAuto = false; }
+    borders(p);
     if (GEDIT) { if (!glInit) { GL = JSON.parse(JSON.stringify(Array.isArray(p.gifs) ? p.gifs : [])); glInit = true; ui(); } gifs(GL); }
     else gifs(p.gifs);
   };
@@ -73,7 +85,6 @@
   function cur() { return GL.filter(function (g) { return g.id === selId; })[0]; }
   function editor() {
     bar = el('div', 'gbar');
-    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#1c1316;color:#f4e9ec;border-top:1px solid #3a2a30;padding:10px;font:13px system-ui,sans-serif;max-height:50vh;overflow:auto';
     document.body.appendChild(bar);
     var f = el('input'); f.type = 'file'; f.accept = 'image/gif,image/png,image/webp,image/jpeg'; f.hidden = true; f.id = 'gfile'; document.body.appendChild(f);
     f.addEventListener('change', function () {
@@ -92,19 +103,16 @@
   }
   function ui() {
     if (!bar) return; var g = cur();
-    var h = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><b style="margin-right:auto">GIFs</b>'
-      + '<input id="gurl" placeholder="Paste a GIF link (https://…)" style="flex:1;min-width:150px;padding:6px;border-radius:8px;border:1px solid #4a363d;background:#2a1d22;color:inherit">'
-      + '<button data-a="addurl" class="gb">Add link</button><button data-a="upload" class="gb">Upload</button><button data-a="done" class="gb" style="background:#ff5d7e;color:#1a0a0e;font-weight:700">Done</button></div>';
-    h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">' + GL.map(function (x, i) { return '<button data-a="pick" data-id="' + x.id + '" class="gb"' + (x.id === selId ? ' style="outline:2px solid #ff5d7e"' : '') + '>' + (i + 1) + (x.z === 'bg' ? ' (bg)' : '') + '</button>'; }).join('') + '</div>';
-    if (g) h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px">'
-      + '<label>Layer<select data-k="z" class="gi2"><option value="front"' + (g.z === 'front' ? ' selected' : '') + '>In front of everything</option><option value="back"' + (g.z === 'back' ? ' selected' : '') + '>Behind the card</option><option value="bg"' + (g.z === 'bg' ? ' selected' : '') + '>Page background</option></select></label>'
+    var h = '<div class="gh"><span class="gt">GIFs</span><button data-a="done" class="pri">Done</button></div>'
+      + '<div class="gh"><input id="gurl" type="text" placeholder="Paste a GIF link (https://…)" style="flex:1;min-width:150px;width:auto"><button data-a="addurl">Add link</button><button data-a="upload">Upload</button></div>';
+    if (GL.length) h += '<div class="gh">' + GL.map(function (x, i) { return '<button data-a="pick" data-id="' + x.id + '"' + (x.id === selId ? ' class="on"' : '') + '>' + (i + 1) + (x.z === 'bg' ? ' · bg' : '') + '</button>'; }).join('') + '</div>';
+    if (g) h += '<div class="gg">'
+      + '<label>Layer<select data-k="z"><option value="front"' + (g.z === 'front' ? ' selected' : '') + '>In front of everything</option><option value="back"' + (g.z === 'back' ? ' selected' : '') + '>Behind the card</option><option value="bg"' + (g.z === 'bg' ? ' selected' : '') + '>Page background</option></select></label>'
       + '<label>Size<input type="range" data-k="w" min="3" max="100" value="' + g.w + '"></label><label>Opacity<input type="range" data-k="o" min="0.05" max="1" step="0.05" value="' + (g.o == null ? 1 : g.o) + '"></label><label>Rotate<input type="range" data-k="r" min="-180" max="180" value="' + g.r + '"></label>'
-      + '<button data-a="del" class="gb" style="align-self:end">Delete this GIF</button></div><p style="opacity:.6;margin:8px 0 0">Drag a GIF on the card to move it.</p>';
-    else h += '<p style="opacity:.6;margin:0">Add a GIF, then drag it anywhere. Choose whether it sits behind the card, in front of the buttons, or fills the whole page.</p>';
-    bar.innerHTML = h;
-    bar.querySelectorAll('.gb').forEach(function (b) { b.style.cssText += ';font:inherit;color:inherit;background:#2a1d22;border:1px solid #4a363d;border-radius:8px;padding:6px 10px;cursor:pointer'; });
-    bar.querySelectorAll('select,input[type=range]').forEach(function (i) { i.style.cssText = 'width:100%;display:block;margin-top:2px;font:inherit;color:#f4e9ec;background:#2a1d22;border:1px solid #4a363d;border-radius:6px'; });
-    var b2 = bar.querySelector('[data-a=done]'); if (b2) b2.style.cssText += ';background:#ff5d7e;color:#1a0a0e;font-weight:700';
+      + '<button data-a="del" style="align-self:end">Delete this GIF</button></div><p class="gp">Drag a GIF on the card to move it.</p>';
+    else h += '<p class="gp" style="margin:0">Add a GIF, then drag it anywhere. Choose whether it sits behind the card, in front of the buttons, or fills the whole page.</p>';
+    var keep = document.activeElement && document.activeElement.id === 'gurl' ? document.getElementById('gurl').value : '';
+    bar.innerHTML = h; if (keep) document.getElementById('gurl').value = keep;
   }
   function onBar(e) {
     var b = e.target.closest('[data-a]'); if (!b) return; var a = b.dataset.a;

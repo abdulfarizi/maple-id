@@ -91,25 +91,31 @@
       else if (e.target.closest('#gif-open')) openFrame('/owner/index.html?preview=1&gifedit=1', 'GIF editor');
     });
   }
+  var hidden = [];
   function openFrame(src, title) {
     if (!window.__dgGet) return; close();
-    overlay = document.createElement('div'); overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#0c0708';
-    var fr = document.createElement('iframe'); fr.title = title; fr.src = src; fr.style.cssText = 'border:0;width:100%;height:100%;display:block';
-    fr.addEventListener('load', function () { try { fr.contentWindow.renderCard(window.__dgGet()); } catch (e) {} });
-    overlay.appendChild(fr); document.body.appendChild(overlay); document.documentElement.style.overflow = 'hidden';
+    overlay = document.createElement('div'); overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#0c0708;color:#f4e9ec;font:14px system-ui,sans-serif';
+    var note = document.createElement('div'); note.textContent = 'Loading editor…'; note.style.cssText = 'position:absolute;inset:0;display:grid;place-items:center'; overlay.appendChild(note);
+    var fr = document.createElement('iframe'); fr.title = title; fr.src = src; fr.style.cssText = 'position:absolute;inset:0;border:0;width:100%;height:100%;display:block;background:transparent';
+    var tries = 0, go = function () {
+      try { if (fr.contentWindow && typeof fr.contentWindow.renderCard === 'function') { fr.contentWindow.renderCard(window.__dgGet()); note.remove(); return; } } catch (e) {}
+      if (++tries < 60) setTimeout(go, 100); else note.textContent = 'Could not open the editor. Close and try again.';
+    };
+    fr.addEventListener('load', go);
+    overlay.appendChild(fr);
+    // the Studio page behind (with its own live preview) is parked while the editor is open, so a phone only draws one page at a time
+    hidden = []; Array.prototype.forEach.call(document.body.children, function (c) { if (c !== overlay && c.style.display !== 'none') { hidden.push([c, c.style.display]); c.style.display = 'none'; } });
+    document.body.appendChild(overlay); document.documentElement.style.overflow = 'hidden';
+    document.addEventListener('keydown', esc);
   }
-  function close() { if (overlay) { overlay.remove(); overlay = null; document.documentElement.style.overflow = ''; } }
-  function open() {
-    var f = document.getElementById('editor'); if (!f || !window.__dgGet) return;
-    close();
-    overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;background:#0c0708';
-    var fr = document.createElement('iframe');
-    fr.title = 'Page builder'; fr.src = '/builder/index.html?edit=1';
-    fr.style.cssText = 'border:0;width:100%;height:100%;display:block';
-    fr.addEventListener('load', function () { try { fr.contentWindow.renderCard(window.__dgGet()); } catch (e) {} });
-    overlay.appendChild(fr); document.body.appendChild(overlay); document.documentElement.style.overflow = 'hidden';
+  function esc(e) { if (e.key === 'Escape') close(); }
+  function close() {
+    document.removeEventListener('keydown', esc);
+    if (overlay) { overlay.remove(); overlay = null; document.documentElement.style.overflow = ''; }
+    hidden.forEach(function (h) { h[0].style.display = h[1]; }); hidden = [];
+    window.dispatchEvent(new Event('resize'));
   }
+  function open() { openFrame('/builder/index.html?edit=1', 'Page builder'); }
   function el(tag, css, txt) { var e = document.createElement(tag); if (css) e.style.cssText = css; if (txt) e.textContent = txt; return e; }
   function inbox() {
     var ov = el('div', 'position:fixed;inset:0;z-index:100000;background:#0c0708ee;overflow:auto;padding:16px');
