@@ -115,7 +115,7 @@
     hidden.forEach(function (h) { h[0].style.display = h[1]; }); hidden = [];
     window.dispatchEvent(new Event('resize'));
   }
-  function open() { openFrame('/builder/index.html?edit=1', 'Page builder'); }
+  function open() { openFrame('/builder/page.html?edit=1', 'Page builder'); }
   function el(tag, css, txt) { var e = document.createElement(tag); if (css) e.style.cssText = css; if (txt) e.textContent = txt; return e; }
   function inbox() {
     var ov = el('div', 'position:fixed;inset:0;z-index:100000;background:#0c0708ee;overflow:auto;padding:16px');
