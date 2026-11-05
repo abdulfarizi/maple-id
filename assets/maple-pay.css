@@ -10,8 +10,8 @@ html.mpay-lock { overflow: hidden; }
 /* the sheet rises from below the screen edge on the compositor (transform only), with a soft landing */
 .mpay-sheet { position: relative; box-sizing: border-box; display: flex; flex-direction: column; width: min(440px, 100%); max-height: calc(100vh - 12px); max-height: calc(100dvh - 12px);
   overflow: hidden; outline: 0; font-family: inherit; text-align: center;
-  background: var(--mpay-bg, var(--card, #17100f)); color: var(--mpay-fg, var(--text, #f6ece7));
-  border: 1px solid var(--mpay-line, var(--line, rgba(255, 255, 255, .12))); border-bottom: 0; border-radius: 26px 26px 0 0;
+  background: var(--mpay-bg, var(--card, var(--panel-solid))); color: var(--mpay-fg, var(--text, var(--text)));
+  border: 1px solid var(--mpay-line, var(--line, color-mix(in srgb,var(--ink) 12%,transparent))); border-bottom: 0; border-radius: 26px 26px 0 0;
   box-shadow: 0 -18px 60px rgba(0, 0, 0, .5);
   transform: translate3d(0, 100%, 0); transition: transform .46s cubic-bezier(.32, .72, 0, 1); will-change: transform; }
 .mpay-back.in .mpay-sheet { transform: none; }
@@ -24,21 +24,21 @@ html.in-dock .mpay-scroll { padding-bottom: calc(88px + env(safe-area-inset-bott
 
 @media (min-width: 560px) {
   .mpay-back { align-items: center; }
-  .mpay-sheet { border-bottom: 1px solid var(--mpay-line, rgba(255, 255, 255, .12)); border-radius: 26px; opacity: 0;
+  .mpay-sheet { border-bottom: 1px solid var(--mpay-line, color-mix(in srgb,var(--ink) 12%,transparent)); border-radius: 26px; opacity: 0;
     transform: translate3d(0, 28px, 0) scale(.97); transition: transform .4s cubic-bezier(.32, .72, 0, 1), opacity .3s ease; }
   .mpay-back.in .mpay-sheet { opacity: 1; transform: none; }
 }
 
 /* buttons are reset first so the host page's own button styles cannot push them around */
 .mpay-x { all: unset; box-sizing: border-box; position: absolute; top: 12px; right: 12px; z-index: 2; width: 40px; height: 40px;
-  display: grid; place-items: center; border-radius: 50%; background: rgba(255, 255, 255, .1); color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb,var(--ink) 10%,transparent); color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mpay-x svg { display: block; }
 .mpay-eyebrow { margin: 0; font: 500 10.5px/1 var(--mono, ui-monospace, monospace); letter-spacing: .14em; text-transform: uppercase; opacity: .6; }
 .mpay-title { margin: 8px 44px 2px; font-size: 17px; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
 .mpay-amount { margin: 0 0 14px; font-size: 30px; font-weight: 700; letter-spacing: -.01em; color: var(--accent, #ff8a3d); }
 
 .mpay-qr { width: min(72vw, 288px); margin: 0 auto 12px; border-radius: 18px; overflow: hidden; line-height: 0;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .1), 0 12px 32px rgba(0, 0, 0, .4); }
+  box-shadow: 0 0 0 1px color-mix(in srgb,var(--ink) 10%,transparent), 0 12px 32px rgba(0, 0, 0, .4); }
 .mpay-qr svg { display: block; width: 100%; height: auto; }
 .mpay-scan { margin: 0 0 4px; font-size: 13px; font-weight: 500; }
 .mpay-check, .mpay-free { margin: 0 0 14px; font-size: 12px; line-height: 1.45; opacity: .72; }
@@ -48,7 +48,7 @@ html.in-dock .mpay-scroll { padding-bottom: calc(88px + env(safe-area-inset-bott
 .mpay-btn { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; padding: 0 16px;
   border-radius: 14px; border: 1px solid transparent; font-family: inherit; font-size: 14px; font-weight: 600; line-height: 1.2; text-align: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mpay-main { background: var(--accent, #ff6a3d); color: var(--on-accent, #fff); }
-.mpay-ghost { background: rgba(255, 255, 255, .07); color: inherit; border-color: rgba(255, 255, 255, .14); }
+.mpay-ghost { background: color-mix(in srgb,var(--ink) 7%,transparent); color: inherit; border-color: color-mix(in srgb,var(--ink) 14%,transparent); }
 .mpay-btn:focus-visible, .mpay-link:focus-visible, .mpay-x:focus-visible { outline: 2px solid var(--accent, #ff8a3d); outline-offset: 2px; }
 .mpay-link { all: unset; box-sizing: border-box; display: block; width: max-content; max-width: 100%; margin: 4px auto 10px; padding: 8px 10px; color: inherit; opacity: .75;
   font-family: inherit; font-size: 12.5px; font-weight: 500; line-height: 1.2; text-align: center; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -58,7 +58,7 @@ html.in-dock .mpay-scroll { padding-bottom: calc(88px + env(safe-area-inset-bott
 @media (prefers-reduced-motion: reduce) { .mpay-back, .mpay-sheet { transition: none; } }
 
 /* ── Studio editor ── */
-.mpay-ed { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line, rgba(255, 255, 255, .1)); }
+.mpay-ed { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line, color-mix(in srgb,var(--ink) 10%,transparent)); }
 .mpay-ed-h { margin: 0 0 10px; font-weight: 600; }
 .mpay-ed-body { margin-top: 12px; display: grid; gap: 12px; }
 .mpay-ed-body[hidden] { display: none; }
@@ -72,7 +72,7 @@ html.in-dock .mpay-scroll { padding-bottom: calc(88px + env(safe-area-inset-bott
 .mpay-ed-paste textarea { width: 100%; margin: 8px 0; font: 11px/1.4 var(--mono, ui-monospace, monospace); }
 .mpay-ed-prev { display: grid; grid-template-columns: minmax(120px, 170px) 1fr; gap: 14px; align-items: start; }
 .mpay-ed-qr { border-radius: 14px; overflow: hidden; line-height: 0; min-height: 120px; display: grid; place-items: center;
-  background: rgba(255, 255, 255, .05); font-size: 12px; line-height: 1.4; padding: 0; text-align: center; opacity: .95; }
+  background: color-mix(in srgb,var(--ink) 5%,transparent); font-size: 12px; line-height: 1.4; padding: 0; text-align: center; opacity: .95; }
 .mpay-ed-qr svg { display: block; width: 100%; height: auto; }
 .mpay-ed-ctl { display: grid; gap: 10px; min-width: 0; }
 .mpay-ed input[type=color] { width: 100%; height: 40px; padding: 2px; border-radius: 10px; cursor: pointer; }

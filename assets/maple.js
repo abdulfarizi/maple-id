@@ -44,7 +44,9 @@
     ctx.fill(path);
     ctx.restore();
   }
+  var flip = 0;
   function frame() {
+    if ((flip ^= 1)) { raf = requestAnimationFrame(frame); return; }
     if (!document.getElementById('maple-home') || (window.dgPager && !dgPager.active())) return teardown();
     if (window.dgPager && dgPager.layered && dgPager.layered()) { raf = requestAnimationFrame(frame); return; }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -88,7 +90,7 @@
     document.body.insertBefore(cv, document.body.firstChild);
     ctx = cv.getContext('2d');
     readPalette(); size();
-    var n = W < 700 ? 14 : 28;
+    var n = W < 700 ? 12 : 22;
     parts = Array.from({ length: n }, function () { return spawn({}, true); });
     window.addEventListener('resize', size);
     document.addEventListener('visibilitychange', onVis);
@@ -123,6 +125,6 @@
   }
 
   window.mapleHome = {
-    mount: function () { leaves(); tilt(); themes(); }
+    mount: function () { if (!window.__mapleLite) leaves(); tilt(); themes(); }
   };
 })();

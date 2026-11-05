@@ -94,15 +94,24 @@
 
   /* ───── dock highlight (3 tabs; the card pane lights Explore) ───── */
   function items() { var d = dockEl(); return d ? d.querySelectorAll('.dock-i') : []; }
+  var M = { x: [], w: [], key: '' };                   // cached tab geometry: no layout reads while scrolling
+  function measure(it) {
+    var key = it.length + ':' + (it[0] ? it[0].offsetWidth : 0) + ':' + (dockEl() ? dockEl().offsetWidth : 0);
+    if (M.key === key && M.x.length === it.length) return;
+    M.key = key; M.x = []; M.w = [];
+    for (var i = 0; i < it.length; i++) { M.x.push(it[i].offsetLeft); M.w.push(it[i].offsetWidth); }
+    var ind = dockEl() && dockEl().querySelector('.dock-ind'); if (ind) ind.dataset.base = M.w[0] || 84;
+  }
   function moveInd(p) {
     var d = dockEl(), ind = d && d.querySelector('.dock-ind'), it = items();
     if (!ind || !it.length) return;
+    measure(it);
     var a = clamp(Math.floor(p), 0, it.length - 1), b = Math.min(a + 1, it.length - 1), f = clamp(p - a, 0, 1);
-    var A = it[a], B = it[b];
-    var x = lerp(A.offsetLeft, B.offsetLeft, f), w = lerp(A.offsetWidth, B.offsetWidth, f), s = Math.sin(Math.PI * f);
-    ind.style.width = w + 'px';
-    ind.style.transform = 'translate3d(' + x + 'px,0,0) scale(' + (1 + 0.14 * s).toFixed(3) + ',' + (1 - 0.06 * s).toFixed(3) + ')';
+    var x = lerp(M.x[a], M.x[b], f), w = lerp(M.w[a], M.w[b], f), base = +ind.dataset.base || 84;
+    ind.style.width = base + 'px';                                         // fixed width: size changes are a scaleX, never a re-layout
+    ind.style.transform = 'translate3d(' + x.toFixed(2) + 'px,0,0) scale(' + (w / base).toFixed(4) + ',1)';
   }
+  window.addEventListener('resize', function () { M.key = ''; });
   function dockProg(p) { return clamp(p, 0, vis().length - 1); }      // dock tabs == strip panes, so progress is the same
   function dockToStrip(d) { return clamp(d, 0, vis().length - 1); }   // (for dragging the dock)
   function litDock() { return layerKind === 'studio' ? vis().length - 1 : cur ? Math.max(0, idx(cur)) : 0; }
@@ -160,7 +169,6 @@
     if (!layerKind) moveInd(dockProg(p));
     var r = clamp(Math.round(p), 0, v.length - 1);
     if (v[r] !== cur && !layerKind) setCur(v[r]);
-    v.forEach(function (n, i) { sections[n].style.setProperty('--d', clamp(Math.abs(p - i), 0, 1).toFixed(3)); });
   }
   function onScroll() {
     if (!raf) raf = requestAnimationFrame(update);

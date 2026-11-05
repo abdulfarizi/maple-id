@@ -160,14 +160,16 @@
       var sx = cfg.flutter ? (0.35 + 0.65 * Math.abs(Math.cos(p.f))) : 1;
       if (cfg.mode === 'twinkle') { sx = 0.6 + 0.4 * Math.abs(Math.sin(p.f)); }
       ctx.scale((p.s / 100) * sx, p.s / 100); ctx.translate(-50, -50);
-      if (cfg.glow) { ctx.shadowColor = p.c; ctx.shadowBlur = 14; }
+      
       if (cfg.stroke) { ctx.strokeStyle = p.c; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.stroke(paths[sh]); } else { ctx.fillStyle = p.c; ctx.fill(paths[sh]); }
     }
     ctx.restore();
   }
   function paintStatic() { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H); parts.forEach(draw); }
+  var flip = 0;
   function frame() {
     if (!cv) return;
+    if ((flip ^= 1)) { raf = requestAnimationFrame(frame); return; }   /* 30fps cap: half the paint work, same look */
     if ((++tick & 63) === 0 && !wanted()) { sync(); return; }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     for (var i = 0; i < parts.length; i++) {
@@ -194,13 +196,14 @@
     cv = document.createElement('canvas'); cv.id = 'fx-canvas'; cv.setAttribute('aria-hidden', 'true');
     document.body.insertBefore(cv, document.body.firstChild); document.body.insertBefore(big, document.body.firstChild);
     ctx = cv.getContext('2d'); readPalette(); size();
-    var n = Math.round(cfg.n * (W < 700 ? 0.55 : 1));
+    if (window.__mapleLite) { cv.style.display = 'none'; parts = []; return; }
+    var n = Math.round(cfg.n * (W < 700 ? 0.4 : 0.6));
     parts = Array.from({ length: n }, function () { return spawn({}, true); });
   }
   function start() {
     running = true; root.classList.add('fx-on'); build(root.getAttribute('data-theme'));
     window.addEventListener('resize', size); document.addEventListener('visibilitychange', onVis);
-    if (reduce) paintStatic(); else raf = requestAnimationFrame(frame);
+    if (reduce || window.__mapleLite) { if (!window.__mapleLite) paintStatic(); } else raf = requestAnimationFrame(frame);
   }
   function stop() {
     if (!running) return; running = false; root.classList.remove('fx-on');
