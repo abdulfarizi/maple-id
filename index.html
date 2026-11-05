@@ -3,8 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0c0708" />
+    <meta name="theme-color" content="#0f0d0e" />
+    <meta name="color-scheme" content="dark light" />
+    <script src="/assets/maple-mode.js?v=2"></script>
     <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -489,19 +492,38 @@
       const failMsg = (r, what) => (r && (r.status === 403 || r.status === 401) ? 'Slow down a little, then try again.' : 'Could not ' + what + '. Please try again.');
       const hdr = { 'Prefer': 'return=minimal' };
 
+      if (rest[0] === 'avatars' && method === 'GET') {
+        const slugs = String(qs.get('slugs') || '').split(',').map((x) => x.trim().toLowerCase()).filter((x) => /^[a-z0-9_-]{1,40}$/.test(x)).slice(0, 12);
+        if (!slugs.length) return json({ avatars: {} });
+        const ar = await sb('/rest/v1/profiles?select=id,slug,name&slug=in.(' + slugs.map(encodeURIComponent).join(',') + ')', { token: T });
+        const out = {};
+        if (ar && ar.ok) (await ar.json().catch(() => [])).forEach((row) => {
+          const a = unpackRow(row).avatar;
+          if (typeof a === 'string' && a && (/^https:\/\/\S+$/i.test(a) || /^data:image\/(?:jpeg|png|webp|gif);base64,/i.test(a))) out[row.slug] = a;
+        });
+        return json({ avatars: out });
+      }
       if (rest[0] === 'posts' && rest.length === 1 && method === 'GET') {
         const cat = qs.get('cat'), before = qs.get('before'), q = String(qs.get('q') || '').replace(/[^\w\s-]/g, '').slice(0, 40).trim();
-        let p = '/rest/v1/forum_posts?select=id,author,author_slug,author_name,category,title,body,image,created_at,forum_likes(count),forum_comments(count)&order=created_at.desc&limit=21';
-        if (CATS.includes(cat)) p += '&category=eq.' + cat;
-        if (q) p += '&or=(title.ilike.*' + encodeURIComponent(q) + '*,body.ilike.*' + encodeURIComponent(q) + '*)';
-        if (before && /^[\d\-T:.+Z%]+$/.test(before)) p += '&created_at=lt.' + encodeURIComponent(before);
-        const r = await sb(p, { token: T });
+        const BASE = 'id,author,author_slug,author_name,category,title,body,image,created_at,forum_likes(count),forum_comments(count)';
+        let filt = '';
+        if (CATS.includes(cat)) filt += '&category=eq.' + cat;
+        if (q) filt += '&or=(title.ilike.*' + encodeURIComponent(q) + '*,body.ilike.*' + encodeURIComponent(q) + '*)';
+        let cur = '';
+        if (before && /^[\d\-T:.+Z%]+$/.test(before)) cur = '&created_at=lt.' + encodeURIComponent(before);
+        let hasPin = true;
+        let r = await sb('/rest/v1/forum_posts?select=' + BASE + ',pinned&pinned=eq.false&order=created_at.desc&limit=21' + filt + cur, { token: T });
+        if (!r || !r.ok) { hasPin = false; r = await sb('/rest/v1/forum_posts?select=' + BASE + '&order=created_at.desc&limit=21' + filt + cur, { token: T }); }
         if (!r || !r.ok) return json({ error: 'Could not load the forum. Has the forum SQL been run in Supabase?' }, 503);
         let rows = await r.json().catch(() => []); if (!Array.isArray(rows)) rows = [];
         const more = rows.length > 20; rows = rows.slice(0, 20);
+        let pinRows = [];
+        if (hasPin && !before) { const pr = await sb('/rest/v1/forum_posts?select=' + BASE + ',pinned&pinned=eq.true&order=created_at.desc&limit=5' + filt, { token: T }); if (pr && pr.ok) pinRows = await pr.json().catch(() => []); if (!Array.isArray(pinRows)) pinRows = []; }
+        const ids = rows.concat(pinRows).map((x) => x.id).filter(isId);
         let mine = [];
-        if (rows.length) { const lr = await sb('/rest/v1/forum_likes?select=post&user_id=eq.' + au.uid + '&post=in.(' + rows.map((x) => x.id).filter(isId).join(',') + ')', { token: T }); if (lr && lr.ok) mine = (await lr.json().catch(() => [])).map((x) => x.post); }
-        return json({ more, me: { mod: !!au.isOwner }, posts: rows.map((x) => ({ id: x.id, mine: x.author === au.uid, slug: x.author_slug, name: x.author_name, cat: x.category, title: x.title, body: x.body, image: x.image, at: x.created_at, likes: cnt(x, 'forum_likes'), comments: cnt(x, 'forum_comments'), liked: mine.includes(x.id) })) });
+        if (ids.length) { const lr = await sb('/rest/v1/forum_likes?select=post&user_id=eq.' + au.uid + '&post=in.(' + ids.join(',') + ')', { token: T }); if (lr && lr.ok) mine = (await lr.json().catch(() => [])).map((x) => x.post); }
+        const map = (x) => ({ id: x.id, mine: x.author === au.uid, slug: x.author_slug, name: x.author_name, cat: x.category, title: x.title, body: x.body, image: x.image, at: x.created_at, pinned: !!x.pinned, likes: cnt(x, 'forum_likes'), comments: cnt(x, 'forum_comments'), liked: mine.includes(x.id) });
+        return json({ more, me: { mod: !!au.isOwner }, pinned: pinRows.map(map), posts: rows.map(map) });
       }
       if (rest[0] === 'posts' && rest.length === 1 && method === 'POST') {
         const b = parse(options.body), title = str(b.title, 120).trim(), text = str(b.body, 2000).trim(), cat = CATS.includes(b.category) ? b.category : 'general';
@@ -537,12 +559,88 @@
       }
       if (rest[0] === 'posts' && isId(rest[1]) && rest[2] === 'like') {
         if (method === 'POST') {
-          const r = await sb('/rest/v1/forum_likes', { method: 'POST', token: T, headers: hdr, body: { post: rest[1], user_id: au.uid } });
+          const r = await sb('/rest/v1/forum_likes', { method: 'POST', token: T, headers: hdr, body: { post: rest[1], user_id: au.uid, user_name: (await who()).name, user_slug: (await who()).slug } });
           return json({ ok: !!(r && (r.ok || r.status === 409)) });
         }
         if (method === 'DELETE') {
           const r = await sb('/rest/v1/forum_likes?post=eq.' + rest[1] + '&user_id=eq.' + au.uid, { method: 'DELETE', token: T });
           return json({ ok: !!(r && r.ok) });
+        }
+      }
+      const slugOk = (v) => /^[a-z0-9_-]{1,40}$/i.test(v || '');
+      const gone = (r) => !r || !r.ok;
+
+      // ---- pin (mod only) ----
+      if (rest[0] === 'posts' && isId(rest[1]) && rest[2] === 'pin' && method === 'POST') {
+        if (!au.isOwner) return json({ error: 'Only the admin can pin posts.' }, 403);
+        const r = await sb('/rest/v1/forum_posts?id=eq.' + rest[1], { method: 'PATCH', token: T, headers: hdr, body: { pinned: !!parse(options.body).pinned } });
+        return json({ ok: !gone(r) }, gone(r) ? 503 : 200);
+      }
+      // ---- report a post or a comment ----
+      if ((rest[0] === 'posts' || rest[0] === 'comments') && isId(rest[1]) && rest[2] === 'report' && method === 'POST') {
+        const kind = rest[0] === 'posts' ? 'post' : 'comment', reason = str(parse(options.body).reason, 200).trim();
+        let post = rest[1];
+        if (kind === 'comment') { const cr = await sb('/rest/v1/forum_comments?select=post&id=eq.' + rest[1], { token: T }); const cj = cr && cr.ok ? await cr.json().catch(() => []) : []; if (!cj[0]) return json({ error: 'That comment is gone.' }, 404); post = cj[0].post; }
+        const r = await sb('/rest/v1/forum_reports', { method: 'POST', token: T, headers: hdr, body: { kind, target: rest[1], post, reporter: au.uid, reason } });
+        if (r && r.status === 409) return json({ ok: true, again: true });
+        if (gone(r)) return json({ error: r && r.status === 403 ? 'Slow down a little, then try again.' : 'Could not send the report. Has the part-2 SQL been run?' }, 429);
+        return json({ ok: true });
+      }
+      if (rest[0] === 'reports' && rest.length === 1 && method === 'GET') {
+        if (!au.isOwner) return json({ error: 'Admins only.' }, 403);
+        const r = await sb('/rest/v1/forum_reports?select=kind,target,post,reason,created_at&order=created_at.desc&limit=200', { token: T });
+        if (gone(r)) return json({ items: [] });
+        const rows = await r.json().catch(() => []), g = {};
+        rows.forEach((x) => { const k = x.kind + ':' + x.target; const e = g[k] = g[k] || { kind: x.kind, target: x.target, post: x.post, count: 0, reasons: [] }; e.count++; if (x.reason && e.reasons.length < 3 && !e.reasons.includes(x.reason)) e.reasons.push(x.reason); });
+        const items = Object.values(g), pids = items.filter((i) => i.kind === 'post').map((i) => i.target).filter(isId), cids = items.filter((i) => i.kind === 'comment').map((i) => i.target).filter(isId);
+        const info = {};
+        if (pids.length) { const pr = await sb('/rest/v1/forum_posts?select=id,title,body,author_name,author_slug&id=in.(' + pids.join(',') + ')', { token: T }); if (pr && pr.ok) (await pr.json().catch(() => [])).forEach((x) => { info['post:' + x.id] = { text: x.title + (x.body ? ' - ' + x.body : ''), name: x.author_name, slug: x.author_slug }; }); }
+        if (cids.length) { const cr = await sb('/rest/v1/forum_comments?select=id,body,author_name,author_slug&id=in.(' + cids.join(',') + ')', { token: T }); if (cr && cr.ok) (await cr.json().catch(() => [])).forEach((x) => { info['comment:' + x.id] = { text: x.body, name: x.author_name, slug: x.author_slug }; }); }
+        return json({ items: items.map((i) => { const f = info[i.kind + ':' + i.target]; return { kind: i.kind, target: i.target, count: i.count, reasons: i.reasons, gone: !f, text: f ? String(f.text).slice(0, 220) : '', name: f ? f.name : '', slug: f ? f.slug : '' }; }) });
+      }
+      if (rest[0] === 'reports' && (rest[1] === 'post' || rest[1] === 'comment') && isId(rest[2]) && method === 'DELETE') {
+        if (!au.isOwner) return json({ error: 'Admins only.' }, 403);
+        const r = await sb('/rest/v1/forum_reports?kind=eq.' + rest[1] + '&target=eq.' + rest[2], { method: 'DELETE', token: T });
+        return json({ ok: !gone(r) });
+      }
+      // ---- notifications ----
+      if (rest[0] === 'notifications' && method === 'GET') {
+        const r = await sb('/rest/v1/forum_notifications?select=id,kind,post_title,actor_name,actor_slug,snippet,read,created_at&user_id=eq.' + au.uid + '&order=created_at.desc&limit=40', { token: T });
+        const dr = await sb('/rest/v1/forum_dms?select=id&recipient=eq.' + au.uid + '&read=eq.false&limit=99', { token: T });
+        const items = !gone(r) ? await r.json().catch(() => []) : [], dm = !gone(dr) ? (await dr.json().catch(() => [])).length : 0;
+        return json({ off: gone(r), mod: !!au.isOwner, dm, unread: items.filter((x) => !x.read).length, items: items.map((x) => ({ kind: x.kind, title: x.post_title, name: x.actor_name, slug: x.actor_slug, snippet: x.snippet, read: !!x.read, at: x.created_at })) });
+      }
+      if (rest[0] === 'notifications' && rest[1] === 'read' && method === 'POST') {
+        const r = await sb('/rest/v1/forum_notifications?user_id=eq.' + au.uid + '&read=eq.false', { method: 'PATCH', token: T, headers: hdr, body: { read: true } });
+        return json({ ok: !gone(r) });
+      }
+      // ---- private messages ----
+      if (rest[0] === 'dms' && rest.length === 1 && method === 'GET') {
+        const r = await sb('/rest/v1/forum_dms?select=sender,sender_slug,sender_name,recipient,recipient_slug,recipient_name,body,read,created_at&or=(sender.eq.' + au.uid + ',recipient.eq.' + au.uid + ')&order=created_at.desc&limit=200', { token: T });
+        if (gone(r)) return json({ threads: [], off: true });
+        const rows = await r.json().catch(() => []), by = {};
+        rows.forEach((x) => { const me = x.sender === au.uid, k = me ? x.recipient : x.sender; const e = by[k] = by[k] || { slug: me ? x.recipient_slug : x.sender_slug, name: me ? x.recipient_name : x.sender_name, last: String(x.body).slice(0, 80), mine: me, at: x.created_at, unread: 0 }; if (!me && !x.read) e.unread++; });
+        return json({ threads: Object.values(by) });
+      }
+      if (rest[0] === 'dms' && slugOk(rest[1]) && rest.length === 2) {
+        const pr = await sb('/rest/v1/profiles?select=*&slug=eq.' + encodeURIComponent(rest[1].toLowerCase()));
+        const prow = pr && pr.ok ? await pr.json().catch(() => []) : [];
+        if (!prow[0]) return json({ error: 'No member has that link.' }, 404);
+        const other = prow[0], op = unpackRow(other), oname = String(op.name || 'Member').slice(0, 80);
+        if (other.id === au.uid) return json({ error: 'You cannot message yourself.' }, 400);
+        if (method === 'GET') {
+          const r = await sb('/rest/v1/forum_dms?select=id,sender,body,created_at&or=(and(sender.eq.' + au.uid + ',recipient.eq.' + other.id + '),and(sender.eq.' + other.id + ',recipient.eq.' + au.uid + '))&order=created_at.asc&limit=200', { token: T });
+          if (gone(r)) return json({ error: 'Messages are not set up yet. Run the part-2 SQL in Supabase.' }, 503);
+          const rows = await r.json().catch(() => []);
+          await sb('/rest/v1/forum_dms?recipient=eq.' + au.uid + '&sender=eq.' + other.id + '&read=eq.false', { method: 'PATCH', token: T, headers: hdr, body: { read: true } });
+          return json({ with: { slug: op.slug || rest[1], name: oname }, messages: rows.map((x) => ({ id: x.id, mine: x.sender === au.uid, body: x.body, at: x.created_at })) });
+        }
+        if (method === 'POST') {
+          const text = str(parse(options.body).body, 1000).trim(); if (!text) return json({ error: 'Write a message first.' }, 400);
+          const w = await who(); if (!w.slug) return json({ error: 'Claim your card link first, so people can reply to you.' }, 400);
+          const r = await sb('/rest/v1/forum_dms', { method: 'POST', token: T, headers: hdr, body: { sender: au.uid, sender_slug: w.slug, sender_name: w.name, recipient: other.id, recipient_slug: op.slug || rest[1], recipient_name: oname, body: text } });
+          if (gone(r)) return json({ error: r && r.status === 403 ? 'Slow down a little, then try again.' : 'Could not send. Has the part-2 SQL been run?' }, 429);
+          return json({ ok: true });
         }
       }
       return json({ error: 'Not supported' }, 404);
@@ -742,24 +840,25 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <script src="/assets/maple-ui.js?v=3"></script>
     <script src="/assets/maple-explore.js?v=2"></script>
     <script src="/assets/maple-pay.js?v=4" defer></script>
-    <script src="/assets/maple-pager.js?v=6"></script>
+    <script src="/assets/maple-pager.js?v=7"></script>
     <script src="/assets/launch.js?v=2"></script>
     <script type="module" crossorigin src="/assets/index-maple1.js?v=12"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css" />
-    <link rel="stylesheet" href="/assets/maple.css?v=2" />
-    <link rel="stylesheet" href="/assets/themes.css?v=3" />
-    <link rel="stylesheet" href="/assets/maple-theme.css?v=3" />
-    <link rel="stylesheet" href="/assets/glass.css?v=3" />
-    <link rel="stylesheet" href="/assets/card-ui.css?v=1" />
-    <link rel="stylesheet" href="/assets/maple-ui.css?v=4" />
-    <link rel="stylesheet" href="/assets/maple-pay.css?v=2" />
-    <link rel="stylesheet" href="/assets/maple-pager.css?v=5" />
-    <link rel="stylesheet" href="/assets/studio.css?v=2" />
+    <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css?v=2" />
+    <link rel="stylesheet" href="/assets/maple.css?v=3" />
+    <link rel="stylesheet" href="/assets/themes.css?v=4" />
+    <link rel="stylesheet" href="/assets/maple-theme.css?v=4" />
+    <link rel="stylesheet" href="/assets/glass.css?v=4" />
+    <link rel="stylesheet" href="/assets/card-ui.css?v=2" />
+    <link rel="stylesheet" href="/assets/maple-ui.css?v=5" />
+    <link rel="stylesheet" href="/assets/maple-pay.css?v=3" />
+    <link rel="stylesheet" href="/assets/maple-pager.css?v=6" />
+    <link rel="stylesheet" href="/assets/studio.css?v=3" />
+    <link rel="stylesheet" href="/assets/maple-design.css?v=1" />
     <script src="/assets/maple-studio.js?v=1" defer></script>
-    <script src="/assets/maple-builder.js?v=2" defer></script>
-    <script src="/assets/maple-forum.js?v=1" defer></script>
-    <script src="/assets/maplefx.js?v=5" defer></script>
-    <script src="/assets/maple.js?v=3"></script>
+    <script src="/assets/maple-builder.js?v=3" defer></script>
+    <script src="/assets/maple-forum.js?v=2" defer></script>
+    <script src="/assets/maplefx.js?v=6" defer></script>
+    <script src="/assets/maple.js?v=5"></script>
   </head>
   <body>
     <svg class="sprite" aria-hidden="true" focusable="false">
@@ -772,8 +871,8 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
         <symbol id="leaf-veins" viewBox="0 0 100 100"><path pathLength="1" d="M50 96V8M50 76L84 46M50 76L16 46M50 62L74 30M50 62L26 30M50 50L66 20M50 50L34 20"/></symbol>
       </defs>
     </svg>
-    <div id="star-intro" style="position:fixed;inset:0;z-index:99999;background:#0c0708"></div>
-    <div id="boot-cover" style="position:fixed;inset:0;z-index:99998;background:#0c0708;transition:opacity .2s"></div>
+    <div id="star-intro" style="position:fixed;inset:0;z-index:99999;background:var(--bg)"></div>
+    <div id="boot-cover" style="position:fixed;inset:0;z-index:99998;background:var(--bg);transition:opacity .2s"></div>
     <script>
 /* Hollow-star zoom intro: a dark cover with a star-shaped hole. The star grows until the page is revealed. */
 function createStarIntro(opts) {
@@ -783,7 +882,7 @@ function createStarIntro(opts) {
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) { el.remove(); return { go: function () {}, skip: function () {} }; }
 
-    var W = window.innerWidth, H = window.innerHeight, cx = W / 2, cy = H / 2, bg = opts.bg || '#0c0708';
+    var W = window.innerWidth, H = window.innerHeight, cx = W / 2, cy = H / 2, bg = opts.bg || (getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0f0d0e');
     el.style.background = 'transparent';
     el.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="display:block">'
         + '<defs><mask id="star-intro-mask"><rect width="' + W + '" height="' + H + '" fill="#fff"/><path id="si-hole" fill="#000"/></mask></defs>'
@@ -858,7 +957,7 @@ function createStarIntro(opts) {
       // Only on the home page / studio, once per visit. Star-layout cards play their own intro.
       if (seen || (path !== '/' && path !== '/studio' && path !== '/profile' && path !== '/explore' && path !== '/index.html')) { el.remove(); return; }
       try { sessionStorage.setItem('dig-intro', '1'); } catch (e) {}
-      var intro = createStarIntro({ bg: '#0c0708' });
+      var intro = createStarIntro({});
       var go = function () { setTimeout(function () { intro.go(); }, 250); };
       if (document.readyState === 'complete') go(); else window.addEventListener('load', go);
     })();
