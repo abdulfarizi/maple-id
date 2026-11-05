@@ -1,11 +1,12 @@
 /* Maple ID \u00b7 Forum: the home page for signed-in members.
-   Posts, categories, likes, comments, pinned posts, reports, alerts and private messages. */
+   The page itself is just the Feed. Private messages, alerts and reports open from the header button and the
+   side menu (maple-shell.js) through dgForum.open(view); each of those screens has a \u201cFeed\u201d button to come back. */
 (function () {
   'use strict';
   var CATS = [['all', 'All'], ['general', 'General'], ['gaming', 'Gaming'], ['showcase', 'Showcase'], ['help', 'Help']];
   var CAT_NAME = { general: 'General', gaming: 'Gaming', showcase: 'Showcase', help: 'Help' };
   var S = { view: 'feed', cat: 'all', sort: 'new', q: '', posts: [], pinned: [], more: false, mod: false, busy: false, err: '', dm: 0, unread: 0, off: false };
-  var sec = null, viewEl = null, navEl = null, listEl = null, moreEl = null, statEl = null, st = null, nav = {}, poll = null, threadTimer = null;
+  var sec = null, viewEl = null, listEl = null, moreEl = null, statEl = null, st = null, poll = null, threadTimer = null;
 
   function h(tag, a, kids) {
     var e = document.createElement(tag), k;
@@ -91,26 +92,30 @@
   function btn(text, cls, fn, extra) { var b = h('button', Object.assign({ type: 'button', class: 'fm-btn' + (cls ? ' ' + cls : ''), text: text }, extra || {})); if (fn) b.addEventListener('click', fn); return b; }
   function css() {
     if (st) return; st = document.createElement('style');
-    st.textContent = '.fm{max-width:760px;margin:0 auto;padding:clamp(18px,4vw,34px) 14px 110px;color:var(--text,#ededf0)}'
-      + '.fm *{box-sizing:border-box}.fm-eyebrow{font:500 11px var(--mono,monospace);letter-spacing:.16em;text-transform:uppercase;color:var(--accent,#ff7a1a);margin:0 0 6px}'
-      + '.fm h1{margin:0 0 6px;font-size:clamp(28px,6vw,40px);line-height:1.1}.fm h2{margin:0 0 12px;font-size:22px}.fm-sub{margin:0 0 14px;color:var(--muted,#9a9aa6)}'
-      + '.fm-card{background:var(--panel,#ffffff0a);border:1px solid var(--line,#ffffff1f);border-radius:18px;padding:14px;margin-bottom:12px}.fm-card.pin{border-color:var(--accent,#ff7a1a)}'
-      + '.fm-start{width:100%;text-align:left;font:inherit;color:var(--muted,#9a9aa6);background:var(--panel,#ffffff0a);border:1px dashed var(--line,#ffffff33);border-radius:18px;padding:14px 16px;cursor:pointer;margin-bottom:14px}'
+    st.textContent = '.fm{max-width:680px;margin:0 auto;padding:clamp(14px,3vw,26px) 14px 120px;color:var(--text,#ededf0)}'
+      + '.fm *{box-sizing:border-box}'
+      + '.fm-top{display:flex;align-items:baseline;gap:10px;margin:2px 2px 14px}.fm-top h1{margin:0;font-size:clamp(26px,6vw,34px);line-height:1.1}.fm-top span{color:var(--muted,#9a9aa6);font-size:13px}'
+      + '.fm h2{margin:0;font-size:22px}.fm-eyebrow{font:500 11px var(--mono,monospace);letter-spacing:.16em;text-transform:uppercase;color:var(--accent,#ff7a1a);margin:0 0 6px}'
+      + '.fm-bar{display:flex;align-items:center;gap:10px;margin:2px 0 14px}.fm-bar .fm-back{flex:none}'
+      + '.fm-card{background:var(--panel,#ffffff0a);border:1px solid var(--line,#ffffff1f);border-radius:20px;padding:14px;margin-bottom:12px}.fm-card.pin{border-color:var(--accent,#ff7a1a)}'
+      + '.fm-start{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:var(--muted,#9a9aa6);background:var(--panel,#ffffff0a);border:1px solid var(--line,#ffffff33);border-radius:20px;padding:10px 10px 10px 16px;cursor:pointer;margin-bottom:12px}'
+      + '.fm-start span{flex:1}.fm-start b{flex:none;font:600 12px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--on-accent,#fff);background:var(--accent,#ff7a1a);border-radius:999px;padding:9px 15px}'
       + '.fm input,.fm textarea,.fm select{width:100%;font:inherit;color:var(--text,#ededf0);background:var(--bg,#0000004d);border:1px solid var(--line,#ffffff26);border-radius:12px;padding:10px 12px;margin-top:8px}'
       + '.fm textarea{min-height:110px;resize:vertical}.fm :focus-visible{outline:2px solid var(--accent,#ff7a1a);outline-offset:2px}'
       + '.fm-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}'
       + '.fm-btn{font:500 12px var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--text,#ededf0);background:var(--panel,#ffffff0a);border:1px solid var(--line,#ffffff33);border-radius:999px;padding:9px 15px;cursor:pointer}'
       + '.fm-btn.pri{background:var(--accent,#ff7a1a);border-color:transparent;color:#fff}.fm-btn[disabled]{opacity:.5;cursor:default}.fm-btn.on{border-color:var(--accent,#ff7a1a);color:var(--accent,#ff7a1a)}.fm-btn.sm{padding:6px 11px;font-size:11px}'
-      + '.fm-nav{display:flex;gap:8px;overflow-x:auto;padding:2px 0 14px;scrollbar-width:none}.fm-nav::-webkit-scrollbar{display:none}.fm-nav .fm-btn{white-space:nowrap}'
       + '.fm-dot{display:inline-block;min-width:18px;padding:1px 6px;margin-left:6px;border-radius:999px;background:var(--accent,#ff7a1a);color:#fff;font-size:10px;text-align:center}'
       + '.fm-chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}.fm-chips::-webkit-scrollbar{display:none}.fm-chips .fm-btn{white-space:nowrap}'
-      + '.fm-av{width:34px;height:34px;border-radius:50%;display:inline-grid;place-items:center;font-weight:700;color:#fff;flex:none}'
+      + '.fm-av{width:38px;height:38px;border-radius:50%;display:inline-grid;place-items:center;font-weight:700;color:#fff;flex:none}'
       + '.fm-name{font-weight:600;color:var(--text,#ededf0);text-decoration:none}.fm-meta{color:var(--muted,#9a9aa6);font-size:12px}'
-      + '.fm-tag{font:500 10px var(--mono,monospace);letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line,#ffffff33);border-radius:999px;padding:3px 9px;color:var(--accent,#ff7a1a)}'
-      + '.fm-post h3{margin:10px 0 6px;font-size:18px;line-height:1.25;word-break:break-word}.fm-body{margin:0 0 10px;white-space:pre-wrap;word-break:break-word;color:var(--text,#ededf0);opacity:.88}'
-      + '.fm-img{display:block;max-width:100%;max-height:420px;border-radius:12px;margin:0 0 10px;object-fit:cover}'
+      + '.fm-who{display:flex;gap:10px;align-items:center;min-width:0;flex:1}.fm-who .tx{display:flex;flex-direction:column;min-width:0;line-height:1.25}.fm-who .fm-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'
+      + '.fm-tag{font:500 10px var(--mono,monospace);letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line,#ffffff33);border-radius:999px;padding:3px 9px;color:var(--accent,#ff7a1a);white-space:nowrap}'
+      + '.fm-post h3{margin:12px 0 6px;font-size:18px;line-height:1.25;word-break:break-word}.fm-body{margin:0 0 10px;white-space:pre-wrap;word-break:break-word;color:var(--text,#ededf0);opacity:.88}'
+      + '.fm-img{display:block;max-width:100%;max-height:420px;border-radius:14px;margin:0 0 10px;object-fit:cover}'
       + '.fm-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.fm-act .fm-btn{padding:7px 12px}.fm-com{border-top:1px solid var(--line,#ffffff1f);margin-top:12px;padding-top:10px}'
-      + '.fm-c{display:flex;gap:10px;padding:8px 0;align-items:flex-start}.fm-c .fm-av{width:26px;height:26px;font-size:12px}.fm-c p{margin:2px 0 0;white-space:pre-wrap;word-break:break-word}'
+      + '.fm-more-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line,#ffffff1f)}.fm-more-row[hidden]{display:none}'
+      + '.fm-c{display:flex;gap:10px;padding:8px 0;align-items:flex-start}.fm-c .fm-av{width:28px;height:28px;font-size:12px}.fm-c p{margin:2px 0 0;white-space:pre-wrap;word-break:break-word}'
       + '.fm-thr{display:flex;gap:12px;align-items:center;width:100%;text-align:left;font:inherit;color:inherit;background:var(--panel,#ffffff0a);border:1px solid var(--line,#ffffff1f);border-radius:16px;padding:12px;margin-bottom:10px;cursor:pointer}'
       + '.fm-thr .tx{flex:1;min-width:0}.fm-thr .ls{color:var(--muted,#9a9aa6);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
       + '.fm-chat{display:flex;flex-direction:column;gap:8px;margin:12px 0;max-height:52vh;overflow-y:auto;padding:4px}'
@@ -120,6 +125,7 @@
       + '.fm-more{display:block;margin:6px auto}.fm-more[hidden]{display:none}.fm-err{color:#ff8a80;margin:8px 0 0;font-size:13px}.fm-empty{text-align:center;color:var(--muted,#9a9aa6);padding:36px 10px}';
     document.head.appendChild(st);
   }
+
 
   /* ---------- feed ---------- */
   function load(reset) {
@@ -149,10 +155,10 @@
   }
   function card(p) {
     var el = h('article', { class: 'fm-card fm-post' + (p.pinned ? ' pin' : '') }), cm = null, cmBtn, likeBtn;
-    var tags = [h('span', { class: 'fm-meta', text: '\u00b7 ' + ago(p.at) })];
+    var parts = who(p), tags = [];
     if (p.pinned) tags.push(h('span', { class: 'fm-tag', text: '\ud83d\udccc Pinned' }));
-    tags.push(h('span', { class: 'fm-tag', style: 'margin-left:auto', text: CAT_NAME[p.cat] || 'General' }));
-    el.appendChild(h('div', { class: 'fm-row' }, who(p).concat(tags)));
+    tags.push(h('span', { class: 'fm-tag', text: CAT_NAME[p.cat] || 'General' }));
+    el.appendChild(h('div', { class: 'fm-row', style: 'flex-wrap:nowrap' }, [h('div', { class: 'fm-who' }, [parts[0], h('div', { class: 'tx' }, [parts[1], h('span', { class: 'fm-meta', text: ago(p.at) })])])].concat(tags)));
     el.appendChild(h('h3', { text: p.title }));
     if (p.body) el.appendChild(h('p', { class: 'fm-body', text: p.body }));
     if (p.image && /^https:\/\//i.test(p.image)) el.appendChild(h('img', { class: 'fm-img', src: p.image, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }));
@@ -165,12 +171,16 @@
       if (cm) { cm.remove(); cm = null; cmBtn.setAttribute('aria-expanded', 'false'); return; }
       cm = h('div', { class: 'fm-com' }); el.appendChild(cm); cmBtn.setAttribute('aria-expanded', 'true'); comments(p, cm, cmBtn);
     }, { 'aria-expanded': 'false', 'aria-label': 'Comments' });
-    var act = h('div', { class: 'fm-act' }, [likeBtn, cmBtn]), right = h('div', { class: 'fm-act', style: 'margin-left:auto' });
-    if (!p.mine && okSlug(p.slug)) right.appendChild(btn('\u2709 Message', 'sm', function () { go('thread', p.slug); }));
+    var act = h('div', { class: 'fm-act' }, [likeBtn, cmBtn]), right = h('div', { class: 'fm-more-row', hidden: true });
+    if (!p.mine && okSlug(p.slug)) act.appendChild(btn('\u2709 Message', 'sm', function () { go('thread', p.slug); }));
     if (!p.mine) right.appendChild(btn('Report', 'sm', function () { report('post', p.id); }));
     if (S.mod) right.appendChild(btn(p.pinned ? 'Unpin' : 'Pin', 'sm', function () { api('posts/' + p.id + '/pin', { method: 'POST', body: { pinned: !p.pinned } }).then(function (r) { if (r.ok) load(true); else alert((r.j && r.j.error) || 'Could not pin. Has the part-2 SQL been run?'); }); }));
     if (p.mine || S.mod) right.appendChild(btn('Delete', 'sm', function () { if (!confirm('Delete this post?')) return; api('posts/' + p.id, { method: 'DELETE' }).then(function (r) { if (r.ok) { S.posts = S.posts.filter(function (x) { return x.id !== p.id; }); S.pinned = S.pinned.filter(function (x) { return x.id !== p.id; }); draw(); } else alert('Could not delete it.'); }); }));
-    act.appendChild(right); el.appendChild(act); return el;
+    if (right.children.length) {
+      var dots = btn('\u22ef', 'sm', function () { var open = right.hidden; right.hidden = !open; dots.setAttribute('aria-expanded', String(open)); }, { 'aria-label': 'More actions', 'aria-expanded': 'false', style: 'margin-left:auto;font-size:16px;line-height:1;padding:4px 12px' });
+      act.appendChild(dots);
+    }
+    el.appendChild(act); if (right.children.length) el.appendChild(right); return el;
   }
   function comments(p, box, cmBtn) {
     box.textContent = 'Loading\u2026';
@@ -202,11 +212,11 @@
   }
   function composer() {
     var wrap = h('div');
-    var start = h('button', { type: 'button', class: 'fm-start', text: 'Start a post\u2026' });
+    var start = h('button', { type: 'button', class: 'fm-start' }, [h('span', { text: 'What\u2019s on your mind?' }), h('b', { text: 'Post' })]);
     var form = h('div', { class: 'fm-card', hidden: true });
     var cat = h('select', { 'aria-label': 'Category' }, CATS.slice(1).map(function (c) { return h('option', { value: c[0], text: c[1] }); }));
     var title = h('input', { type: 'text', maxlength: '120', placeholder: 'Title', 'aria-label': 'Title' });
-    var body = h('textarea', { maxlength: '2000', placeholder: 'Share something with the community\u2026', 'aria-label': 'Post text' });
+    var body = h('textarea', { maxlength: '2000', placeholder: 'What\u2019s on your mind?', 'aria-label': 'Post text' });
     var img = h('input', { type: 'text', maxlength: '500', placeholder: 'Image or GIF link (https://\u2026), optional', 'aria-label': 'Image link' });
     var err = h('p', { class: 'fm-err', role: 'alert', hidden: true }), post = btn('Post', 'pri'), cancel = btn('Cancel');
     [cat, title, body, img, err].forEach(function (x) { form.appendChild(x); });
@@ -225,6 +235,7 @@
     wrap.appendChild(start); wrap.appendChild(form); return wrap;
   }
   function feedView() {
+    viewEl.appendChild(h('div', { class: 'fm-top' }, [h('h1', { text: 'Feed' }), h('span', { text: 'What the community is up to' })]));
     viewEl.appendChild(composer());
     var chips = h('div', { class: 'fm-chips', role: 'tablist', 'aria-label': 'Categories' });
     CATS.forEach(function (c) { var b = btn(c[0] === 'all' ? 'All' : c[1], c[0] === S.cat ? 'on' : '', null, { role: 'tab', 'aria-selected': String(c[0] === S.cat) });
@@ -240,7 +251,7 @@
 
   /* ---------- alerts ---------- */
   function alertsView() {
-    viewEl.appendChild(h('h2', { text: 'Alerts' }));
+    viewEl.appendChild(topBar('Alerts'));
     var box = h('div', { text: 'Loading\u2026' }); viewEl.appendChild(box);
     api('notifications').then(function (r) {
       box.textContent = ''; if (S.view !== 'alerts') return;
@@ -258,8 +269,11 @@
   }
 
   /* ---------- private messages ---------- */
+  function topBar(title) {
+    return h('div', { class: 'fm-bar' }, [btn('\u2190 Feed', 'sm fm-back', function () { go('feed'); }, { 'aria-label': 'Back to the feed' }), h('h2', { text: title })]);
+  }
   function inboxView() {
-    viewEl.appendChild(h('h2', { text: 'Messages' }));
+    viewEl.appendChild(topBar('Messages'));
     var nm = h('div', { class: 'fm-card' }), inp = h('input', { type: 'text', placeholder: 'Card link of a member, e.g. aiman', maxlength: '40', 'aria-label': 'Member card link', style: 'margin:0' }), er = h('p', { class: 'fm-err', hidden: true });
     var go2 = function () { var v = inp.value.trim().replace(/^.*\//, '').toLowerCase(); if (!okSlug(v)) { er.hidden = false; er.textContent = 'Type the member\u2019s card link, like aiman.'; return; } go('thread', v); };
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go2(); });
@@ -278,7 +292,7 @@
     });
   }
   function threadView(slug) {
-    var head = h('div', { class: 'fm-row' }, [btn('\u2190 Back', 'sm', function () { go('inbox'); })]), title = h('h2', { text: slug, style: 'margin:0' }); head.appendChild(title);
+    var head = h('div', { class: 'fm-bar' }, [btn('\u2190 Messages', 'sm fm-back', function () { go('inbox'); })]), title = h('h2', { text: slug, style: 'margin:0' }); head.appendChild(title);
     var chat = h('div', { class: 'fm-chat', 'aria-live': 'polite' }), err = h('p', { class: 'fm-err', hidden: true });
     var inp = h('input', { type: 'text', maxlength: '1000', placeholder: 'Write a message\u2026', 'aria-label': 'Message', style: 'margin:0' }), send = btn('Send', 'pri');
     viewEl.appendChild(head); viewEl.appendChild(chat); viewEl.appendChild(err); viewEl.appendChild(h('div', { class: 'fm-row' }, [h('div', { style: 'flex:1;min-width:160px' }, [inp]), send]));
@@ -307,7 +321,7 @@
 
   /* ---------- reports (admin) ---------- */
   function reportsView() {
-    viewEl.appendChild(h('h2', { text: 'Reports' }));
+    viewEl.appendChild(topBar('Reports'));
     var box = h('div', { text: 'Loading\u2026' }); viewEl.appendChild(box);
     api('reports').then(function (r) {
       box.textContent = ''; if (S.view !== 'reports') return;
@@ -327,13 +341,11 @@
   }
 
   /* ---------- shell ---------- */
+  /* the header message button and the side menu show these counts (maple-shell.js listens) */
   function drawNav() {
-    if (!navEl) return;
-    var label = { feed: 'Feed', inbox: 'Messages', alerts: 'Alerts', reports: 'Reports' }, cnt = { inbox: S.dm, alerts: S.unread };
-    Object.keys(nav).forEach(function (k) {
-      var b = nav[k]; b.textContent = label[k]; if (cnt[k] > 0) b.appendChild(h('span', { class: 'fm-dot', text: String(cnt[k]) }));
-      b.classList.toggle('on', k === (S.view === 'thread' ? 'inbox' : S.view)); b.hidden = k === 'reports' && !S.mod;
-    });
+    var d = { dm: S.dm, unread: S.unread, mod: S.mod };
+    window.__forumBadges = d;
+    try { window.dispatchEvent(new CustomEvent('maple:forum', { detail: d })); } catch (e) {}
   }
   function updateBadges() {
     api('notifications').then(function (r) {
@@ -341,24 +353,37 @@
     });
   }
   function go(view, arg) {
+    var was = S.view;
     clearInterval(threadTimer); threadTimer = null; S.view = view; viewEl.textContent = ''; listEl = moreEl = statEl = null;
     if (view === 'feed') feedView(); else if (view === 'alerts') alertsView(); else if (view === 'inbox') inboxView(); else if (view === 'thread') threadView(arg); else if (view === 'reports') reportsView();
-    drawNav(); if (view !== 'feed') window.scrollTo && sec && sec.scrollIntoView && sec.scrollIntoView({ block: 'start' });
+    drawNav(); if ((view !== 'feed' || was !== 'feed') && sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'start' });
+  }
+  /* a screen asked for by the header / side menu; honoured for a few seconds so it survives the page being (re)built */
+  var want = null, VIEWS = { feed: 1, inbox: 1, alerts: 1, reports: 1, thread: 1 };
+  function takeWant() {
+    var w = want; want = null;
+    return w && Date.now() - w.t < 4000 && VIEWS[w.v] ? w : null;
+  }
+  function open(view, arg) {
+    if (!VIEWS[view]) view = 'feed';
+    want = { v: view, a: arg, t: Date.now() };
+    var P = window.dgPager, path = location.pathname.replace(/\/+$/, '') || '/';
+    var onHome = P && P.active() && !P.layered() && path === '/' && !location.hash;
+    if (sec && document.body.contains(sec)) { var w = takeWant(); if (w) go(w.v, w.a); }
+    if (onHome) return;
+    if (window.dgNavigate) window.dgNavigate('/');
+    else location.href = '/?pm=1';
   }
   function mount(pane) {
     if (!pane || pane.querySelector('#forum')) return; css();
     // hide the default landing sections (the creator directory stays, so it can still move to the Explore tab)
     Array.prototype.forEach.call(pane.children, function (c) { if (c.id !== 'explore') c.hidden = true; });
-    document.title = 'Maple ID \u00b7 Community';
-    sec = h('section', { class: 'fm', id: 'forum', 'aria-label': 'Community forum' });
-    sec.appendChild(h('p', { class: 'fm-eyebrow', text: 'Community' })); sec.appendChild(h('h1', { text: 'Forum' }));
-    sec.appendChild(h('p', { class: 'fm-sub', text: 'Ask questions, show off your card, and meet other creators and gamers.' }));
-    navEl = h('div', { class: 'fm-nav', role: 'navigation', 'aria-label': 'Forum sections' }); nav = {};
-    ['feed', 'inbox', 'alerts', 'reports'].forEach(function (k) { nav[k] = btn(k, '', function () { go(k); }); navEl.appendChild(nav[k]); });
-    sec.appendChild(navEl); viewEl = h('div'); sec.appendChild(viewEl);
+    document.title = 'Maple ID · Community';
+    sec = h('section', { class: 'fm', id: 'forum', 'aria-label': 'Feed' });
+    viewEl = h('div'); sec.appendChild(viewEl);
     pane.insertBefore(sec, pane.firstChild);
-    S.view = 'feed'; go('feed'); updateBadges();
+    var w = takeWant(); S.view = 'feed'; go(w ? w.v : 'feed', w && w.a); updateBadges();
     clearInterval(poll); poll = setInterval(function () { if (!document.body.contains(sec)) { clearInterval(poll); clearInterval(threadTimer); return; } if (!document.hidden) updateBadges(); }, 60000);
   }
-  window.dgForum = { mount: mount };
+  window.dgForum = { mount: mount, open: open, view: function () { return S.view; }, badges: function () { return { dm: S.dm, unread: S.unread, mod: S.mod }; } };
 })();

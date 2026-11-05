@@ -44,14 +44,8 @@ html[data-glass=on] .topbar{background:color-mix(in srgb,var(--bg) 90%,transpare
 .tb-end{display:flex;align-items:center;gap:10px}
 .nav-link{color:var(--muted);font-weight:500;transition:color .15s}.nav-link:hover{color:var(--text)}
 
-/* 4 ─ mode switch */
-.mode-switch{position:relative;width:38px;height:38px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);display:grid;place-items:center;box-shadow:var(--shadow-sm);transition:transform .2s var(--ease),border-color .2s}
-.mode-switch:hover{border-color:var(--line-strong)}.mode-switch:active{transform:scale(.9)}
-.mode-switch svg{grid-area:1/1;width:19px;height:19px;transition:transform .45s var(--ease),opacity .25s}
-:root[data-mode=dark] .ms-moon,:root:not([data-mode]) .ms-moon{opacity:0;transform:rotate(-70deg) scale(.4)}
-:root[data-mode=light] .ms-sun{opacity:0;transform:rotate(70deg) scale(.4)}
+/* 4 ─ mode switch: styles + the circular reveal live in maple-mode.css */
 .mode-switch:focus-visible,.btn:focus-visible,.dock-i:focus-visible,.tab:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-html.mode-anim *,html.mode-anim *::before,html.mode-anim *::after{transition:background-color .25s ease,border-color .25s ease,color .25s ease,fill .25s ease,stroke .25s ease,box-shadow .25s ease!important}
 
 /* 5 ─ buttons, fields, tabs, surfaces */
 .btn{height:46px;border-radius:var(--r-md);background:var(--panel);border:1px solid var(--line);color:var(--text);font-weight:600;letter-spacing:-.005em;box-shadow:var(--shadow-sm);transition:transform .16s var(--ease),border-color .16s,background-color .16s}
@@ -117,3 +111,16 @@ img{content-visibility:auto}
 html[data-lite] #fx-big .fx-float{animation:none}
 html[data-lite] *{scroll-behavior:auto!important}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* 10 ─ login / sign-up panel: it was painted with fixed dark colours, so light mode showed a black box with unreadable text */
+.auth{background:var(--panel)!important;border:1px solid var(--line)!important;box-shadow:var(--shadow)!important}
+.auth-tabs{background:var(--bg-2)!important;border:1px solid var(--line)}
+.auth-tabs button{color:var(--muted)}
+.auth-tabs [aria-selected=true]{background:var(--panel-solid)!important;color:var(--text)!important;
+  box-shadow:0 1px 2px rgba(70,35,18,.14),inset 0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)!important}
+:root[data-mode=dark] .auth-tabs [aria-selected=true]{background:color-mix(in srgb,var(--accent) 16%,var(--panel-solid))!important;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)!important}
+.auth .field label,.auth .prefix-input span{color:var(--muted)}
+.prefix-input{background:var(--bg-2)}
+.claim{background:var(--panel)!important;border-color:var(--line)!important}
+.claim:focus-within{box-shadow:0 0 0 4px color-mix(in oklab,var(--accent) 18%,transparent),var(--shadow)}
+.steps>div{background:var(--panel)!important}
