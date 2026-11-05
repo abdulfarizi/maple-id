@@ -476,6 +476,78 @@
       return json({ code: 404, msg: 'Not supported' }, 404);
     }
 
+    // ===== Forum (signed-in members) =====
+    if (url.includes('/api/forum/')) {
+      const au = await authUser();
+      if (!au) return json({ error: 'Please log in to use the forum.' }, 401);
+      const T = au.token, CATS = ['general', 'gaming', 'showcase', 'help'];
+      const rest = url.split('/api/forum/')[1].split('?')[0].replace(/\/+$/, '').split('/');
+      const qs = new URL(url, location.origin).searchParams;
+      const isId = (v) => /^[0-9a-f-]{36}$/i.test(v || '');
+      const cnt = (x, k) => (x && x[k] && x[k][0] && Number(x[k][0].count)) || 0;
+      const who = async () => { const row = await getOwnRow(au); const p = row ? unpackRow(row) : null; return { name: String((p && p.name) || 'Member').slice(0, 80), slug: String((p && p.slug) || '').slice(0, 40) }; };
+      const failMsg = (r, what) => (r && (r.status === 403 || r.status === 401) ? 'Slow down a little, then try again.' : 'Could not ' + what + '. Please try again.');
+      const hdr = { 'Prefer': 'return=minimal' };
+
+      if (rest[0] === 'posts' && rest.length === 1 && method === 'GET') {
+        const cat = qs.get('cat'), before = qs.get('before'), q = String(qs.get('q') || '').replace(/[^\w\s-]/g, '').slice(0, 40).trim();
+        let p = '/rest/v1/forum_posts?select=id,author,author_slug,author_name,category,title,body,image,created_at,forum_likes(count),forum_comments(count)&order=created_at.desc&limit=21';
+        if (CATS.includes(cat)) p += '&category=eq.' + cat;
+        if (q) p += '&or=(title.ilike.*' + encodeURIComponent(q) + '*,body.ilike.*' + encodeURIComponent(q) + '*)';
+        if (before && /^[\d\-T:.+Z%]+$/.test(before)) p += '&created_at=lt.' + encodeURIComponent(before);
+        const r = await sb(p, { token: T });
+        if (!r || !r.ok) return json({ error: 'Could not load the forum. Has the forum SQL been run in Supabase?' }, 503);
+        let rows = await r.json().catch(() => []); if (!Array.isArray(rows)) rows = [];
+        const more = rows.length > 20; rows = rows.slice(0, 20);
+        let mine = [];
+        if (rows.length) { const lr = await sb('/rest/v1/forum_likes?select=post&user_id=eq.' + au.uid + '&post=in.(' + rows.map((x) => x.id).filter(isId).join(',') + ')', { token: T }); if (lr && lr.ok) mine = (await lr.json().catch(() => [])).map((x) => x.post); }
+        return json({ more, me: { mod: !!au.isOwner }, posts: rows.map((x) => ({ id: x.id, mine: x.author === au.uid, slug: x.author_slug, name: x.author_name, cat: x.category, title: x.title, body: x.body, image: x.image, at: x.created_at, likes: cnt(x, 'forum_likes'), comments: cnt(x, 'forum_comments'), liked: mine.includes(x.id) })) });
+      }
+      if (rest[0] === 'posts' && rest.length === 1 && method === 'POST') {
+        const b = parse(options.body), title = str(b.title, 120).trim(), text = str(b.body, 2000).trim(), cat = CATS.includes(b.category) ? b.category : 'general';
+        let image = String(b.image || '').trim(); if (image && !(image.length <= 500 && /^https:\/\/[^\s]+$/i.test(image))) image = '';
+        if (!title) return json({ error: 'Give your post a title.' }, 400);
+        const w = await who();
+        const r = await sb('/rest/v1/forum_posts', { method: 'POST', token: T, headers: hdr, body: { author: au.uid, author_slug: w.slug, author_name: w.name, category: cat, title, body: text, image } });
+        if (!r || !r.ok) return json({ error: failMsg(r, 'post') }, 429);
+        return json({ ok: true });
+      }
+      if (rest[0] === 'posts' && isId(rest[1]) && rest.length === 2 && method === 'DELETE') {
+        const r = await sb('/rest/v1/forum_posts?id=eq.' + rest[1], { method: 'DELETE', token: T });
+        return json({ ok: !!(r && r.ok) }, r && r.ok ? 200 : 503);
+      }
+      if (rest[0] === 'posts' && isId(rest[1]) && rest[2] === 'comments') {
+        if (method === 'GET') {
+          const r = await sb('/rest/v1/forum_comments?select=id,author,author_slug,author_name,body,created_at&post=eq.' + rest[1] + '&order=created_at.asc&limit=100', { token: T });
+          if (!r || !r.ok) return json({ error: 'Could not load comments.' }, 503);
+          const rows = await r.json().catch(() => []);
+          return json({ comments: (Array.isArray(rows) ? rows : []).map((x) => ({ id: x.id, mine: x.author === au.uid, slug: x.author_slug, name: x.author_name, body: x.body, at: x.created_at })), mod: !!au.isOwner });
+        }
+        if (method === 'POST') {
+          const text = str(parse(options.body).body, 500).trim(); if (!text) return json({ error: 'Write a comment first.' }, 400);
+          const w = await who();
+          const r = await sb('/rest/v1/forum_comments', { method: 'POST', token: T, headers: hdr, body: { post: rest[1], author: au.uid, author_slug: w.slug, author_name: w.name, body: text } });
+          if (!r || !r.ok) return json({ error: failMsg(r, 'comment') }, 429);
+          return json({ ok: true });
+        }
+      }
+      if (rest[0] === 'comments' && isId(rest[1]) && method === 'DELETE') {
+        const r = await sb('/rest/v1/forum_comments?id=eq.' + rest[1], { method: 'DELETE', token: T });
+        return json({ ok: !!(r && r.ok) }, r && r.ok ? 200 : 503);
+      }
+      if (rest[0] === 'posts' && isId(rest[1]) && rest[2] === 'like') {
+        if (method === 'POST') {
+          const r = await sb('/rest/v1/forum_likes', { method: 'POST', token: T, headers: hdr, body: { post: rest[1], user_id: au.uid } });
+          return json({ ok: !!(r && (r.ok || r.status === 409)) });
+        }
+        if (method === 'DELETE') {
+          const r = await sb('/rest/v1/forum_likes?post=eq.' + rest[1] + '&user_id=eq.' + au.uid, { method: 'DELETE', token: T });
+          return json({ ok: !!(r && r.ok) });
+        }
+      }
+      return json({ error: 'Not supported' }, 404);
+    }
+
     // ===== Anonymous messages (text + drawing) =====
     if (url.includes('/api/messages')) {
       const rest = url.split('/api/messages')[1].split('?')[0].replace(/^\/+|\/+$/g, '');
@@ -685,6 +757,7 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <link rel="stylesheet" href="/assets/studio.css?v=2" />
     <script src="/assets/maple-studio.js?v=1" defer></script>
     <script src="/assets/maple-builder.js?v=2" defer></script>
+    <script src="/assets/maple-forum.js?v=1" defer></script>
     <script src="/assets/maplefx.js?v=5" defer></script>
     <script src="/assets/maple.js?v=3"></script>
   </head>
