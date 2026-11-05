@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0f0d0e">
     <meta name="color-scheme" content="dark light">
-    <script src="/assets/maple-mode.js?v=2"></script>
+    <script src="/assets/maple-mode.js?v=3"></script>
+    <link rel="stylesheet" href="/assets/maple-mode.css?v=1">
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
@@ -93,6 +94,17 @@
         .top-controls { display:flex; align-items:center; gap:5px; }
         .icon-pill { height:30px; width:30px; border-radius:999px; display:grid; place-items:center; border:1px solid var(--line-strong); background:color-mix(in srgb,var(--bg) 75%,transparent); color:var(--muted); font-size:10.5px; transition:color 0.2s,border-color 0.2s; }
         .icon-pill:hover, .icon-pill.active { color:var(--accent); border-color:var(--accent); }
+        .pm-pill { display:none; position:relative; cursor:pointer; }
+        .pm-pill.show { display:grid; }
+        .pm-pill svg { width:15px; height:15px; }
+        .topbar > span:first-child { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .top-controls { flex-shrink:0; }
+        @media (max-width:430px) {
+            .topbar .top-controls { gap:4px; }
+            .topbar .top-controls .icon-pill, .topbar .top-controls .mode-switch { width:28px; height:28px; }
+            .topbar .owner-studio-badge { padding:4px 8px; }
+            .topbar .lang button { min-width:25px; padding:4px 5px; }
+        }
         .lang { display:inline-flex; gap:2px; padding:3px; border-radius:999px; border:1px solid var(--line-strong); background:color-mix(in srgb,var(--bg) 75%,transparent); }
         .lang button { font-family:var(--mono); font-size:9px; letter-spacing:0.12em; min-width:30px; padding:4px 6px; border-radius:999px; color:var(--muted); }
         .lang button[aria-pressed="true"] { background:var(--accent); color:#fff; }
@@ -294,10 +306,12 @@ html{background:var(--bg)}
     <header class="topbar reveal">
         <span><span id="top-name"></span> / <b data-i18n="card">Maple Card</b></span>
         <div class="top-controls">
+            <button type="button" id="owner-pm-btn" class="icon-pill pm-pill" title="Private messages" aria-label="Private messages"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m4.5 8 7.5 5.2L19.5 8"/></g></svg></button>
             <a id="owner-studio-btn" href="/studio" target="_top" class="owner-studio-badge"><i class="fa-solid fa-pen-to-square"></i> <span data-i18n="studio">Studio</span></a>
             <button type="button" id="music-btn" class="icon-pill" title="Lofi" aria-label="Toggle Lofi Beats"><i class="fa-solid fa-music"></i></button>
             <button type="button" id="sfx-btn" class="icon-pill active" title="UI Sound" aria-label="Toggle UI Sound"><i class="fa-solid fa-volume-high"></i></button>
             <button type="button" id="theme-btn" class="icon-pill" title="Theme" aria-label="Switch Theme"><i class="fa-solid fa-palette"></i></button>
+            <button type="button" id="mode-btn" class="icon-pill mode-switch" title="Dark mode" aria-label="Switch to dark mode"></button>
             <div class="lang" role="group">
                 <button type="button" data-lang="en" aria-pressed="true">EN</button>
                 <button type="button" data-lang="ms" aria-pressed="false">BM</button>
@@ -869,6 +883,7 @@ html{background:var(--bg)}
         renderLove(P); renderShop(P); renderMusic(P); applyLang(lang); renderStatus(); renderClock();
         const mine = !PREVIEW && viewerId() && viewerId() === P.id;
         $('owner-studio-btn').classList.toggle('show', !!mine);
+        $('owner-pm-btn').classList.toggle('show', !PREVIEW && !!viewerId());
         if (firstRender) {
             firstRender = false;
             if (INTRO) { if (P.intro === false) INTRO.skip(); else INTRO.go(); }
@@ -1202,6 +1217,8 @@ html{background:var(--bg)}
     });
     // inside the app, go to the Studio through the shell (no page reload); standalone it stays a normal link
     $('owner-studio-btn').addEventListener('click', (e) => { if (window.parent !== window) { e.preventDefault(); try { parent.postMessage({ maple: 'go', href: '/studio' }, location.origin); } catch { location.href = '/studio'; } } });
+    // private messages live in the forum on the home page: ask the shell, or open the home page with the inbox
+    $('owner-pm-btn').addEventListener('click', () => { if (window.parent !== window) { try { parent.postMessage({ maple: 'pm' }, location.origin); return; } catch {} } (window.top || window).location.href = '/?pm=1'; });
     setInterval(renderClock, 15000); setInterval(() => { if (P) renderStatus(); }, 60000);
     applyLang(lang);
     if (!PREVIEW && !EMBED) loadStandalone();
