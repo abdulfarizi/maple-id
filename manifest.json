@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Maple ID",
-  "short_name": "Maple ID",
+  "name": "M-ID",
+  "short_name": "M-ID",
   "description": "One link for every game ID and social handle.",
   "categories": ["social", "utilities"],
   "start_url": "/",
