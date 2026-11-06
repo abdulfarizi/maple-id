@@ -12,7 +12,7 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var IN_APP = window.parent !== window;
   var REDUCE = matchMedia('(prefers-reduced-motion: reduce)');
-  var root = null, P = null, st = { lines: null, key: '', cur: -1, userAt: 0 }, last = null;
+  var lib = [], root = null, P = null, st = { lines: null, key: '', cur: -1, userAt: 0 }, last = null;
   var I = {
     play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z" fill="currentColor"/></svg>',
     pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.3" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.3" fill="currentColor"/></svg>',
@@ -62,6 +62,20 @@
       + '<span class="sk-time sk-t0">0:00</span><input type="range" class="sk-seek" min="0" max="1000" value="0" aria-label="Seek"><span class="sk-time sk-t1">0:00</span></div></div></div>'
       + '<div class="sk-lyr" tabindex="0" aria-label="Lyrics"><div class="sk-lstate">Tap play to start the music.</div></div>'
       + '<p class="sk-full" hidden></p></div></section>';
+  }
+  /* ── Your songs: Spotify-style list of the uploaded MP3s (full songs, played by our own player) ── */
+  function libHTML() {
+    var rows = lib.map(function (x, i) {
+      var art = x.art && artOk(x.art) ? '<img src="' + esc(x.art) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '';
+      return '<li class="sk-row"' + (i >= 8 ? ' hidden data-sk-extra' : '') + ' data-sk-key="' + esc((x.title || '').toLowerCase()) + '"><button type="button" data-sk-lib="' + i + '" aria-label="Play ' + esc(x.title || 'song') + '">'
+        + '<span class="sk-rn"><b>' + (i + 1) + '</b><span class="sk-rp" aria-hidden="true">' + I.play + '</span><span class="sk-eq" aria-hidden="true"><i></i><i></i><i></i></span></span>'
+        + '<span class="sk-rart"' + (art || !x.url || x.audio ? '' : ' data-fill-url="' + esc(x.url) + '"') + '><span class="sk-ph">' + esc((x.title || '♪')[0]) + '</span>' + art + '</span>'
+        + '<span class="sk-rt"><b>' + esc(x.title || 'Untitled') + '</b><small>' + esc(x.artist || 'Full song') + '</small></span>'
+        + '<span class="sk-rd">' + (x.durationMs ? fmt(x.durationMs) : '') + '</span></button></li>';
+    }).join('');
+    return '<section class="sk-sec sk-lib" data-sk-sec="music" aria-label="Music I like">' + head(P.musicTitle || 'Music I like', P.musicSub || '')
+      + '<ol class="sk-rows" role="list">' + rows + '</ol>'
+      + (lib.length > 8 ? '<button type="button" class="sk-more" data-sk-more>Show all ' + lib.length + ' songs</button>' : '') + '</section>';
   }
   function miniHTML() {
     return '<div class="sk-mini" data-sk-mini><span class="sk-ap-art"><img alt="" hidden><i class="fa-solid fa-music" aria-hidden="true"></i></span>'
@@ -121,13 +135,15 @@
         + (s.connect ? '<button type="button" data-sk-ctl="login">Connect Spotify Premium</button> for full songs.' : '');
       full.__k = fk;
     }
+    var cur = String(s.title || '').toLowerCase();
+    root.querySelectorAll('.sk-row').forEach(function (r) { var on = !!cur && r.dataset.skKey === cur; r.classList.toggle('on', on); r.classList.toggle('playing', on && !!s.playing); });
     syncLyric(s.pos || 0);
   }
   function paintLyrics() {
     var boxes = root.querySelectorAll('.sk-lyr');
     var html = st.lines ? '<ol class="sk-lines">' + st.lines.map(function (l, i) { return '<li data-i="' + i + '">' + (esc(l.x) || '♪') + '</li>'; }).join('') + '</ol>'
       : st.plain ? '<div class="sk-plain">' + esc(st.plain).replace(/\n/g, '<br>') + '</div>'
-      : '<div class="sk-lstate">' + esc(st.msg || 'Tap play to start the music.') + '</div>';
+      : '<div class="sk-lstate"><span>' + esc(st.msg || 'Tap play to start the music.') + (/^(No lyrics|Looking up)/.test(st.msg || '') ? '<br><button type="button" class="sk-lfind" data-sk-ctl="lsearch">Search lyrics manually</button>' : '') + '</span></div>';
     boxes.forEach(function (b) { b.innerHTML = html; });
     var m = root.querySelector('.sk-mlyr'); if (m) m.innerHTML = st.lines ? '<ol class="sk-lines">' + st.lines.map(function (l) { return '<li>' + (esc(l.x) || '♪') + '</li>'; }).join('') + '</ol>' : '';
   }
@@ -151,21 +167,29 @@
     if (!root) return;
     var mx = window.MX, html = '';
     var hasPlayer = IN_APP && P.music !== false && (!!(P.song && P.song.audio) || !!(mx && mx.spotify(P.spotify)) || P.layout === 'star');
+    var likes = Array.isArray(P.musicLikes) ? P.musicLikes.filter(Boolean) : [];
     var animeOn = !!(mx && mx.animeOn(P)), musicOn = !!(mx && mx.musicOn(P));
-    if (hasPlayer) html += miniHTML();
+    lib = IN_APP && musicOn ? likes : [];
+    /* one player only: the big Audio Player section below replaces the separate "now playing" strip */
     if (animeOn) html += '<section class="sk-sec" data-sk-sec="anime" aria-label="Anime">' + head(P.animeTitle || 'Anime', P.animeSub || '') + pager('anime', 'Anime', P.anime.map(animeCard).join('')) + '</section>';
     if (hasPlayer) html += playerHTML();
-    if (musicOn) html += '<section class="sk-sec" data-sk-sec="music" aria-label="Music I like">' + head(P.musicTitle || 'Music I like', P.musicSub || '') + pager('music', 'Music I like', P.musicLikes.map(songCard).join('')) + '</section>';
+    if (musicOn && lib.length) html += libHTML();
+    else if (musicOn) html += '<section class="sk-sec" data-sk-sec="music" aria-label="Music I like">' + head(P.musicTitle || 'Music I like', P.musicSub || '') + pager('music', 'Music I like', P.musicLikes.map(songCard).join('')) + '</section>';
     root.innerHTML = html; root.hidden = !html;
-    root.classList.toggle('sk-lyrics-off', P.lyrics !== true);
+    root.classList.toggle('sk-lyrics-off', P.lyrics === false);
     bindPagers();
     paintLyrics();
+    if (window.MX && MX.fill) MX.fill(root);
     if (!root.__bound) {
       root.__bound = 1;
       root.addEventListener('click', function (e) {
         var g = e.target.closest('[data-sk-go]');
         if (g) { var tr = g.closest('.sk-pager').querySelector('.sk-track'); tr.scrollBy({ left: Number(g.dataset.skGo) * tr.clientWidth, behavior: REDUCE.matches ? 'auto' : 'smooth' }); return; }
         var c = e.target.closest('[data-sk-ctl]'); if (c) { ctl(c.dataset.skCtl); return; }
+        var mo = e.target.closest('[data-sk-more]');
+        if (mo) { root.querySelectorAll('[data-sk-extra]').forEach(function (r) { r.hidden = false; }); mo.remove(); return; }
+        var lb = e.target.closest('[data-sk-lib]');
+        if (lb && window.MX) { var li = lib[Number(lb.dataset.skLib)]; if (li) MX.play(li, P); return; }
         var pl = e.target.closest('[data-sk-play]');
         if (pl && window.MX) { var it = (P.musicLikes || [])[Number(pl.dataset.skPlay)]; if (it) MX.play(it, P); return; }
         var ln = e.target.closest('.sk-lyr li[data-i]');
@@ -179,7 +203,7 @@
       // any tap in the card closes menus/popovers that live in the app around it
       document.addEventListener('pointerdown', function () { try { parent.postMessage({ maple: 'tap' }, location.origin); } catch (e) {} }, { passive: true });
     }
-    if (hasPlayer) { st.key = ''; ctl('hello', { slug: P.slug, lyrics: P.lyrics === true }); }
+    if (hasPlayer) { st.key = ''; ctl('hello', { slug: P.slug, lyrics: P.lyrics !== false }); }
     else if (IN_APP) ctl('hello', { slug: '' });
   }
   window.MXStack = { render: render };

@@ -345,6 +345,12 @@ GoTrue REQUIRES HTTPS to work securely.`),t&&(this.audience=t),this.setCookie=n,
             <div data-dkbg></div>
           </fieldset>
 
+          <fieldset data-deck-only ${e.layout===`deck`?``:`hidden`}>
+            <legend>Gear <small>optional</small></legend>
+            <p class="hint">Shown on its own card in the Glass layout: phone, tablet, laptop, VR headset, GPU… up to 12 items.</p>
+            <div data-dkgear></div>
+          </fieldset>
+
           <fieldset data-builder-only ${e.layout===`builder`?``:`hidden`}>
             <legend>Free canvas</legend>
             <p class="hint">Build your card like a blank page. Drag elements anywhere, resize them, change colours and fonts.</p>
@@ -433,11 +439,11 @@ GoTrue REQUIRES HTTPS to work securely.`),t&&(this.audience=t),this.setCookie=n,
           <fieldset>
             <legend>Bottom music player</legend>
             <label class="toggle"><input type="checkbox" name="music" ${e.music===!1?``:`checked`}><span></span> Show the music player at the bottom of my profile</label>
-            <div class="field"><label>Featured track <small>a Spotify or YouTube link</small></label><input name="spotify" type="text" inputmode="url" maxlength="200" placeholder="https://open.spotify.com/track/… or https://youtu.be/…" value="${J(e.spotify||``)}"></div>
+            <div class="field"><label>Featured track <small>a YouTube link, or upload a song</small></label><input name="spotify" type="text" inputmode="url" maxlength="200" placeholder="https://youtu.be/…" value="${J(e.spotify||``)}"></div>
             <div class="mxs-feat" data-mxs-feat></div>
             <label class="toggle"><input type="checkbox" name="musicAuto" ${e.musicAuto===!1?``:`checked`}><span></span> Show the full mini-player when my profile opens (off = a small play button)</label>
             <label class="toggle"><input type="checkbox" name="lyrics" ${e.lyrics===!1?``:`checked`}><span></span> Find and show lyrics automatically, when available</label>
-            <p class="hint">YouTube links play through YouTube's official player (the video shows in the expanded player). Spotify links: visitors logged in to Spotify in their browser hear full songs; everyone else gets Spotify's 30-second preview plus a Log in to Spotify button in the player. Lyrics are looked up automatically in LRCLIB, an open community lyrics database, from the song's title and artist (it isn't available for every song). Star cards without a link keep their theme music in the same player.</p>
+            <p class="hint">YouTube links play through YouTube's official player (audio only, the video is never shown). Uploaded songs play in full for every visitor. Only upload music you own or have permission to share. Lyrics are looked up automatically in LRCLIB, an open community lyrics database, from the song's title and artist. If they're wrong or missing, search and pick the right ones under Featured track. Star cards without a song keep their theme music in the same player.</p>
           </fieldset>
           <fieldset>
             <legend>Music I like</legend>

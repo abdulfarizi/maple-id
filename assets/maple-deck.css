@@ -10,10 +10,10 @@
 body.pager-on .dk-deck{--top:var(--tb-h,64px)}
 /* v36-1 fix: the deck lives INSIDE its pager pane (absolute, not fixed). It used to be position:fixed, so it stayed on
  * screen on top of Home and Explore after you swiped/clicked away from the card or Profile pane. */
-.pg:has(.dk-deck),.pg-layer:has(.dk-deck){position:relative;overflow:hidden}
-.pg-layer:has(.dk-deck){position:fixed}
-.pg:has(.dk-deck)::before,.pg:has(.dk-deck)::after,.pg-layer:has(.dk-deck)::before,.pg-layer:has(.dk-deck)::after{display:none}
-.pg:has(.dk-deck)>.pg-main,.pg-layer:has(.dk-deck)>.pg-layer-main{min-height:0;position:static;z-index:auto;overflow:visible}
+.pg:has(.dk-deck:not(.dk-preview)),.pg-layer:has(.dk-deck:not(.dk-preview)){position:relative;overflow:hidden}
+.pg-layer:has(.dk-deck:not(.dk-preview)){position:fixed}
+.pg:has(.dk-deck:not(.dk-preview))::before,.pg:has(.dk-deck:not(.dk-preview))::after,.pg-layer:has(.dk-deck:not(.dk-preview))::before,.pg-layer:has(.dk-deck:not(.dk-preview))::after{display:none}
+.pg:has(.dk-deck:not(.dk-preview))>.pg-main,.pg-layer:has(.dk-deck:not(.dk-preview))>.pg-layer-main{min-height:0;position:static;z-index:auto;overflow:visible}
 .dk-preview{position:relative;inset:auto;height:600px;border-radius:22px;--top:0px;--bot:0px}
 
 /* background */
@@ -385,3 +385,183 @@ body.pager-on .dk-deck{--top:var(--tb-h,64px)}
 .dkbg-msg{margin:8px 0 0;font-size:12px;min-height:1em}
 .dkbg-msg.bad{color:#ef4444}
 @media (max-width:420px){.dkbg-modes{grid-template-columns:1fr}.dkbg-sw{height:34px}}
+
+/* v36-6 · manual lyric search button */
+.dk-lfind{font:inherit;font-size:.8rem;font-weight:700;color:#111;background:#fff;border:0;border-radius:999px;padding:8px 14px;cursor:pointer}
+
+
+/* ═══ v36-8 · Audio Player slide: transparent lyrics, follows light / dark, no flicker ═══ */
+.dk-big{background:color-mix(in srgb,var(--ink,#fff) 7%,transparent);border-color:color-mix(in srgb,var(--ink,#fff) 14%,transparent);transform:translateZ(0)}
+.dk-lyr{background:transparent}
+.dk-lyr-in{will-change:transform}
+.dk-lyr-in p{color:color-mix(in srgb,var(--text,#fff) 30%,transparent);filter:none;opacity:.9;transition:color .4s,opacity .4s}     /* blur() on every line re-rasterised the whole list each change */
+.dk-lyr-in p.cur{color:var(--text,#fff);opacity:1}
+.dk-lyr-in p.nxt{color:color-mix(in srgb,var(--text,#fff) 48%,transparent);filter:none}
+.dk-lyr-in .dk-lmsg{color:color-mix(in srgb,var(--text,#fff) 62%,transparent)}
+.dk-lyr-in .dk-lplain{color:color-mix(in srgb,var(--text,#fff) 74%,transparent)}
+.dk-bar{background:color-mix(in srgb,var(--text,#fff) 22%,transparent)}
+.dk-bar i,.dk-bar b{background:var(--text,#fff)}
+
+
+/* ═══ v36-9 · no "click to enter": the hollow star zooms in by itself, then the slides appear ═══ */
+.dk-splash{display:none!important}
+.dk-starzoom{position:absolute;inset:0;z-index:30;pointer-events:none;overflow:hidden}
+.dk-starzoom svg{width:100%;height:100%}
+/* the slides wait behind the star cover and rise in as it opens (the same entrance they used after the tap) */
+.dk-deck.dk-opening .dk-item{opacity:0!important;transform:translateY(18px)!important}
+.dk-deck.dk-opening .dk-count,.dk-deck.dk-opening .dk-hint,.dk-deck.dk-opening .dk-dots,.dk-deck.dk-opening .dk-top{opacity:0}
+.dk-deck .dk-count,.dk-deck .dk-hint,.dk-deck .dk-dots,.dk-deck .dk-top{transition:opacity .6s ease .15s}
+@media (prefers-reduced-motion:reduce){.dk-starzoom{display:none}}
+
+
+/* ═══ v36-10 · Glass slides follow Light / Dark fully · transparent audio player · Studio scrolls again ═══
+ * Scroll fix: the pane rules at the top used  :has(.dk-deck)  which also matched the STUDIO pane (it holds the small
+ * .dk-preview deck), so the Studio got overflow:hidden and its spacers removed = it could not scroll. They now only
+ * match a pane that holds the real full-screen deck (:has(.dk-deck:not(.dk-preview))).
+ * Light mode: the deck used to be hard-coded dark (white text, black wash). Now every deck colour reads from the
+ * tokens below, and light mode swaps them (cream background, dark text, white glass). */
+.dk-deck{color-scheme:dark}
+:root[data-mode=light] .dk-deck{
+  color-scheme:light;
+  --text:#1b1620;--muted:rgba(27,22,32,.74);--dim:rgba(27,22,32,.52);
+  --glass-bg:rgba(255,255,255,.5);--tile:rgba(255,255,255,.55);--tile-line:rgba(27,22,32,.1);
+  --glass-line:color-mix(in srgb,var(--a) 42%,rgba(255,255,255,.92));
+  --glow:color-mix(in srgb,var(--a) 28%,transparent)}
+
+/* background layers */
+:root[data-mode=light] .dk-bg{background:radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--a) 16%,#fffaf6),#f5eee8 70%)}
+:root[data-mode=light] .dk-dim{background:rgba(255,250,246,calc(var(--dk-dim,.4) + .12))}
+:root[data-mode=light] .dk-vig{background:radial-gradient(130% 100% at 50% 45%,transparent 55%,rgba(255,250,246,.55))}
+:root[data-mode=light] .dk-blob{mix-blend-mode:normal;opacity:.34}
+:root[data-mode=light] .dk-blob.b3{opacity:.2}
+:root[data-mode=light] .dk-bigshape svg{opacity:.14}
+:root[data-mode=light] .dk-bigshape .veins{stroke:var(--text);stroke-opacity:.18}
+
+/* buttons, dots, counter, hint */
+:root[data-mode=light] .dk-fab{color:var(--text);background:rgba(255,255,255,.6);border-color:var(--glass-line);box-shadow:0 0 12px var(--glow),inset 0 0 8px rgba(255,255,255,.7)}
+:root[data-mode=light] .dk-fab:focus-visible,:root[data-mode=light] .dk-socials .tile:focus-visible,:root[data-mode=light] .dk-pager button:focus-visible,:root[data-mode=light] .dk-ctl button:focus-visible,:root[data-mode=light] .dk-stat .like:focus-visible{outline-color:var(--a)}
+:root[data-mode=light] .dk-dots button i{background:color-mix(in srgb,var(--text) 32%,transparent)}
+:root[data-mode=light] .dk-dots button:hover i{background:var(--text)}
+:root[data-mode=light] .dk-dots::after{background:color-mix(in srgb,var(--text) 14%,transparent)}
+:root[data-mode=light] .dk-pdots button{background:color-mix(in srgb,var(--text) 30%,transparent)}
+:root[data-mode=light] .dk-count{color:var(--text)}
+:root[data-mode=light] .dk-hint{color:color-mix(in srgb,var(--text) 70%,transparent)}
+:root[data-mode=light] .dk-hint i{border-color:color-mix(in srgb,var(--text) 65%,transparent)}
+.dk-pager>button{color:var(--text)}
+
+/* headings + text */
+:root[data-mode=light] .dk-head h2{background-image:linear-gradient(90deg,var(--text) 30%,color-mix(in srgb,var(--a) 80%,var(--text)))}
+:root[data-mode=light] .dk-who h1{background-image:linear-gradient(90deg,var(--text) 0%,var(--text) 40%,color-mix(in srgb,var(--a) 85%,var(--text)) 50%,var(--text) 60%,var(--text) 100%);filter:none}
+:root[data-mode=light] .dk-bio,:root[data-mode=light] .dk-pinfo b,:root[data-mode=light] .dk-ainfo b,:root[data-mode=light] .dk-mus b,:root[data-mode=light] .dk-arow em,
+:root[data-mode=light] .dk-socials .tile,:root[data-mode=light] .dk-reacts .reactions button,:root[data-mode=light] .dk-acts .btn,:root[data-mode=light] .dk-extras .btn,
+:root[data-mode=light] .dk-extras .owner-bar,:root[data-mode=light] .dk-badges>span,:root[data-mode=light] .dk-ctl button,:root[data-mode=light] .dk-list .tile .ico{color:var(--text)}
+:root[data-mode=light] .dk-arow em{border-color:color-mix(in srgb,var(--text) 45%,transparent)}
+:root[data-mode=light] .dk-badges>span{background:color-mix(in srgb,var(--text) 8%,transparent)}
+:root[data-mode=light] .dk-acts .btn:hover{background:rgba(255,255,255,.85)}
+:root[data-mode=light] .dk-extras .btn,:root[data-mode=light] .dk-extras .owner-bar{background:rgba(255,255,255,.55);border-color:color-mix(in srgb,var(--text) 18%,transparent)}
+:root[data-mode=light] .dk-dot{border-color:#f7f1ec}
+:root[data-mode=light] .dk-av .avatar-inner{border-color:#fff;background:#e9e2dc;color:var(--text)}
+:root[data-mode=light] .dk-sart,:root[data-mode=light] .dk-ph{background:#e9e2dc}
+:root[data-mode=light] .dk-ani,:root[data-mode=light] .dk-mus{background:rgba(255,255,255,.66)}
+:root[data-mode=light] .dk-ani:focus-visible,:root[data-mode=light] .dk-mus:focus-visible{box-shadow:0 0 0 2px var(--a)}
+:root[data-mode=light] .dk-list .tile,:root[data-mode=light] .dk-list .tile-copy,:root[data-mode=light] .dk-list li{background:rgba(255,255,255,.58)!important;border:1px solid color-mix(in srgb,var(--text) 10%,transparent)!important}
+:root[data-mode=light] .dk-list .tile:hover{background:rgba(255,255,255,.85)!important}
+:root[data-mode=light] .dk-list .tile .ico{background:color-mix(in srgb,var(--text) 7%,transparent)}
+:root[data-mode=light] .dk-ctl .dk-pp{background:linear-gradient(135deg,var(--a),var(--a2));color:#fff}
+:root[data-mode=light] .dk-lfind{background:var(--text);color:#fff}
+:root[data-mode=light] .dk-eq i{background:var(--a)}
+
+/* glass cards */
+:root[data-mode=light] .dk-card{background:linear-gradient(160deg,rgba(255,255,255,.66),rgba(255,255,255,.36));
+  box-shadow:0 0 14px var(--glow),0 18px 40px -22px rgba(70,45,60,.35),inset 0 0 14px rgba(255,255,255,.55)}
+:root[data-mode=light] .dk-card::before{background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.7) 48%,transparent 60%);background-size:250% 100%;background-position:120% 0}
+:root[data-mode=light] [data-cstyle=outline] .dk-card{background:rgba(255,255,255,.12);box-shadow:none}
+:root[data-mode=light] [data-cstyle=solid] .dk-card{background:rgba(255,255,255,.94);border-color:color-mix(in srgb,var(--text) 10%,transparent);box-shadow:0 18px 40px -22px rgba(70,45,60,.4)}
+:root[data-mode=light] [data-cstyle=neon] .dk-card{background:rgba(255,255,255,.55);box-shadow:0 0 18px var(--a),inset 0 0 18px color-mix(in srgb,var(--a) 22%,transparent)}
+:root[data-mode=light] [data-cstyle=tinted] .dk-card{background:color-mix(in srgb,var(--a) 14%,rgba(255,255,255,.7));border-color:color-mix(in srgb,var(--a) 55%,#fff)}
+:root[data-mode=light] [data-glass=on] .dk-card{background:rgba(255,255,255,.4);border-color:rgba(255,255,255,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 18px 40px -24px rgba(70,45,60,.35)}
+
+/* ── audio player card: much more see-through, in both modes (the background shows through; only a hairline edge) ── */
+:root .dk-deck .dk-card.dk-big{
+  background:color-mix(in srgb,var(--text) 2.5%,transparent)!important;
+  border-color:color-mix(in srgb,var(--text) 14%,transparent);
+  box-shadow:none!important;
+  -webkit-backdrop-filter:blur(3px)!important;backdrop-filter:blur(3px)!important}
+:root .dk-deck .dk-card.dk-big::before{display:none}
+
+/* ── lyrics: readable on any background, in both modes ── */
+.dk-lyr-in p{color:color-mix(in srgb,var(--text) 40%,transparent);opacity:1}
+.dk-lyr-in p.nxt{color:color-mix(in srgb,var(--text) 64%,transparent)}
+.dk-lyr-in p.cur{color:var(--text)}
+.dk-lyr-in .dk-lmsg{color:color-mix(in srgb,var(--text) 76%,transparent)}
+.dk-lyr-in .dk-lplain{color:color-mix(in srgb,var(--text) 86%,transparent)}
+:root[data-mode=light] .dk-lyr-in p{color:color-mix(in srgb,var(--text) 58%,transparent);text-shadow:none}
+:root[data-mode=light] .dk-lyr-in p.nxt{color:color-mix(in srgb,var(--text) 78%,transparent)}
+:root[data-mode=light] .dk-lyr-in p.cur{color:color-mix(in srgb,var(--a) 28%,#120e16);text-shadow:none;font-weight:700}
+:root:not([data-mode=light]) .dk-lyr-in p{text-shadow:0 1px 8px rgba(0,0,0,.55)}
+:root[data-mode=light] .dk-bar{background:color-mix(in srgb,var(--text) 18%,transparent)}
+
+/* ───────── v36-11 · profile slide: one fixed main card + a "more" card, gear card, owner badges ───────── */
+.dk-s-profile .dk-in{gap:12px}
+.dk-main{padding:0 0 14px;overflow:hidden}                       /* fixed: never scrolls inside */
+.dk-main .dk-ban{height:96px}
+.dk-nm{display:flex;align-items:center;gap:6px;min-width:0}
+.dk-nm h1{min-width:0}
+.dk-vbs{display:inline-flex;align-items:center;gap:4px;flex:none}
+.dk-vb{display:inline-grid;place-items:center;width:20px;height:20px;flex:none}
+.dk-vb svg{width:100%;height:100%;display:block}
+.dk-vb-tick{color:#2f9bff;filter:drop-shadow(0 0 5px rgba(47,155,255,.55))}
+.dk-vb-crown{color:#f6b73c;width:19px;height:19px;filter:drop-shadow(0 0 6px rgba(246,183,60,.6))}
+.dk-main .dk-bio{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden;margin:12px 16px 0}
+.dk-cta{display:flex;gap:8px;margin:14px 14px 0}
+.dk-cbtn{all:unset;box-sizing:border-box;flex:1;min-width:0;height:42px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;
+  font:600 .82rem/1 Inter,system-ui,sans-serif;color:var(--text);background:var(--tile);border:1px solid var(--tile-line);
+  transition:transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease}
+.dk-cbtn i{font-size:15px}
+.dk-cbtn:hover{transform:translateY(-1px);background:rgba(255,255,255,.14)}
+.dk-cbtn:active{transform:scale(.97)}
+.dk-cbtn:focus-visible{outline:2px solid var(--a,#fff);outline-offset:2px}
+.dk-cbtn[disabled]{opacity:.6;cursor:default;pointer-events:none}
+.dk-cbtn-main{color:#fff;border-color:transparent;background:linear-gradient(135deg,var(--a),color-mix(in srgb,var(--a) 55%,#000));box-shadow:0 8px 22px -10px var(--glow,var(--a))}
+.dk-cbtn-main:hover{background:linear-gradient(135deg,var(--a),color-mix(in srgb,var(--a) 55%,#000));box-shadow:0 10px 26px -8px var(--glow,var(--a))}
+.dk-cbtn[data-dk-wa] i{color:#25d366}
+.dk-cbtn[data-dk-wa]:hover{border-color:#25d366}
+.dk-more{padding:12px 0 12px}
+.dk-more .dk-foot{margin:0 14px}
+.dk-more .dk-reacts{margin:10px 14px 0}
+.dk-own{margin:12px 14px 0;padding-top:10px;border-top:1px dashed var(--tile-line);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.dk-own[hidden]{display:none}
+.dk-own-l{font-size:.68rem;letter-spacing:.04em;color:var(--muted)}
+.dk-own-l i{color:#f6b73c;margin-right:4px}
+.dk-own-b{display:inline-flex;gap:6px}
+.dk-own-b button{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:999px;font-size:.68rem;font-weight:600;color:var(--text);background:var(--tile);border:1px solid var(--tile-line);transition:background .2s,border-color .2s}
+.dk-own-b button[aria-pressed=true][data-dk-bd=verified]{background:rgba(47,155,255,.2);border-color:#2f9bff}
+.dk-own-b button[aria-pressed=true][data-dk-bd=crown]{background:rgba(246,183,60,.22);border-color:#f6b73c}
+.dk-own-b button:focus-visible{outline:2px solid var(--a,#fff);outline-offset:2px}
+.dk-own-b button[disabled]{opacity:.5}
+/* gear card */
+.dk-gear{padding:12px}
+.dk-gearlist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.dk-gear-it{display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px;background:var(--tile);border:1px solid var(--tile-line);min-width:0}
+.dk-gear-ico{flex:none;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--a);background:color-mix(in srgb,var(--a) 14%,transparent);font-size:15px}
+.dk-gear-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.dk-gear-tx small{font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.dk-gear-tx b{font-size:.78rem;font-weight:600;line-height:1.25;color:var(--text);overflow-wrap:anywhere}
+.dk-slide.on .dk-gear-it{animation:dk-rise .6s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(.35s + var(--j,0) * 60ms)}
+@media (max-width:340px){.dk-gearlist{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.dk-slide.on .dk-gear-it{animation:none!important}.dk-cbtn{transition:none}}
+/* short phones: tighter so the profile slide rarely needs to scroll at all */
+@media (max-height:720px){.dk-main .dk-ban{height:78px}.dk-main .dk-bio{-webkit-line-clamp:2;line-clamp:2}.dk-cbtn{height:38px}}
+/* light mode */
+:root[data-mode=light] .dk-cbtn{color:var(--text)}
+:root[data-mode=light] .dk-cbtn:hover{background:rgba(255,255,255,.85)}
+:root[data-mode=light] .dk-cbtn-main{color:#fff}
+:root[data-mode=light] .dk-own-b button,:root[data-mode=light] .dk-gear-tx b{color:var(--text)}
+:root[data-mode=light] .dk-gear-it{background:rgba(255,255,255,.55);border-color:color-mix(in srgb,var(--text) 14%,transparent)}
+:root[data-mode=light] .dk-vb-tick{color:#1a7fe0}
+:root[data-mode=light] .dk-vb-crown{color:#d89412}
+
+/* Studio · gear editor rows */
+.dkg-rows{display:grid;gap:8px;margin-bottom:8px}
+.dkg-row{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:6px;align-items:center}
+@media (max-width:420px){.dkg-row{grid-template-columns:96px minmax(0,1fr) auto}}

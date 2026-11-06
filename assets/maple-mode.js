@@ -51,6 +51,8 @@
     if (m) m.setAttribute('content', COLORS[mode]);
     paintButtons(mode);
     paintFrames(mode);
+    /* v36-11: listeners (the Glass deck's particle canvas) repaint in the SAME pass, before the new look is captured */
+    try { window.dispatchEvent(new CustomEvent('maple:modepaint', { detail: mode })); } catch (e) {}
   }
   function paintFrames(mode) {
     var fs = document.getElementsByTagName('iframe');
@@ -88,7 +90,7 @@
       try {
         root.animate(
           { clipPath: ['circle(0px at ' + x + 'px ' + y + 'px)', 'circle(' + r + 'px at ' + x + 'px ' + y + 'px)'] },
-          { duration: 620, easing: 'cubic-bezier(.22,.8,.24,1)', pseudoElement: '::view-transition-new(root)' }
+          { duration: 420, easing: 'cubic-bezier(.3,.7,.3,1)', fill: 'forwards', pseudoElement: '::view-transition-new(root)' }
         );
       } catch (e) { /* no pseudoElement animation: the browser's default cross-fade runs */ }
     }, function () {});

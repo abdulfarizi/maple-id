@@ -18,7 +18,8 @@
   function isVideoUrl(u) { return /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u || ''); }
   function dirty() { if (form) form.dispatchEvent(new Event('input', { bubbles: true })); }
   function snapshot() {
-    return { deckBg: st.mode === 'custom' && !st.url ? 'theme' : st.mode, deckBgUrl: st.url, deckBgKind: st.kind, deckDim: st.dim, deckBlur: st.blur };
+    return { deckBg: st.mode === 'custom' && !st.url ? 'theme' : st.mode, deckBgUrl: st.url, deckBgKind: st.kind, deckDim: st.dim, deckBlur: st.blur,
+      gear: (st.gear || []).map(function (g) { return { k: g.k, n: String(g.n || '').trim() }; }).filter(function (g) { return g.n; }) };
   }
 
   function thumb() {
@@ -116,6 +117,26 @@
       if (e.key === 'Enter' && e.target.matches && e.target.matches('[data-dkbg-url]')) { e.preventDefault(); useLink(); }
     });
   }
+
+  /* ---- gear list (v36-11) ---- */
+  var KINDS = [['phone', 'Phone'], ['tablet', 'Tablet'], ['laptop', 'Laptop'], ['pc', 'Desktop'], ['vr', 'VR headset'], ['gpu', 'GPU'], ['other', 'Other']];
+  function paintGear() {
+    var box = form && form.querySelector('[data-dkgear]'); if (!box) return;
+    box.innerHTML = '<div class="dkg-rows">' + st.gear.map(function (g, i) {
+      return '<div class="dkg-row"><select data-dkg-k="' + i + '" aria-label="Device type">' + KINDS.map(function (k) { return '<option value="' + k[0] + '"' + (g.k === k[0] ? ' selected' : '') + '>' + k[1] + '</option>'; }).join('') + '</select>'
+        + '<input type="text" maxlength="60" placeholder="e.g. iPhone 15 Pro" data-dkg-n="' + i + '" value="' + esc(g.n) + '" aria-label="Device name">'
+        + '<button type="button" class="btn btn-sm" data-dkg-del="' + i + '" aria-label="Remove"><i class="fa-solid fa-xmark"></i></button></div>';
+    }).join('') + '</div>'
+      + '<button type="button" class="btn btn-sm" data-dkg-add' + (st.gear.length >= 12 ? ' disabled' : '') + '><i class="fa-solid fa-plus"></i> Add device</button>';
+  }
+  function bindGear() {
+    form.addEventListener('input', function (e) { var t = e.target; if (t.matches && t.matches('[data-dkg-n]')) st.gear[Number(t.dataset.dkgN)].n = t.value; });
+    form.addEventListener('change', function (e) { var t = e.target; if (t.matches && t.matches('[data-dkg-k]')) { st.gear[Number(t.dataset.dkgK)].k = t.value; dirty(); } });
+    form.addEventListener('click', function (e) {
+      if (e.target.closest('[data-dkg-add]')) { e.preventDefault(); if (st.gear.length < 12) { var used = st.gear.map(function (g) { return g.k; }); var next = KINDS.filter(function (k) { return used.indexOf(k[0]) < 0; })[0]; st.gear.push({ k: next ? next[0] : 'other', n: '' }); paintGear(); dirty(); var ins = form.querySelectorAll('[data-dkg-n]'); ins.length && ins[ins.length - 1].focus(); } return; }
+      var d = e.target.closest('[data-dkg-del]'); if (d) { e.preventDefault(); st.gear.splice(Number(d.dataset.dkgDel), 1); paintGear(); dirty(); }
+    });
+  }
   function syncVis() {
     var l = form && form.querySelector('input[name="layout"]:checked');
     var on = !!l && l.value === 'deck';
@@ -130,10 +151,11 @@
       mode: ['theme', 'banner', 'custom'].indexOf(cur.deckBg) > -1 ? cur.deckBg : 'theme',
       url: cur.deckBgUrl || '', kind: cur.deckBgKind === 'video' ? 'video' : 'image',
       dim: isFinite(dim) && cur.deckDim !== undefined && cur.deckDim !== '' ? dim : 40,
-      blur: isFinite(blur) && cur.deckBlur !== undefined && cur.deckBlur !== '' ? blur : 0
+      blur: isFinite(blur) && cur.deckBlur !== undefined && cur.deckBlur !== '' ? blur : 0,
+      gear: Array.isArray(cur.gear) ? cur.gear.map(function (g) { return { k: g && g.k, n: g && g.n || '' }; }).slice(0, 12) : []
     };
     window.__dkBg = snapshot;
-    paint(); bind(); syncVis();
+    paint(); paintGear(); bind(); bindGear(); syncVis();
   }
   function check() {
     var f = document.getElementById('editor');

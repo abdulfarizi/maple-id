@@ -12,12 +12,38 @@
   if (window.dgDeck) return;
   var REDUCE = matchMedia('(prefers-reduced-motion: reduce)');
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var NAMES = { profile: 'Profile', anime: 'Anime', player: 'Audio Player', music: 'Music', games: 'Games', socials: 'Socials', shop: 'Shop' };
+  var NAMES = { profile: 'Profile', gear: 'Gear', anime: 'Anime', player: 'Audio Player', music: 'Music', games: 'Games', socials: 'Socials', shop: 'Shop' };
   function artOk(u) { return !!u && (window.MX ? MX.artOk(u) : /^https:\/\//.test(u)); }
   function fmt(ms) { ms = Math.max(0, ms | 0); var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
   function first(s) { return esc((String(s || '?').trim()[0] || '?').toUpperCase()); }
   function take(n) { if (n && n.parentNode) n.parentNode.removeChild(n); return n || null; }
   function chunk(a, n) { var o = []; for (var i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; }
+
+  /* v36-11 · badges, gear, contact buttons */
+  var ICO_TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1.8l2.5 1.9 3.1-.2 1 3 2.6 1.8-.9 3 .9 3-2.6 1.8-1 3-3.1-.2-2.5 1.9-2.5-1.9-3.1.2-1-3-2.6-1.8.9-3-.9-3 2.6-1.8 1-3 3.1.2z"/><path fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M8 12.3l2.7 2.7 5.3-5.6"/></svg>';
+  var ICO_CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 8l4.5 3.6L12 4l4.5 7.6L21 8l-1.8 10.2a1 1 0 0 1-1 .8H5.8a1 1 0 0 1-1-.8z"/><rect x="5.2" y="20" width="13.6" height="1.8" rx=".9" fill="currentColor"/></svg>';
+  function badgeHTML(b) {
+    b = b || {}; var h = '';
+    if (b.verified) h += '<span class="dk-vb dk-vb-tick" title="Verified" role="img" aria-label="Verified">' + ICO_TICK + '</span>';
+    if (b.crown) h += '<span class="dk-vb dk-vb-crown" title="Special honor" role="img" aria-label="Special honor">' + ICO_CROWN + '</span>';
+    return h;
+  }
+  var GEAR = { phone: ['Phone', 'fa-mobile-screen'], tablet: ['Tablet', 'fa-tablet-screen-button'], laptop: ['Laptop', 'fa-laptop'], pc: ['Desktop', 'fa-desktop'], vr: ['VR headset', 'fa-vr-cardboard'], gpu: ['GPU', 'fa-microchip'], other: ['Other', 'fa-gear'] };
+  function gearList(p) {
+    return (Array.isArray(p.gear) ? p.gear : []).filter(function (g) { return g && typeof g.n === 'string' && g.n.trim(); }).slice(0, 12);
+  }
+  function gearHTML(list) {
+    return '<ul class="dk-gearlist">' + list.map(function (g, j) {
+      var t = GEAR[g.k] || GEAR.other;
+      return '<li class="dk-gear-it" style="--j:' + j + '"><span class="dk-gear-ico"><i class="fa-solid ' + t[1] + '" aria-hidden="true"></i></span><span class="dk-gear-tx"><small>' + esc(t[0]) + '</small><b>' + esc(g.n.trim()) + '</b></span></li>';
+    }).join('') + '</ul>';
+  }
+  function waLink(p) {
+    var d = String(p.contactPhone || p.shopWhatsApp || '').replace(/[^0-9]/g, '');
+    if (d.length < 7 || d.length > 15) return '';
+    return 'https://wa.me/' + d + '?text=' + encodeURIComponent('Hi ' + (p.name || '') + '!');
+  }
+  function isSignedIn() { return !!document.querySelector('#nav-actions a[href="/studio"]'); }
 
   function mainSong(p) {
     if (p.music === false) return null;
@@ -55,7 +81,7 @@
     var art = x.art && artOk(x.art) ? '<img src="' + esc(x.art) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '';
     var sub = x.artist || (x.audio ? 'Uploaded' : /youtube\.com/.test(x.url || '') ? 'YouTube' : /\/album\//.test(x.url) ? 'Album' : /\/playlist\//.test(x.url) ? 'Playlist' : 'Spotify');
     return '<button type="button" class="dk-mus" data-dk-play="' + i + '" aria-label="Play ' + esc(x.title || 'song') + '">'
-      + '<span class="dk-cover"><span class="dk-ph">' + first(x.title) + '</span>' + art + '<span class="dk-hover"><i class="fa-solid fa-play"></i></span></span>'
+      + '<span class="dk-cover"' + (art || !x.url || x.audio ? '' : ' data-fill-url="' + esc(x.url) + '"') + '><span class="dk-ph">' + first(x.title) + '</span>' + art + '<span class="dk-hover"><i class="fa-solid fa-play"></i></span></span>'
       + '<b>' + esc(x.title || 'Untitled') + '</b><small>' + esc(sub) + '</small></button>';
   }
   /* compact player: cover · title/artist · ⏮ ⏯ ⏭ · time ─●─ time */
@@ -83,7 +109,7 @@
     var cfg, paths = {}, parts = [], W = 1, H = 1, dpr = 1, raf = 0, flip = 0, boost = 0, alive = true, palette = [], theme = '', tries = 0, ro = null, mo = null;
     function readPalette() {
       var cs = getComputedStyle(deck), a = cs.getPropertyValue('--accent').trim() || '#e87fa0', b = cs.getPropertyValue('--accent-2').trim() || a, c = cs.getPropertyValue('--maple-red').trim() || a;
-      palette = [a, b, c, a, '#ffffff'];
+      palette = [a, b, c, a, document.documentElement.getAttribute('data-mode') === 'light' ? '#6b5b73' : '#ffffff'];
     }
     function spawn(q, init) {
       var s = cfg.s; q.z = Math.random(); q.s = s[0] + q.z * (s[1] - s[0]); q.x = Math.random() * W;
@@ -92,7 +118,7 @@
       else { q.y = Math.random() * H; q.vy = 0; }
       q.vx = (Math.random() - 0.3) * 0.35; if (cfg.mode === 'wander') { q.vx = (Math.random() - 0.5) * 0.5; q.vy = (Math.random() - 0.5) * 0.5; }
       q.r = cfg.spin ? Math.random() * 6.28 : 0; q.vr = (Math.random() - 0.5) * 0.02; q.f = Math.random() * 6.28; q.vf = 0.015 + Math.random() * 0.02;
-      q.a = cfg.alpha * (0.4 + Math.random() * 0.6); q.c = palette[(Math.random() * (palette.length - (Math.random() < .2 ? 0 : 1))) | 0];
+      q.a = cfg.alpha * (0.4 + Math.random() * 0.6); q.ci = (Math.random() * (palette.length - (Math.random() < .2 ? 0 : 1))) | 0; q.c = palette[q.ci];
       return q;
     }
     function draw(q) {
@@ -160,8 +186,54 @@
       else if (cfg) { readPalette(); parts.forEach(function (q) { q.c = palette[(Math.random() * palette.length) | 0]; }); if (still) paint(); }
     });
     if (mo) mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'style'] });
+    /* light / dark switch: recolour the floating shapes (the white ones would vanish on the light background) */
+    var onMode = function () {
+      if (!alive) return; if (!document.body.contains(cv) && !preview) return;
+      if (cfg) { readPalette(); parts.forEach(function (q) { q.c = palette[(q.ci == null ? 0 : q.ci) % palette.length]; }); paint(); }
+    };
+    window.addEventListener('maple:mode', onMode);
+    /* v36-11 · flicker fix: recolour INSIDE the light/dark swap (before the new look is captured), keeping each shape's colour slot,
+       so the canvas is already final when the reveal starts instead of popping to new random colours after it ends */
+    var onPaint = function () {
+      if (!alive || !cfg || (!document.body.contains(cv) && !preview)) return;
+      readPalette(); parts.forEach(function (q) { q.c = palette[(q.ci == null ? 0 : q.ci) % palette.length]; }); paint();
+    };
+    window.addEventListener('maple:modepaint', onPaint);
+    var _stop = api.stop; api.stop = function () { window.removeEventListener('maple:mode', onMode); window.removeEventListener('maple:modepaint', onPaint); _stop(); };
     requestAnimationFrame(build);
     return api;
+  }
+
+  /* ── v36-9 · opening: the hollow-star zoom (same look as the card intro), plays by itself, nothing to press ── */
+  function starZoom(host, accent, done) {
+    var W = host.clientWidth || window.innerWidth, H = host.clientHeight || window.innerHeight, cx = W / 2, cy = H / 2;
+    var bg = (getComputedStyle(document.documentElement).getPropertyValue('--bg') || '').trim() || '#0f0d0e';
+    var NS = 'http://www.w3.org/2000/svg', ov = document.createElement('div');
+    ov.className = 'dk-starzoom'; ov.setAttribute('aria-hidden', 'true');
+    ov.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" style="display:block">'
+      + '<defs><mask id="dk-sz-mask"><rect width="' + W + '" height="' + H + '" fill="#fff"/><path id="dk-sz-hole" fill="#000"/></mask></defs>'
+      + '<rect width="' + W + '" height="' + H + '" fill="' + bg + '" mask="url(#dk-sz-mask)"/><path id="dk-sz-ring" fill="none" stroke-linejoin="round"/></svg>';
+    host.appendChild(ov);
+    var hole = ov.querySelector('#dk-sz-hole'), ring = ov.querySelector('#dk-sz-ring');
+    ring.style.stroke = accent; ring.style.filter = 'drop-shadow(0 0 10px ' + accent + ')';
+    var base = Math.max(46, Math.min(74, Math.min(W, H) * 0.15)), Rmax = Math.hypot(W, H) / 2 / 0.3 * 1.12;
+    var APPEAR = 450, HOLD = 250, ZOOM = 1050, t0 = performance.now(), fin = false;
+    function star(R, rot) { var d = ''; for (var i = 0; i < 10; i++) { var r = i % 2 ? R * 0.382 : R, a = -Math.PI / 2 + rot + i * Math.PI / 5; d += (i ? 'L' : 'M') + (cx + r * Math.cos(a)).toFixed(1) + ' ' + (cy + r * Math.sin(a)).toFixed(1); } return d + 'Z'; }
+    var backOut = function (u) { var c = 1.70158; return 1 + (c + 1) * Math.pow(u - 1, 3) + c * Math.pow(u - 1, 2); };
+    var inOut = function (u) { return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+    function end() { if (fin) return; fin = true; ov.remove(); if (done) done(); }
+    (function frame(now) {
+      if (fin) return;
+      if (!document.body.contains(ov)) { fin = true; if (done) done(); return; }
+      var t = now - t0, R, rot = 0, ringA = 1, zt = APPEAR + HOLD;
+      if (t < APPEAR) { var u0 = t / APPEAR; R = base * backOut(u0); ringA = Math.min(1, u0 * 1.6); }
+      else if (t < zt) R = base * (1 + 0.045 * Math.sin((t - APPEAR) / 170));
+      else { var u = Math.min(1, (t - zt) / ZOOM), e = inOut(u); R = base * Math.pow(Rmax / base, e); rot = e * Math.PI * 0.8; ringA = 1 - Math.max(0, (u - 0.5) / 0.5); if (u >= 1) return end(); }
+      var d = star(R, rot); hole.setAttribute('d', d); ring.setAttribute('d', d);
+      ring.setAttribute('stroke-width', (2 + R * 0.012).toFixed(2)); ring.style.opacity = ringA;
+      requestAnimationFrame(frame);
+    })(t0);
+    return end;
   }
 
   window.dgDeck = function (root, p, opt) {
@@ -180,6 +252,8 @@
     var tag = card && card.querySelector('.chip-tag');
     var online = !!(card && card.querySelector('.status.on'));
     var actions = take(page.querySelector('.actions'));
+    var isOwn = !!(page.querySelector('.owner-bar') || (actions && actions.querySelector('a[href="/studio"]')));
+    if (actions) { var stl = actions.querySelector('a[href="/studio"]'); if (stl) stl.remove(); }   // Studio lives in the header / menu
     var reactions = take(page.querySelector('.reactions'));
     var lists = { games: null, socials: null };
     page.querySelectorAll('section.list:not(.shop)').forEach(function (sec) {
@@ -190,28 +264,38 @@
     var shop = page.querySelector('section.list.shop');
     var shopUl = shop && shop.querySelector('ul'), shopNote = shop && shop.querySelector('.shop-note');
     var donate = page.querySelector('.widget-section .donate-btn');
-    var extras = Array.prototype.slice.call(page.querySelectorAll(':scope > .owner-bar, :scope > .signed-as, :scope > a.btn'));
+    var extras = [];   // v36-11: "edit in Studio", "view public card" and "signed in as / log out" are gone from the slide (header + menu already have them)
 
     var song = mainSong(p), bio = (p.bio || '').trim();
     var place = [p.city, p.country].filter(Boolean).join(', ');
 
-    /* ── 1 · profile: the glass card + the mini player under it ── */
+    /* ── 1 · profile: ONE fixed main card (who + two buttons), a second card for everything else, then the mini player ── */
+    var wa = waLink(p), gear = gearList(p);
     var prof = '<div class="dk-card dk-main dk-item" style="--i:0">'
       + '<div class="dk-ban" data-dk-slot="banner"><span class="dk-tag" data-dk-slot="tag"></span></div>'
       + '<div class="dk-id"><div class="dk-av"><div data-dk-slot="avatar"></div><i class="dk-dot ' + (online ? 'on' : 'off') + '" title="' + (online ? 'Online' : 'Offline') + '"></i></div>'
-      + '<div class="dk-who"><h1>' + esc(p.name || 'Creator') + '</h1>'
+      + '<div class="dk-who"><div class="dk-nm"><h1>' + esc(p.name || 'Creator') + '</h1><span class="dk-vbs" data-dk-vbs>' + badgeHTML(p.badges) + '</span></div>'
       + '<div class="dk-badges"><span><i class="dk-ldot ' + (online ? 'on' : 'off') + '"></i>' + (online ? 'Online' : 'Offline') + '</span><span data-dk-slot="clockw"><i class="fa-regular fa-clock"></i><span data-dk-slot="clock"></span></span></div>'
       + (p.role && p.role.trim() ? '<p class="dk-role">' + esc(p.role.trim()) + '</p>' : '') + '</div></div>'
       + (bio ? '<p class="dk-bio" data-dk-bio aria-label="' + esc(bio) + '"><span aria-hidden="true">' + esc(bio) + '</span></p>' : '')
-      + '<div data-dk-slot="socials" class="dk-socials"></div>'
-      + '<div data-dk-slot="reactions" class="dk-reacts"></div>'
+      + '<div class="dk-cta">'
+      + '<button type="button" class="dk-cbtn dk-cbtn-main" data-dk-dm' + (preview ? ' disabled' : '') + '><i class="fa-regular fa-message" aria-hidden="true"></i><span>Message me</span></button>'
+      + (wa ? '<a class="dk-cbtn" data-dk-wa href="' + esc(wa) + '" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><span>WhatsApp</span></a>' : '')
+      + '</div></div>'
+      + '<div class="dk-card dk-more dk-item" style="--i:1">'
       + '<div class="dk-foot"><span class="dk-stat" data-dk-slot="visits"><i class="fa-solid fa-eye"></i></span>'
       + (place ? '<span class="dk-stat"><i class="fa-solid fa-location-dot"></i>' + esc(place) + '</span>' : '')
       + '<span class="dk-right"><span data-dk-slot="actions" class="dk-acts"></span><span class="dk-stat" data-dk-slot="like"></span></span></div>'
+      + '<div data-dk-slot="reactions" class="dk-reacts"></div>'
+      + '<div class="dk-own" data-dk-own hidden><span class="dk-own-l"><i class="fa-solid fa-crown" aria-hidden="true"></i> Owner · badges</span>'
+      + '<span class="dk-own-b"><button type="button" data-dk-bd="verified" aria-pressed="false"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Verified</button>'
+      + '<button type="button" data-dk-bd="crown" aria-pressed="false"><i class="fa-solid fa-crown" aria-hidden="true"></i> Crown</button></span></div>'
       + '</div>'
-      + (song ? '<div class="dk-card dk-mini dk-item" style="--i:1" data-dk-player>' + playerRow(song, preview, false) + '</div>' : '')
-      + '<div data-dk-slot="extras" class="dk-extras dk-item" style="--i:2"></div>';
+      + (song ? '<div class="dk-card dk-mini dk-item" style="--i:2" data-dk-player>' + playerRow(song, preview, false) + '</div>' : '');
     var html = slide('profile', prof);
+
+    /* ── 1b · gear: its own card ── */
+    if (gear.length) html += slide('gear', '<div class="dk-card dk-gear dk-item" style="--i:1">' + gearHTML(gear) + '</div>', { title: 'Gear', sub: 'what I use every day' });
 
     /* ── 2 · anime: two posters a page ── */
     var anime = window.MX && MX.animeOn(p) ? p.anime : [];
@@ -231,8 +315,7 @@
     if (shopUl || donate) html += slide('shop', '<div class="dk-card dk-list dk-item" style="--i:1"><div data-dk-slot="shopnote"></div><div data-dk-slot="shop"></div><div data-dk-slot="donate"></div></div>', { title: (shopUl && p.shopTitle) || (shopUl ? 'Shop' : 'Support'), sub: '' });
 
     var key = 'dk:in:' + (p.slug || '');
-    var entered = preview || REDUCE.matches;
-    try { if (sessionStorage.getItem(key)) entered = true; } catch (e) {}
+    var entered = true;                 // v36-9: no "click to enter" gate; the star zoom plays by itself instead
 
     var deck = document.createElement('div');
     deck.className = 'dk-deck' + (preview ? ' dk-preview' : '') + (entered ? ' dk-on' : '');
@@ -249,9 +332,7 @@
       + '<div class="dk-top">' + (song ? '<button type="button" class="dk-fab" data-dk-song="toggle" aria-label="Play music"' + (preview ? ' disabled' : '') + '><i class="fa-solid fa-volume-xmark"></i></button>' : '') + '</div>'
       + '<div class="dk-stage">' + html + '</div>'
       + '<nav class="dk-dots" aria-label="Profile sections"></nav>'
-      + '<div class="dk-count" aria-hidden="true"><b data-dk-num>01</b><span data-dk-total></span><em data-dk-name></em></div>'
-      + '<div class="dk-hint" aria-hidden="true"><i></i><span>scroll</span></div>'
-      + (entered ? '' : '<button type="button" class="dk-splash" data-dk-enter><span>click to enter</span></button>');
+      + '<div class="dk-hint" aria-hidden="true"><i></i><span>scroll</span></div>';
 
     function slot(k, node, wrap) { var s = deck.querySelector('[data-dk-slot="' + k + '"]'); if (!s) return; if (!node) { if (wrap) s.remove(); return; } s.appendChild(take(node)); }
     var par = deck.querySelector('.dk-par');
@@ -282,34 +363,16 @@
     if (visits) { var vn = visits.querySelector('[data-visits]'); vs.appendChild(take(vn)); vs.title = 'Visits'; take(visits); } else vs.remove();
     slot('like', like, true);
     slot('actions', actions, true); slot('reactions', reactions, true);
-    // The full socials list gets its own slide (moved, so the app's copy/open handlers keep working).
-    // The profile card keeps a row of round icons: a copy of that list whose taps are forwarded to the real tiles.
-    if (lists.socials) {
-      var iconRow = lists.socials.cloneNode(true); iconRow.removeAttribute('id');
-      var realTiles = lists.socials.querySelectorAll('.tile');
-      iconRow.querySelectorAll('.tile').forEach(function (t, i) {
-        var b = t.querySelector('.txt b'), s = t.querySelector('.txt small');
-        var label = [(b && b.textContent) || '', (s && s.textContent) || ''].filter(Boolean).join(' · ');
-        if (label) { t.title = label; t.setAttribute('aria-label', label); }
-        t.removeAttribute('id');
-        t.addEventListener('click', function (e) {
-          var real = realTiles[i]; if (!real) return;
-          e.preventDefault(); e.stopPropagation(); real.click();
-        });
-      });
-      iconRow.querySelectorAll('.tile-copy').forEach(function (c) { c.remove(); });
-      deck.querySelector('[data-dk-slot="socials"]').appendChild(iconRow);
-    } else slot('socials', null, true);
+    // The full socials list has its own slide (moved, so the app's copy/open handlers keep working).
     slot('sociallist', lists.socials);
     slot('games', lists.games);
     slot('shop', shopUl, true); slot('shopnote', shopNote, true); slot('donate', donate, true);
-    var ex = deck.querySelector('[data-dk-slot="extras"]'); extras.forEach(function (x) { ex.appendChild(take(x)); }); if (!extras.length) ex.remove();
+    page.querySelectorAll(':scope > .owner-bar, :scope > .signed-as, :scope > a.btn').forEach(function (x) { x.remove(); });
 
     deck.querySelectorAll('.dk-list li, .dk-list .tile-row, .dk-pg').forEach(function (pg) {
       if (pg.classList.contains('dk-pg')) Array.prototype.forEach.call(pg.children, function (c, j) { c.style.setProperty('--j', j); });
       else pg.style.setProperty('--j', Array.prototype.indexOf.call(pg.parentNode.children, pg));
     });
-    deck.querySelectorAll('.dk-socials li, .dk-socials .tile').forEach(function (c, j) { c.style.setProperty('--j', j); });
 
     page.replaceChildren(deck);
     page.classList.add('dk-page');
@@ -341,9 +404,6 @@
       deck.style.setProperty('--dk-k', String(i)); deck.style.setProperty('--dk-n', String(slides.length)); deck.style.setProperty('--dk-sp', '0');
       deck.classList.toggle('dk-last', i === slides.length - 1);
       deck.classList.toggle('dk-first', i === 0);
-      var nb = deck.querySelector('[data-dk-num]'), nn = deck.querySelector('[data-dk-name]'), nt = deck.querySelector('[data-dk-total]');
-      if (nb) { nb.textContent = String(i + 1).padStart(2, '0'); nt.textContent = '/ ' + String(slides.length).padStart(2, '0'); nn.textContent = NAMES[slides[i].dataset.dk] || '';
-        var cnt = nb.parentNode; cnt.classList.remove('dk-tick'); void cnt.offsetWidth; cnt.classList.add('dk-tick'); }
       if (dir && fx) fx.kick(dir);
       dots.querySelectorAll && dots.querySelectorAll('[data-dk-go]').forEach(function (b, k) { b.setAttribute('aria-current', String(k === i)); });
       var wantLyr = slides[i].dataset.dk === 'player';
@@ -351,6 +411,7 @@
       if (wantLyr) { lyrVer = -2; paintSong(); }
     }
     go(0, true);
+    if (window.MX && MX.fill) MX.fill(deck);
 
     slides.forEach(function (s) {
       s.addEventListener('scroll', function () { if (s !== slides[cur]) return; var m = s.scrollHeight - s.clientHeight; deck.style.setProperty('--dk-sp', m > 4 ? (s.scrollTop / m).toFixed(3) : '0'); }, { passive: true });
@@ -439,11 +500,45 @@
       if (song && p.musicAuto !== false) { var st = state(); if (!(mine(st) && st.playing)) songCtl('toggle'); }
     }
     if (entered && !preview && !REDUCE.matches) typeBio();
-    if (!entered) {
-      var sp0 = deck.querySelector('.dk-splash');
-      var onEnterKey = function (e) { if (!document.body.contains(deck)) { document.removeEventListener('keydown', onEnterKey); return; } if (e.key === 'Enter' || e.key === ' ') { if (document.activeElement === sp0 || document.activeElement === document.body) { e.preventDefault(); enter(); } document.removeEventListener('keydown', onEnterKey); } };
-      document.addEventListener('keydown', onEnterKey);
+    if (!preview && !REDUCE.matches) {                                    // opening animation: the star zooms in, then the slides appear (nothing to tap)
+      var acc = (getComputedStyle(document.documentElement).getPropertyValue('--accent') || '').trim() || '#ff6a3d';
+      deck.classList.add('dk-opening');
+      var starEnd = starZoom(deck, acc, function () { deck.classList.remove('dk-opening'); });
+      setTimeout(starEnd, 4000);                                          // never get stuck
     }
+
+
+    /* ── v36-11 · "Message me" (private message on the site) ── */
+    function messageMe() {
+      if (!isSignedIn()) { var t = document.querySelector('#nav-actions [data-auth="login"]'); if (t) t.click(); else if (window.dgNavigate) window.dgNavigate('/#auth'); return; }
+      if (!window.dgForum || !dgForum.open) return;
+      if (isOwn) dgForum.open('inbox'); else dgForum.open('thread', String(p.slug || '').toLowerCase());
+    }
+
+    /* ── v36-11 · owner-only badges: the control only appears for the site owner (the server checks it again) ── */
+    var vbs = deck.querySelector('[data-dk-vbs]'), own = deck.querySelector('[data-dk-own]');
+    function paintBadges() {
+      var b = p.badges || {};
+      if (vbs) vbs.innerHTML = badgeHTML(b);
+      if (own) own.querySelectorAll('[data-dk-bd]').forEach(function (x) { x.setAttribute('aria-pressed', String(!!b[x.dataset.dkBd])); });
+    }
+    function ownerCheck() {
+      if (!own || preview || !document.body.contains(deck)) return;
+      var f = window.dgForum && dgForum.badges && dgForum.badges();
+      own.hidden = !(f && f.mod && p.slug); paintBadges();
+    }
+    function toggleBadge(btn) {
+      var k = btn.dataset.dkBd, cur = p.badges || {}, next = { verified: !!cur.verified, crown: !!cur.crown }; next[k] = !next[k];
+      btn.disabled = true;
+      fetch('/api/badges/' + encodeURIComponent(p.slug), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (r) {
+          btn.disabled = false;
+          if (!r.ok) { var lb = own.querySelector('.dk-own-l'), keep = lb.innerHTML; lb.textContent = r.d.error || 'Could not save the badge.'; setTimeout(function () { lb.innerHTML = keep; }, 3500); return; }
+          p.badges = { verified: !!r.d.verified, crown: !!r.d.crown }; paintBadges();
+        }, function () { btn.disabled = false; });
+    }
+    if (!preview) { window.addEventListener('maple:forum', ownerCheck); setTimeout(ownerCheck, 300); setTimeout(ownerCheck, 1500); }
 
     /* ── clicks ── */
     deck.addEventListener('click', function (e) {
@@ -452,6 +547,9 @@
       var pg = e.target.closest('[data-dk-pg]'), pt = e.target.closest('[data-dk-pgto]');
       if (pg || pt) { var car = (pg || pt).closest('[data-dk-car]'); if (car && car.__go) car.__go(pt ? Number(pt.dataset.dkPgto) : car.__idx() + Number(pg.dataset.dkPg)); return; }
       if (preview) return;
+      if (e.target.closest('[data-dk-dm]')) { messageMe(); return; }
+      var bdb = e.target.closest('[data-dk-bd]'); if (bdb) { toggleBadge(bdb); return; }
+      if (e.target.closest('[data-dk-lsearch]')) { if (window.MaplePlayer && MaplePlayer.searchLyrics) MaplePlayer.searchLyrics(); return; }
       var pl = e.target.closest('[data-dk-play]');
       if (pl) { var item = (p.musicLikes || [])[Number(pl.dataset.dkPlay)]; if (item && window.MX) MX.play(item, p); return; }
       var sc = e.target.closest('[data-dk-song]');
@@ -478,7 +576,10 @@
         lyrVer = v; lyrCur = -1;
         if (L && L.ok && L.lines) box.innerHTML = L.lines.map(function (l) { return '<p>' + (esc(l.x) || '♪') + '</p>'; }).join('');
         else if (L && L.ok && L.plain) box.innerHTML = '<p class="dk-lplain">' + esc(L.plain) + '</p>';
-        else box.innerHTML = '<p class="dk-lmsg">' + esc((L && L.ok && L.msg) || song.note || (p.lyrics !== false ? (on ? '♪' : 'Press play to see the lyrics') : '♪')) + '</p>';
+        else {
+          var msg = p.lyrics === false ? (song.note || '♪') : ((L && L.ok && L.msg) || (on ? 'Finding lyrics…' : 'Press play to see the lyrics'));
+          box.innerHTML = '<p class="dk-lmsg">' + esc(msg) + '</p>' + (p.lyrics !== false && on && L && L.ok ? '<p class="dk-lmsg"><button type="button" class="dk-lfind" data-dk-lsearch><i class="fa-solid fa-magnifying-glass"></i> Search lyrics manually</button></p>' : '');
+        }
         box.style.transform = '';
       }
       if (L && L.ok && L.lines) {
