@@ -1,4 +1,4 @@
-/* Maple ID · QR centre symbols shared by the card QR and the Pay QR. */
+/* M-ID · QR centre symbols shared by the card QR and the Pay QR. */
 (function () {
   'use strict';
   var EMOJI = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';

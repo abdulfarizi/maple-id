@@ -1,4 +1,4 @@
-/* Maple ID · site header + slide-out menu.
+/* M-ID · site header + slide-out menu.
  *
  * The header stays clean: [☰ menu] [brand]  ……  [private messages] [Studio] [light/dark].
  * Every other link lives in the slide-out menu that opens from the hamburger.
@@ -109,7 +109,7 @@
     if (drawer) return;
     scrim = h('div', { id: 'sh-scrim', class: 'sh-scrim', 'aria-hidden': 'true' });
     drawer = h('aside', { id: 'sh-drawer', class: 'sh-drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Menu', 'aria-hidden': 'true' },
-      '<div class="sh-head"><a href="/" data-link class="brand sh-brand"><svg class="leaf-ico" aria-hidden="true"><use href="#leaf"/></svg> Maple<b>ID</b></a>'
+      '<div class="sh-head"><a href="/" data-link class="brand sh-brand"><svg class="leaf-ico" aria-hidden="true"><use href="#leaf"/></svg> M<b>-</b>ID</a>'
       + '<button type="button" class="sh-x" aria-label="Close menu">' + ICON_X + '</button></div>'
       + '<nav class="sh-nav" aria-label="Main"></nav><div class="sh-foot"></div>');
     drawer.inert = true;

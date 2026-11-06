@@ -1,4 +1,4 @@
-/* Maple ID · QR checkout
+/* M-ID · QR checkout
  * Sellers upload the DuitNow QR from their own banking app. We read it, keep the payment details
  * untouched, and redraw it in the card's theme (custom colours, dot style, hollow-star centre).
  * At checkout the buyer sees that QR with the exact amount filled in, pays straight to the seller,
@@ -225,7 +225,7 @@
       save: 'Save QR', saved: 'QR saved', done: 'I’ve paid · send proof on WhatsApp', other: 'Pay another way · chat with the seller',
       note: 'Your money goes straight to the seller. They confirm your payment by hand before sending your order.',
       ref: 'Order ref', free: 'After scanning, enter {total} in your app.', close: 'Close',
-      hi: 'Hi {seller}! I’ve paid by QR:', buy: 'Hi {seller}! I’d like to buy:', paidVia: 'Paid via DuitNow QR. I’ll send the screenshot here.', from: 'From your Maple ID card'
+      hi: 'Hi {seller}! I’ve paid by QR:', buy: 'Hi {seller}! I’d like to buy:', paidVia: 'Paid via DuitNow QR. I’ll send the screenshot here.', from: 'From your M-ID card'
     },
     ms: {
       title: 'Bayar dengan QR', scan: 'Imbas dengan aplikasi bank atau e-dompet anda', amount: 'Jumlah', total: 'Jumlah',
@@ -233,7 +233,7 @@
       save: 'Simpan QR', saved: 'QR disimpan', done: 'Sudah bayar · hantar bukti di WhatsApp', other: 'Bayar cara lain · sembang dengan penjual',
       note: 'Wang anda terus ke penjual. Penjual akan semak pembayaran sebelum menghantar pesanan.',
       ref: 'Rujukan', free: 'Selepas mengimbas, masukkan {total} dalam aplikasi anda.', close: 'Tutup',
-      hi: 'Hai {seller}! Saya sudah bayar melalui QR:', buy: 'Hai {seller}! Saya ingin membeli:', paidVia: 'Dibayar melalui DuitNow QR. Saya hantar tangkapan skrin di sini.', from: 'Dari kad Maple ID anda'
+      hi: 'Hai {seller}! Saya sudah bayar melalui QR:', buy: 'Hai {seller}! Saya ingin membeli:', paidVia: 'Dibayar melalui DuitNow QR. Saya hantar tangkapan skrin di sini.', from: 'Dari kad M-ID anda'
     }
   };
   function tr(lang) { var d = TXT[lang] || TXT.en; return function (k, v) { var s = d[k] || TXT.en[k] || k; if (v) for (var n in v) s = s.split('{' + n + '}').join(v[n]); return s; }; }

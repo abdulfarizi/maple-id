@@ -1,4 +1,4 @@
-/* Maple ID · Free-canvas builder: opens the drag-and-drop editor full screen and syncs it into the Studio form. */
+/* M-ID · Free-canvas builder: opens the drag-and-drop editor full screen and syncs it into the Studio form. */
 (function () {
   'use strict';
   var overlay = null, form = null;

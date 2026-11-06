@@ -1,4 +1,4 @@
-/* Maple ID · theme music.
+/* M-ID · theme music.
  * Every theme has its own playlist of three tracks. The tracks are generated live with the Web Audio API
  * (no audio files, nothing to license, works offline) in five moods: lofi, synth, ambient, bell, night.
  * window.MapleMusic.create({ ctx: () => AudioContext, dest: () => AudioNode }) -> player

@@ -1,4 +1,4 @@
-/* Maple ID \u00b7 Forum: the home page for signed-in members.
+/* M-ID \u00b7 Forum: the home page for signed-in members.
    The page itself is just the Feed. Private messages, alerts and reports open from the header button and the
    side menu (maple-shell.js) through dgForum.open(view); each of those screens has a \u201cFeed\u201d button to come back. */
 (function () {
@@ -153,63 +153,196 @@
       alert(r.ok ? 'Thanks. The admin will take a look.' : ((r.j && r.j.error) || 'Could not send the report.'));
     });
   }
+  /* ---------- media: pictures, GIFs, video, voice notes ----------
+     The file goes to /api/uploads; the returned https link rides at the end of the text as [[img|vid|aud:url]]. */
+  var MEDIA_RE = /\n?\[\[(img|vid|aud):(https:\/\/[^\]\s]{4,400})\]\]\s*$/;
+  var LIMIT = { img: 3 * 1048576, vid: 25 * 1048576, aud: 8 * 1048576 };
+  var ICO = {
+    plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    send: '<svg viewBox="0 0 24 24"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    mic: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></g></svg>',
+    msg: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="m4.5 8 7.5 5.2L19.5 8"/></g></svg>',
+    dots: '<svg viewBox="0 0 24 24"><g fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></g></svg>',
+    x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    back: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    trash: '<svg viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/></g></svg>'
+  };
+  function ico(svg, cls, label, fn) { var b = h('button', { type: 'button', class: cls, 'aria-label': label, title: label }); b.innerHTML = svg; if (fn) b.addEventListener('click', fn); return b; }
+  function splitMedia(t) {
+    var s = String(t || ''), m = MEDIA_RE.exec(s);
+    if (m) return { text: s.slice(0, m.index), kind: m[1], url: m[2] };
+    var d = /\n?\[\[(img|vid|aud):[^\]]*$/i.exec(s); /* cut-off or malformed token: show a label, never the raw text */
+    if (d) return { text: s.slice(0, d.index), kind: d[1].toLowerCase(), url: '' };
+    return { text: s, kind: '', url: '' };
+  }
+  function mediaEl(kind, url) {
+    if (kind === 'img') return h('img', { class: 'fm-media', src: url, alt: 'Picture', loading: 'lazy', referrerpolicy: 'no-referrer' });
+    if (kind === 'vid') return h('video', { class: 'fm-media', src: url, controls: '', playsinline: '', preload: 'metadata' });
+    return h('audio', { class: 'fm-voice', src: url, controls: '', preload: 'metadata' });
+  }
+  function mediaLabel(kind) { return kind === 'img' ? 'Photo' : kind === 'vid' ? 'Video' : 'Voice note'; }
+  function kindOf(f) { var t = (f && f.type) || ''; return /^image\//.test(t) ? 'img' : /^video\//.test(t) ? 'vid' : /^audio\//.test(t) ? 'aud' : ''; }
+  function upload(file, kind) {
+    return fetch('/api/uploads?kind=forum-' + kind, { method: 'POST', body: file }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok || !j.url) throw new Error(j.error || (kind === 'img' ? 'Could not upload the picture.' : 'Could not upload the ' + (kind === 'vid' ? 'video' : 'voice note') + '. The server may not accept this file type yet.'));
+        return j.url;
+      });
+    }, function () { throw new Error('No connection. Check your internet and try again.'); });
+  }
+  function post(path, body) {
+    return api(path, { method: 'POST', body: { body: body } }).then(function (r) { if (!r.ok) throw new Error((r.j && r.j.error) || 'Could not send.'); return r; });
+  }
+
+  /* the message bar shared by the comment widget and the chat: [+] [text] [send | mic] */
+  function composerBar(o) {
+    var wrap = h('div', { class: 'fm-cb' }), pend = h('div', { class: 'fm-pend', hidden: true }), err = h('p', { class: 'fm-err fm-cb-err', role: 'alert', hidden: true });
+    var row = h('div', { class: 'fm-cb-row' }), file = h('input', { type: 'file', accept: 'image/*,video/*', hidden: true, tabindex: '-1', 'aria-hidden': 'true' });
+    var inp = h('input', { type: 'text', class: 'fm-cb-in', maxlength: String(o.max), placeholder: o.placeholder, 'aria-label': o.label, autocomplete: 'off', enterkeyhint: 'send' });
+    var plus = ico(ICO.plus, 'fm-ico fm-plus', 'Add a picture, GIF or video', function () { file.click(); });
+    var act = ico(ICO.send, 'fm-ico fm-go', 'Send'), media = null, busy = false, rec = null;
+    var recBar = h('div', { class: 'fm-rec', hidden: true }), timer = h('span', { class: 'fm-rec-t', text: '0:00' }), tick = 0;
+    function setErr(t) { err.hidden = !t; err.textContent = t || ''; }
+    function mode() { return (o.voice && !inp.value.trim() && !media) ? 'mic' : 'send'; }
+    function sync() { var m = mode(); if (act.dataset.m === m) return; act.dataset.m = m; act.innerHTML = m === 'mic' ? ICO.mic : ICO.send; act.setAttribute('aria-label', m === 'mic' ? 'Record a voice note' : 'Send'); act.title = act.getAttribute('aria-label'); act.classList.toggle('mic', m === 'mic'); }
+    function clearMedia() { if (media && media.url) URL.revokeObjectURL(media.url); media = null; pend.hidden = true; pend.textContent = ''; file.value = ''; sync(); }
+    function send() {
+      var t = inp.value.trim(); if ((!t && !media) || busy) return;
+      setErr(''); busy = true; wrap.classList.add('busy');
+      var up = media ? upload(media.file, media.kind).then(function (u) { return '[[' + media.kind + ':' + u + ']]'; }) : Promise.resolve('');
+      up.then(function (tok) {
+        var body = t + (tok ? (t ? '\n' : '') + tok : '');
+        if (body.length > o.max) throw new Error('Too long. Shorten the text a little.');
+        return o.onSend(body);
+      }).then(function () { inp.value = ''; clearMedia(); })
+        .catch(function (e) { setErr(e.message || 'Could not send.'); })
+        .then(function () { busy = false; wrap.classList.remove('busy'); sync(); });
+    }
+    function recUI(on) { row.hidden = on; recBar.hidden = !on; if (!on) clearInterval(tick); }
+    function stopRec(cancel) { if (!rec) return; rec.cancel = !!cancel; try { rec.mr.stop(); } catch (e) { recUI(false); rec = null; } }
+    function startRec() {
+      if (!navigator.mediaDevices || !window.MediaRecorder) { setErr('Voice notes are not supported in this browser.'); return; }
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        var mt = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].filter(function (m) { return MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m); })[0] || '';
+        var chunks = [], t0 = Date.now(), mr = new MediaRecorder(stream, mt ? { mimeType: mt } : undefined);
+        rec = { mr: mr, cancel: false };
+        mr.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+        mr.onstop = function () {
+          stream.getTracks().forEach(function (t) { t.stop(); }); var cancel = rec && rec.cancel; recUI(false); rec = null; if (cancel) return;
+          var blob = new Blob(chunks, { type: (mr.mimeType || mt || 'audio/webm').split(';')[0] });
+          if (blob.size < 800) { setErr('That was too short. Hold on a little longer.'); return; }
+          media = { file: blob, kind: 'aud' }; send();
+        };
+        mr.start(); timer.textContent = '0:00'; recUI(true);
+        tick = setInterval(function () { var s = Math.round((Date.now() - t0) / 1000); timer.textContent = Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); if (s >= 120) stopRec(false); }, 500);
+      }).catch(function () { setErr('Allow microphone access in your browser to send voice notes.'); });
+    }
+    file.addEventListener('change', function () {
+      var f = file.files && file.files[0]; if (!f) return; var k = kindOf(f); setErr('');
+      if (!k || k === 'aud') { setErr('Choose a picture, GIF or video.'); file.value = ''; return; }
+      if (f.size > LIMIT[k]) { setErr(k === 'vid' ? 'Videos can be up to 25 MB.' : 'Pictures and GIFs can be up to 3 MB.'); file.value = ''; return; }
+      clearMedia(); var u = URL.createObjectURL(f); media = { file: f, kind: k, url: u };
+      pend.textContent = ''; pend.hidden = false;
+      pend.appendChild(k === 'img' ? h('img', { src: u, alt: 'Selected picture' }) : h('video', { src: u, muted: '', playsinline: '', preload: 'metadata' }));
+      pend.appendChild(ico(ICO.x, 'fm-pend-x', 'Remove', clearMedia)); sync();
+    });
+    act.addEventListener('click', function () { if (mode() === 'mic') startRec(); else send(); });
+    inp.addEventListener('input', sync); inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); if (mode() === 'send') send(); } });
+    recBar.appendChild(ico(ICO.trash, 'fm-ico', 'Discard voice note', function () { stopRec(true); }));
+    recBar.appendChild(h('span', { class: 'fm-rec-dot', 'aria-hidden': 'true' })); recBar.appendChild(timer);
+    recBar.appendChild(ico(ICO.send, 'fm-ico fm-go', 'Send voice note', function () { stopRec(false); }));
+    row.appendChild(plus); row.appendChild(inp); row.appendChild(act);
+    [pend, err, row, recBar, file].forEach(function (x) { wrap.appendChild(x); }); sync();
+    wrap.focusInput = function () { inp.focus({ preventScroll: true }); };
+    return wrap;
+  }
+
+  /* ---------- a post ---------- */
   function card(p) {
-    var el = h('article', { class: 'fm-card fm-post' + (p.pinned ? ' pin' : '') }), cm = null, cmBtn, likeBtn;
-    var parts = who(p), tags = [];
-    if (p.pinned) tags.push(h('span', { class: 'fm-tag', text: '\ud83d\udccc Pinned' }));
-    tags.push(h('span', { class: 'fm-tag', text: CAT_NAME[p.cat] || 'General' }));
-    el.appendChild(h('div', { class: 'fm-row', style: 'flex-wrap:nowrap' }, [h('div', { class: 'fm-who' }, [parts[0], h('div', { class: 'tx' }, [parts[1], h('span', { class: 'fm-meta', text: ago(p.at) })])])].concat(tags)));
+    var el = h('article', { class: 'fm-card fm-post' + (p.pinned ? ' pin' : '') }), likeBtn, cmBtn, pop = null, dots = null, items = [];
+    var parts = who(p), headAct = h('div', { class: 'fm-head-act' });
+    var meta = h('span', { class: 'fm-meta' }, [ago(p.at), h('span', { class: 'fm-cat', text: CAT_NAME[p.cat] || 'General' })]);
+    if (p.pinned) meta.appendChild(h('span', { class: 'fm-pinned', text: 'Pinned' }));
+    if (!p.mine && okSlug(p.slug)) headAct.appendChild(ico(ICO.msg, 'fm-ico', 'Message ' + (p.name || 'this member'), function () { go('thread', p.slug); }));
+    if (!p.mine) items.push(['Report', function () { report('post', p.id); }]);
+    if (S.mod) items.push([p.pinned ? 'Unpin' : 'Pin', function () { api('posts/' + p.id + '/pin', { method: 'POST', body: { pinned: !p.pinned } }).then(function (r) { if (r.ok) load(true); else alert((r.j && r.j.error) || 'Could not pin. Has the part-2 SQL been run?'); }); }]);
+    if (p.mine || S.mod) items.push(['Delete', function () { if (!confirm('Delete this post?')) return; api('posts/' + p.id, { method: 'DELETE' }).then(function (r) { if (r.ok) { S.posts = S.posts.filter(function (x) { return x.id !== p.id; }); S.pinned = S.pinned.filter(function (x) { return x.id !== p.id; }); draw(); } else alert('Could not delete it.'); }); }, true]);
+    function closePop() { if (!pop) return; pop.remove(); pop = null; dots.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', outside, true); document.removeEventListener('click', outside, true); document.removeEventListener('keydown', esc); }
+    function outside(e) { if (pop && !pop.contains(e.target) && !dots.contains(e.target)) closePop(); }
+    function esc(e) { if (e.key === 'Escape' && pop) { closePop(); dots.focus(); } }
+    if (items.length) {
+      dots = ico(ICO.dots, 'fm-ico', 'More actions', function () {
+        if (pop) { closePop(); return; }
+        pop = h('div', { class: 'fm-pop', role: 'menu' }, items.map(function (it) { return h('button', { type: 'button', role: 'menuitem', class: 'fm-pop-i' + (it[2] ? ' bad' : ''), text: it[0], onclick: function () { closePop(); it[1](); } }); }));
+        pop.addEventListener('click', function (e) { e.stopPropagation(); });
+        headAct.appendChild(pop); dots.setAttribute('aria-expanded', 'true'); document.addEventListener('pointerdown', outside, true); document.addEventListener('click', outside, true); document.addEventListener('keydown', esc);
+        var f = pop.querySelector('button'); if (f) f.focus({ preventScroll: true });
+      });
+      dots.setAttribute('aria-haspopup', 'menu'); dots.setAttribute('aria-expanded', 'false'); headAct.appendChild(dots);
+    }
+    el.appendChild(h('div', { class: 'fm-head' }, [parts[0], h('div', { class: 'fm-who' }, [h('div', { class: 'tx' }, [parts[1], meta])]), headAct]));
     el.appendChild(h('h3', { text: p.title }));
     if (p.body) el.appendChild(h('p', { class: 'fm-body', text: p.body }));
     if (p.image && /^https:\/\//i.test(p.image)) el.appendChild(h('img', { class: 'fm-img', src: p.image, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }));
-    likeBtn = btn('\u2665 ' + p.likes, p.liked ? 'on' : '', null, { 'aria-pressed': String(!!p.liked), 'aria-label': 'Like' });
+    var heart = function () { return (p.liked ? '\u2665 ' : '\u2661 ') + p.likes; };
+    likeBtn = btn(heart(), p.liked ? 'on' : '', null, { 'aria-pressed': String(!!p.liked), 'aria-label': 'Like' });
     likeBtn.addEventListener('click', function () {
-      var on = !p.liked; p.liked = on; p.likes += on ? 1 : -1; likeBtn.textContent = '\u2665 ' + p.likes; likeBtn.classList.toggle('on', on); likeBtn.setAttribute('aria-pressed', String(on));
-      api('posts/' + p.id + '/like', { method: on ? 'POST' : 'DELETE' }).then(function (r) { if (!r.ok) { p.liked = !on; p.likes += on ? -1 : 1; likeBtn.textContent = '\u2665 ' + p.likes; likeBtn.classList.toggle('on', p.liked); } });
+      var on = !p.liked; p.liked = on; p.likes += on ? 1 : -1; likeBtn.textContent = heart(); likeBtn.classList.toggle('on', on); likeBtn.setAttribute('aria-pressed', String(on));
+      api('posts/' + p.id + '/like', { method: on ? 'POST' : 'DELETE' }).then(function (r) { if (!r.ok) { p.liked = !on; p.likes += on ? -1 : 1; likeBtn.textContent = heart(); likeBtn.classList.toggle('on', p.liked); } });
     });
-    cmBtn = btn('\ud83d\udcac ' + p.comments, '', function () {
-      if (cm) { cm.remove(); cm = null; cmBtn.setAttribute('aria-expanded', 'false'); return; }
-      cm = h('div', { class: 'fm-com' }); el.appendChild(cm); cmBtn.setAttribute('aria-expanded', 'true'); comments(p, cm, cmBtn);
-    }, { 'aria-expanded': 'false', 'aria-label': 'Comments' });
-    var act = h('div', { class: 'fm-act' }, [likeBtn, cmBtn]), right = h('div', { class: 'fm-more-row', hidden: true });
-    if (!p.mine && okSlug(p.slug)) act.appendChild(btn('\u2709 Message', 'sm', function () { go('thread', p.slug); }));
-    if (!p.mine) right.appendChild(btn('Report', 'sm', function () { report('post', p.id); }));
-    if (S.mod) right.appendChild(btn(p.pinned ? 'Unpin' : 'Pin', 'sm', function () { api('posts/' + p.id + '/pin', { method: 'POST', body: { pinned: !p.pinned } }).then(function (r) { if (r.ok) load(true); else alert((r.j && r.j.error) || 'Could not pin. Has the part-2 SQL been run?'); }); }));
-    if (p.mine || S.mod) right.appendChild(btn('Delete', 'sm', function () { if (!confirm('Delete this post?')) return; api('posts/' + p.id, { method: 'DELETE' }).then(function (r) { if (r.ok) { S.posts = S.posts.filter(function (x) { return x.id !== p.id; }); S.pinned = S.pinned.filter(function (x) { return x.id !== p.id; }); draw(); } else alert('Could not delete it.'); }); }));
-    if (right.children.length) {
-      var dots = btn('\u22ef', 'sm', function () { var open = right.hidden; right.hidden = !open; dots.setAttribute('aria-expanded', String(open)); }, { 'aria-label': 'More actions', 'aria-expanded': 'false', style: 'margin-left:auto;font-size:16px;line-height:1;padding:4px 12px' });
-      act.appendChild(dots);
-    }
-    el.appendChild(act); if (right.children.length) el.appendChild(right); return el;
+    cmBtn = btn('\ud83d\udcac ' + p.comments, '', function () { openSheet(p, cmBtn); }, { 'aria-haspopup': 'dialog', 'aria-label': 'Comments' });
+    el.appendChild(h('div', { class: 'fm-act' }, [likeBtn, cmBtn])); return el;
   }
-  function comments(p, box, cmBtn) {
-    box.textContent = 'Loading\u2026';
-    api('posts/' + p.id + '/comments').then(function (r) {
-      box.textContent = ''; if (!r.ok) { box.appendChild(h('p', { class: 'fm-err', text: (r.j && r.j.error) || 'Could not load comments.' })); return; }
-      var mod = !!r.j.mod, list = h('div'); box.appendChild(list);
-      (r.j.comments || []).forEach(function (c) { list.appendChild(cItem(c, mod, p, cmBtn)); });
-      var inp = h('input', { type: 'text', maxlength: '500', placeholder: 'Write a comment\u2026', 'aria-label': 'Comment' }), err = h('p', { class: 'fm-err', hidden: true });
-      var send = btn('Reply', 'pri');
-      var go2 = function () {
-        var t = inp.value.trim(); if (!t) return; send.disabled = true;
-        api('posts/' + p.id + '/comments', { method: 'POST', body: { body: t } }).then(function (x) {
-          send.disabled = false;
-          if (!x.ok) { err.hidden = false; err.textContent = (x.j && x.j.error) || 'Could not comment.'; return; }
-          err.hidden = true; inp.value = ''; p.comments++; cmBtn.textContent = '\ud83d\udcac ' + p.comments; comments(p, box, cmBtn);
-        });
-      };
-      send.addEventListener('click', go2); inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go2(); });
-      box.appendChild(h('div', { class: 'fm-row', style: 'margin-top:6px' }, [h('div', { style: 'flex:1;min-width:160px' }, [inp]), send])); box.appendChild(err);
-    });
+
+  /* ---------- the comment widget (opens from the comment button) ---------- */
+  var sheetEl = null, sheetPrev = null;
+  function sheetKey(e) { if (e.key === 'Escape') closeSheet(); }
+  function fitSheet() {
+    var vv = window.visualViewport; if (!sheetEl || !vv) return;
+    sheetEl.style.setProperty('--fm-kb', Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)) + 'px');
+    var pn = sheetEl.querySelector('.fm-sheet'); if (pn) pn.style.maxHeight = Math.floor(vv.height * 0.92) + 'px';
   }
-  function cItem(c, mod, p, cmBtn) {
-    var parts = who(c), row = h('div', { class: 'fm-c' }), body = h('div', { style: 'flex:1;min-width:0' });
-    body.appendChild(h('div', {}, [parts[1], h('span', { class: 'fm-meta', text: ' \u00b7 ' + ago(c.at) })])); body.appendChild(h('p', { text: c.body }));
-    row.appendChild(parts[0]); row.appendChild(body);
-    if (!c.mine) row.appendChild(btn('Report', 'sm', function () { report('comment', c.id); }));
-    if (c.mine || mod) row.appendChild(btn('\u2715', 'sm', function () { api('comments/' + c.id, { method: 'DELETE' }).then(function (r) { if (r.ok) { p.comments = Math.max(0, p.comments - 1); cmBtn.textContent = '\ud83d\udcac ' + p.comments; row.remove(); } }); }, { 'aria-label': 'Delete comment' }));
-    return row;
+  function closeSheet() {
+    if (!sheetEl) return; var s = sheetEl; sheetEl = null; s.classList.remove('open'); document.removeEventListener('keydown', sheetKey);
+    if (window.visualViewport) { window.visualViewport.removeEventListener('resize', fitSheet); window.visualViewport.removeEventListener('scroll', fitSheet); }
+    if (!thEl) document.documentElement.classList.remove('fm-lock'); setTimeout(function () { s.remove(); }, 280);
+    if (sheetPrev && sheetPrev.focus) { try { sheetPrev.focus({ preventScroll: true }); } catch (e) {} }
   }
+  function openSheet(p, cmBtn) {
+    closeSheet(); sheetPrev = document.activeElement;
+    var title = h('h2', { id: 'fm-sheet-t' }), list = h('div', { class: 'fm-sheet-list', 'aria-live': 'polite' }), mod = false;
+    var paint = function () { title.textContent = p.comments === 1 ? '1 comment' : p.comments + ' comments'; cmBtn.textContent = '\ud83d\udcac ' + p.comments; };
+    var refresh = function (toEnd) {
+      return api('posts/' + p.id + '/comments').then(function (r) {
+        if (!sheetEl) return; list.textContent = '';
+        if (!r.ok) { list.appendChild(h('p', { class: 'fm-err', text: (r.j && r.j.error) || 'Could not load comments.' })); return; }
+        mod = !!r.j.mod; var cs = r.j.comments || []; if (cs.length !== p.comments) { p.comments = cs.length; paint(); }
+        if (!cs.length) list.appendChild(h('div', { class: 'fm-empty', text: 'No comments yet. Be the first.' }));
+        cs.forEach(function (c) { list.appendChild(cItem(c, mod, p, paint, refresh)); });
+        if (toEnd) list.scrollTop = list.scrollHeight;
+      });
+    };
+    var bar = composerBar({ label: 'Comment', placeholder: 'Add a comment\u2026', max: 500, voice: false, onSend: function (body) { return post('posts/' + p.id + '/comments', body).then(function () { p.comments++; paint(); return refresh(true); }); } });
+    var panel = h('div', { class: 'fm-sheet' }, [h('div', { class: 'fm-sheet-head' }, [title, ico(ICO.x, 'fm-ico', 'Close comments', closeSheet)]), list, bar]);
+    var scrim = h('div', { class: 'fm-scrim' }); scrim.addEventListener('click', closeSheet);
+    sheetEl = h('div', { class: 'fm-sheet-wrap', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'fm-sheet-t' }, [scrim, panel]);
+    document.body.appendChild(sheetEl); document.documentElement.classList.add('fm-lock'); document.addEventListener('keydown', sheetKey);
+    if (window.visualViewport) { window.visualViewport.addEventListener('resize', fitSheet); window.visualViewport.addEventListener('scroll', fitSheet); fitSheet(); }
+    paint(); list.appendChild(h('div', { class: 'fm-empty', text: 'Loading\u2026' }));
+    requestAnimationFrame(function () { if (sheetEl) sheetEl.classList.add('open'); });
+    refresh(false); setTimeout(function () { if (sheetEl) bar.focusInput(); }, 320);
+  }
+  function cItem(c, mod, p, paint, refresh) {
+    var parts = who(c), row = h('div', { class: 'fm-c' }), body = h('div', { class: 'fm-c-body' }), sp = splitMedia(c.body);
+    body.appendChild(h('div', {}, [parts[1], h('span', { class: 'fm-meta', text: ' ' + ago(c.at) })]));
+    if (sp.text) body.appendChild(h('p', { text: sp.text })); if (sp.kind) body.appendChild(sp.url ? mediaEl(sp.kind, sp.url) : h('p', { class: 'fm-meta', text: mediaLabel(sp.kind) }));
+    var tools = h('div', { class: 'fm-c-tools' });
+    if (!c.mine) tools.appendChild(h('button', { type: 'button', class: 'fm-lnk', text: 'Report', onclick: function () { report('comment', c.id); } }));
+    if (c.mine || mod) tools.appendChild(h('button', { type: 'button', class: 'fm-lnk', text: 'Delete', onclick: function () { api('comments/' + c.id, { method: 'DELETE' }).then(function (r) { if (r.ok) { p.comments = Math.max(0, p.comments - 1); paint(); row.remove(); } }); } }));
+    if (tools.children.length) body.appendChild(tools);
+    row.appendChild(parts[0]); row.appendChild(body); return row;
+  }
+
   function composer() {
     var wrap = h('div');
     var start = h('button', { type: 'button', class: 'fm-start' }, [h('span', { text: 'What\u2019s on your mind?' }), h('b', { text: 'Post' })]);
@@ -235,7 +368,6 @@
     wrap.appendChild(start); wrap.appendChild(form); return wrap;
   }
   function feedView() {
-    viewEl.appendChild(h('div', { class: 'fm-top' }, [h('h1', { text: 'Feed' }), h('span', { text: 'What the community is up to' })]));
     viewEl.appendChild(composer());
     var chips = h('div', { class: 'fm-chips', role: 'tablist', 'aria-label': 'Categories' });
     CATS.forEach(function (c) { var b = btn(c[0] === 'all' ? 'All' : c[1], c[0] === S.cat ? 'on' : '', null, { role: 'tab', 'aria-selected': String(c[0] === S.cat) });
@@ -284,39 +416,40 @@
       box.textContent = ''; if (S.view !== 'inbox') return;
       if (!r.ok) { box.appendChild(h('p', { class: 'fm-err', text: (r.j && r.j.error) || 'Could not load messages.' })); return; }
       if (r.j.off) { box.appendChild(h('div', { class: 'fm-empty', text: 'Messages are not set up yet. Run the part-2 SQL in Supabase.' })); return; }
-      if (!(r.j.threads || []).length) { box.appendChild(h('div', { class: 'fm-empty', text: 'No conversations yet. Use \u201c\u2709 Message\u201d on a post, or type a card link above.' })); return; }
+      if (!(r.j.threads || []).length) { box.appendChild(h('div', { class: 'fm-empty', text: 'No conversations yet. Tap the envelope on a post, or type a card link above.' })); return; }
       r.j.threads.forEach(function (t) {
-        var row = h('button', { type: 'button', class: 'fm-thr' }, [avatar(t.name, t.slug), h('div', { class: 'tx' }, [h('div', {}, [h('strong', { text: t.name || t.slug }), h('span', { class: 'fm-meta', text: ' \u00b7 ' + ago(t.at) })]), h('div', { class: 'ls', text: (t.mine ? 'You: ' : '') + t.last })]), t.unread ? h('span', { class: 'fm-dot', text: String(t.unread) }) : null]);
+        var row = h('button', { type: 'button', class: 'fm-thr' }, [avatar(t.name, t.slug), h('div', { class: 'tx' }, [h('div', {}, [h('strong', { text: t.name || t.slug }), h('span', { class: 'fm-meta', text: ' \u00b7 ' + ago(t.at) })]), h('div', { class: 'ls', text: (t.mine ? 'You: ' : '') + (function (m) { return m.text || (m.kind ? mediaLabel(m.kind) : ''); })(splitMedia(t.last)) })]), t.unread ? h('span', { class: 'fm-dot', text: String(t.unread) }) : null]);
         row.addEventListener('click', function () { go('thread', t.slug); }); box.appendChild(row);
       });
     });
   }
+  /* the conversation: full screen, with the message bar fixed to the bottom like a chat app */
+  var thEl = null;
+  function closeTh() { if (!thEl) return; thEl.remove(); thEl = null; if (!sheetEl) document.documentElement.classList.remove('fm-lock'); }
+  window.addEventListener('popstate', function () { setTimeout(function () { if (thEl && !(sec && document.body.contains(sec))) closeTh(); }, 60); });
   function threadView(slug) {
-    var head = h('div', { class: 'fm-bar' }, [btn('\u2190 Messages', 'sm fm-back', function () { go('inbox'); })]), title = h('h2', { text: slug, style: 'margin:0' }); head.appendChild(title);
-    var chat = h('div', { class: 'fm-chat', 'aria-live': 'polite' }), err = h('p', { class: 'fm-err', hidden: true });
-    var inp = h('input', { type: 'text', maxlength: '1000', placeholder: 'Write a message\u2026', 'aria-label': 'Message', style: 'margin:0' }), send = btn('Send', 'pri');
-    viewEl.appendChild(head); viewEl.appendChild(chat); viewEl.appendChild(err); viewEl.appendChild(h('div', { class: 'fm-row' }, [h('div', { style: 'flex:1;min-width:160px' }, [inp]), send]));
-    var count = -1;
+    var title = h('h2', { text: slug }), count = -1;
+    var chat = h('div', { class: 'fm-chat fm-th-chat', 'aria-live': 'polite' }), err = h('p', { class: 'fm-err fm-th-err', role: 'alert', hidden: true });
     var refresh = function (first) {
       api('dms/' + encodeURIComponent(slug)).then(function (r) {
-        if (S.view !== 'thread') return;
+        if (S.view !== 'thread' || !thEl) return;
         if (!r.ok) { err.hidden = false; err.textContent = (r.j && r.j.error) || 'Could not load the conversation.'; chat.textContent = ''; return; }
         err.hidden = true; if (r.j.with) title.textContent = r.j.with.name;
         var ms = r.j.messages || []; if (ms.length === count) return; count = ms.length; chat.textContent = '';
         if (!ms.length) chat.appendChild(h('div', { class: 'fm-empty', text: 'Say hello \ud83d\udc4b' }));
-        ms.forEach(function (m) { chat.appendChild(h('div', { class: 'fm-b' + (m.mine ? ' me' : '') }, [m.body, h('small', { text: ago(m.at) })])); });
+        ms.forEach(function (m) {
+          var sp = splitMedia(m.body), kids = [];
+          if (sp.kind) kids.push(sp.url ? mediaEl(sp.kind, sp.url) : h('span', { class: 'fm-t', text: mediaLabel(sp.kind) })); if (sp.text) kids.push(h('span', { class: 'fm-t', text: sp.text })); kids.push(h('small', { text: ago(m.at) }));
+          chat.appendChild(h('div', { class: 'fm-b' + (m.mine ? ' me' : '') + (sp.kind ? ' has-media' : '') }, kids));
+        });
         chat.scrollTop = chat.scrollHeight; if (first) updateBadges();
       });
     };
-    var go2 = function () {
-      var t = inp.value.trim(); if (!t) return; send.disabled = true;
-      api('dms/' + encodeURIComponent(slug), { method: 'POST', body: { body: t } }).then(function (r) {
-        send.disabled = false; if (!r.ok) { err.hidden = false; err.textContent = (r.j && r.j.error) || 'Could not send.'; return; }
-        err.hidden = true; inp.value = ''; count = -1; refresh();
-      });
-    };
-    send.addEventListener('click', go2); inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') go2(); });
-    refresh(true); threadTimer = setInterval(function () { if (!document.hidden) refresh(); }, 15000);
+    var bar = composerBar({ label: 'Message', placeholder: 'Message', max: 1000, voice: true, onSend: function (body) { return post('dms/' + encodeURIComponent(slug), body).then(function () { count = -1; refresh(); }); } });
+    var head = h('div', { class: 'fm-th-head' }, [ico(ICO.back, 'fm-ico', 'Back to messages', function () { go('inbox'); }), avatar(slug, slug), title]);
+    thEl = h('div', { class: 'fm-th', role: 'dialog', 'aria-label': 'Conversation with ' + slug }, [head, chat, err, bar]);
+    document.body.appendChild(thEl); document.documentElement.classList.add('fm-lock');
+    refresh(true); threadTimer = setInterval(function () { if (!(sec && document.body.contains(sec))) { closeTh(); clearInterval(threadTimer); return; } if (!document.hidden) refresh(); }, 15000);
   }
 
   /* ---------- reports (admin) ---------- */
@@ -354,7 +487,7 @@
   }
   function go(view, arg) {
     var was = S.view;
-    clearInterval(threadTimer); threadTimer = null; S.view = view; viewEl.textContent = ''; listEl = moreEl = statEl = null;
+    clearInterval(threadTimer); threadTimer = null; closeTh(); closeSheet(); S.view = view; viewEl.textContent = ''; listEl = moreEl = statEl = null;
     if (view === 'feed') feedView(); else if (view === 'alerts') alertsView(); else if (view === 'inbox') inboxView(); else if (view === 'thread') threadView(arg); else if (view === 'reports') reportsView();
     drawNav(); if ((view !== 'feed' || was !== 'feed') && sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'start' });
   }
@@ -378,7 +511,7 @@
     if (!pane || pane.querySelector('#forum')) return; css();
     // hide the default landing sections (the creator directory stays, so it can still move to the Explore tab)
     Array.prototype.forEach.call(pane.children, function (c) { if (c.id !== 'explore') c.hidden = true; });
-    document.title = 'Maple ID · Community';
+    document.title = 'M-ID · Community';
     sec = h('section', { class: 'fm', id: 'forum', 'aria-label': 'Feed' });
     viewEl = h('div'); sec.appendChild(viewEl);
     pane.insertBefore(sec, pane.firstChild);

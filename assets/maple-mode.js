@@ -1,4 +1,4 @@
-/* Maple ID · light / dark mode (v3).
+/* M-ID · light / dark mode (v3).
  * Loaded first in <head>, so the right palette is on the page before anything paints (no flash).
  * Choice order: the person's saved pick → the device setting.
  *

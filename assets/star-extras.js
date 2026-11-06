@@ -1,4 +1,4 @@
-/* Maple ID · Star card extras: free GIF layer (behind / in front / page background) and editable borders. */
+/* M-ID · Star card extras: free GIF layer (behind / in front / page background) and editable borders. */
 (function () {
   'use strict';
   var qs = new URLSearchParams(location.search), GEDIT = qs.get('gifedit') === '1';

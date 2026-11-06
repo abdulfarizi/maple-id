@@ -1,4 +1,4 @@
-/* Maple ID · Studio enhancer: adds the mobile Edit/Preview switch and a few conveniences to the editor once it renders.
+/* M-ID · Studio enhancer: adds the mobile Edit/Preview switch and a few conveniences to the editor once it renders.
  * It only touches the DOM the Studio already produced; the form logic itself is unchanged. */
 (function () {
   'use strict';

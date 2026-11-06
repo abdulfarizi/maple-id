@@ -1,4 +1,4 @@
-/* Maple ID · shared UI helpers (used by the main app AND the Star card page)
+/* M-ID · shared UI helpers (used by the main app AND the Star card page)
  *   dgUI.theme   – site-wide theme that follows the theme picked in Studio
  *   dgUI.vcard   – proper .vcf builder + "save contact" (share sheet on phones, download on desktop)
  *   dgUI.qr      – restyled QR sheet (themed, rounded dots, logo, save as PNG, share)
@@ -101,7 +101,7 @@
     return chunks.join('\r\n ');
   }
   function splitName(full) {
-    var clean = String(full || '').replace(/[☆★✦✧]+/g, '').replace(/\s+/g, ' ').trim() || 'Maple ID';
+    var clean = String(full || '').replace(/[☆★✦✧]+/g, '').replace(/\s+/g, ' ').trim() || 'M-ID';
     var parts = clean.split(' ');
     if (parts.length < 2) return { fn: clean, family: '', given: clean };
     return { fn: clean, family: parts.pop(), given: parts.join(' ') };
@@ -110,7 +110,7 @@
     /* links: [{label, href}] – optional extra profile links (Instagram, YouTube …) */
     build: function (p, url, links) {
       var nm = splitName(p.name), L = [];
-      L.push('BEGIN:VCARD', 'VERSION:3.0', 'PRODID:-//Maple ID//Card//EN');
+      L.push('BEGIN:VCARD', 'VERSION:3.0', 'PRODID:-//M-ID//Card//EN');
       L.push('FN:' + vesc(nm.fn));
       L.push('N:' + vesc(nm.family) + ';' + vesc(nm.given) + ';;;');
       if (p.role && String(p.role).trim()) L.push('TITLE:' + vesc(String(p.role).trim()));
@@ -125,7 +125,7 @@
       if (phone) L.push('TEL;TYPE=CELL,VOICE:' + vesc(phone));
       if (mail) L.push('EMAIL;TYPE=INTERNET,PREF:' + vesc(mail));
       if (p.city || p.country) L.push('ADR;TYPE=HOME:;;;' + vesc(p.city || '') + ';;;' + vesc(p.country || ''));
-      L.push('item1.URL:' + url, 'item1.X-ABLabel:Maple ID');
+      L.push('item1.URL:' + url, 'item1.X-ABLabel:M-ID');
       extras.slice(0, 12).forEach(function (c, i) {
         var g = 'item' + (i + 2);
         L.push(g + '.URL:' + c.href, g + '.X-ABLabel:' + vesc(c.label || 'Link'));

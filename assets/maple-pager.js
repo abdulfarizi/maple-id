@@ -1,4 +1,4 @@
-/* Maple ID · one-page shell.
+/* M-ID · one-page shell.
  *
  * Everything is a pane in ONE horizontally-snapping strip that is built once and kept alive:
  *     Home · Explore · [ Card ] · Profile
@@ -12,11 +12,11 @@
   var ALL = ['home', 'explore', 'card', 'profile'];
   // The dock mirrors the strip: Home · Explore · [ Card ] · Profile. The Card tab only exists while someone's link is open.
   var URLS = { home: '/', explore: '/#explore', profile: '/profile' };
-  var TITLES = { home: 'Maple ID · one link for every handle', explore: 'Explore · Maple ID', profile: 'Profile · Maple ID' };
+  var TITLES = { home: 'M-ID · one link for every handle', explore: 'Explore · M-ID', profile: 'Profile · M-ID' };
   var REDUCE = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
 
   var root, track, appEl, footEl, panes = {}, sections = {}, ro = null;
-  var isOn = false, cur = '', cardOn = false, cardSlug = '', cardUrl = '/', cardTitle = 'Maple ID', cardLabel = 'Card';
+  var isOn = false, cur = '', cardOn = false, cardSlug = '', cardUrl = '/', cardTitle = 'M-ID', cardLabel = 'Card';
   var full = { card: false, profile: false };
   var raf = 0, settleT = 0, dragging = false, swallow = false;
   var layer, layerMain, layerKind = '', layerTimer = 0;
@@ -335,7 +335,7 @@
     cardSlug: function () { return cardSlug; },
     cardMeta: function (title) {
       panes.card.dataset.ready = '1'; cardTitle = title || cardTitle;
-      var nm = String(cardTitle).replace(/\s*\u00b7\s*Maple ID\s*$/, '').trim(); if (nm) cardLabel = nm;
+      var nm = String(cardTitle).replace(/\s*\u00b7\s*M-ID\s*$/, '').trim(); if (nm) cardLabel = nm;
       if (cur === 'card' && !layerKind) document.title = cardTitle;
       if (isOn) syncCardTab();
     },

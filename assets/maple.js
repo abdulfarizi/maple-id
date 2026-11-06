@@ -1,4 +1,4 @@
-/* Maple ID · homepage effects: drifting maple leaves, card tilt, live theme picker.
+/* M-ID · homepage effects: drifting maple leaves, card tilt, live theme picker.
  * Called from the home render as window.mapleHome.mount(). Cleans itself up when the home page is left. */
 (function () {
   var LEAF = 'M50 2L57 18L64 13L62 34L80 24L76 40L96 36L84 54L90 60L62 70L64 78L53 76L53 98L47 98L47 76L36 78L38 70L10 60L16 54L4 36L24 40L20 24L38 34L36 13L43 18Z';
@@ -114,14 +114,18 @@
   function themes() {
     var box = document.querySelector('.theme-pick');
     if (!box) return;
+    var name = function (t) { var x = (window.dgUI && dgUI.themes || []).filter(function (r) { return r[0] === t; })[0]; var n = box.querySelector('.mh2-tname'); if (n) n.textContent = x ? String(x[1]).replace(/ .*/, '') : ''; };
     var set = function (t) {
+      var hc = document.querySelector('.hero-card');
+      if (hc && !reduce) { hc.classList.remove('mh2-swap'); void hc.offsetWidth; hc.classList.add('mh2-swap'); }
+      name(t);
       document.documentElement.dataset.theme = t;
       document.querySelectorAll('.hero-card .idcard').forEach(function (c) { c.dataset.theme = t; });
       box.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.t === t)); });
       recolor();
     };
     box.querySelectorAll('button').forEach(function (b) { b.addEventListener('click', function () { set(b.dataset.t); }); });
-    var cur = document.documentElement.dataset.theme; box.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.t === cur)); });
+    var cur = document.documentElement.dataset.theme; name(cur); box.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.t === cur)); });
   }
 
   window.mapleHome = {
