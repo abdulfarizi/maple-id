@@ -11,7 +11,7 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var STATUS = { watching: 'Watching', completed: 'Completed', hold: 'On hold', dropped: 'Dropped', plan: 'Plan to watch' };
   var STATUS_ICON = { watching: 'fa-circle-play', completed: 'fa-circle-check', hold: 'fa-circle-pause', dropped: 'fa-circle-xmark', plan: 'fa-bookmark' };
-  var ART_OK = /^https:\/\/(?:i\.scdn\.co|image-cdn-[a-z0-9-]+\.spotifycdn\.com|mosaic\.scdn\.co|[a-z0-9-]+\.anilist\.co|s4\.anilist\.co)\/\S+$|^https:\/\/qebbuxixnqsqjuprfpyv\.supabase\.co\/storage\/v1\/object\/public\/song-media\/[0-9a-f-]{36}\/[a-z0-9]{8,24}-art\.jpg(\?v=[a-z0-9]{1,12})?$/i;
+  var ART_OK = /^https:\/\/(?:i\.ytimg\.com\/vi\/[A-Za-z0-9_-]{11}\/[a-z0-9]+\.jpg$|i\.scdn\.co|image-cdn-[a-z0-9-]+\.spotifycdn\.com|mosaic\.scdn\.co|[a-z0-9-]+\.anilist\.co|s4\.anilist\.co)\/\S+$|^https:\/\/qebbuxixnqsqjuprfpyv\.supabase\.co\/storage\/v1\/object\/public\/song-media\/[0-9a-f-]{36}\/[a-z0-9]{8,24}-art\.jpg(\?v=[a-z0-9]{1,12})?$/i;
 
   /* ───── Spotify links ───── */
   function spotify(u) {
@@ -22,10 +22,39 @@
     var type = m[1].toLowerCase();
     return { type: type, id: m[2], url: 'https://open.spotify.com/' + type + '/' + m[2], uri: 'spotify:' + type + ':' + m[2] };
   }
+  /* ───── YouTube links ───── */
+  function youtube(u) {
+    u = String(u || '').trim(); var id = '';
+    if (/^[A-Za-z0-9_-]{11}$/.test(u)) id = u;
+    else { try {
+      var x = new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u), h = x.hostname.replace(/^(www\.|m\.|music\.)/, '');
+      if (h === 'youtu.be') id = x.pathname.slice(1, 12);
+      else if (h === 'youtube.com' || h === 'youtube-nocookie.com') id = x.searchParams.get('v') || ((x.pathname.match(/^\/(?:embed|shorts|live|v)\/([A-Za-z0-9_-]{11})/) || [])[1] || '');
+    } catch (e) {} }
+    return /^[A-Za-z0-9_-]{11}$/.test(id) ? { type: 'video', id: id, url: 'https://www.youtube.com/watch?v=' + id } : null;
+  }
+  function ytMeta(y) {
+    var key = 'mx:yt:' + y.id;
+    if (metaCache[key]) return metaCache[key];
+    try { var c = JSON.parse(sessionStorage.getItem(key) || 'null'); if (c && c.title) return (metaCache[key] = Promise.resolve(c)); } catch (e) {}
+    var art = 'https://i.ytimg.com/vi/' + y.id + '/hqdefault.jpg';
+    var p = fetch('/api/yt-meta?url=' + encodeURIComponent(y.url))
+      .then(function (r) { if (!r.ok || !/json/.test(r.headers.get('content-type') || '')) throw 0; return r.json(); })
+      .catch(function () {   // no server function (local preview): noembed.com is a CORS-enabled oEmbed proxy
+        return fetch('https://noembed.com/embed?url=' + encodeURIComponent(y.url)).then(function (r) { if (!r.ok) throw 0; return r.json(); });
+      })
+      .then(function (d) {
+        d = d || {}; var o = { url: y.url, type: 'video', title: String(d.title || ''), artist: String(d.artist || d.author_name || '').replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, ''), art: art };
+        if (o.title) { try { sessionStorage.setItem(key, JSON.stringify(o)); } catch (e) {} }
+        return o;
+      }).catch(function () { delete metaCache[key]; return { url: y.url, type: 'video', title: '', artist: '', art: art }; });
+    return (metaCache[key] = p);
+  }
   var metaCache = {};
   /* Title / artist / artwork for a Spotify link. Server endpoint first (it can use the Spotify Web API when
    * credentials are configured), then Spotify's public oEmbed endpoint. Never throws: returns what it found. */
   function meta(u) {
+    var yt = youtube(u); if (yt && !spotify(u)) return ytMeta(yt);
     var s = spotify(u);
     if (!s) return Promise.resolve(null);
     if (metaCache[s.url]) return metaCache[s.url];
@@ -81,9 +110,9 @@
     return '<li class="mx-song" style="--i:' + i + '">'
       + '<button type="button" class="mx-song-btn" data-mx-play="' + i + '" aria-label="Play ' + esc(x.title || 'song') + (x.artist ? ' by ' + esc(x.artist) : '') + '">'
       + '<span class="mx-art"><span class="mx-art-ph">' + initials(x.title) + '</span>' + art
-      + '<span class="mx-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>' + (x.audio ? '<span class="mx-sp mx-up" title="Full song"><i class="fa-solid fa-headphones" aria-hidden="true"></i></span>' : '<span class="mx-sp" title="Spotify">' + ICON_SP + '</span>') + '</span>'
+      + '<span class="mx-play" aria-hidden="true"><i class="fa-solid fa-play"></i></span>' + (x.audio ? '<span class="mx-sp mx-up" title="Full song"><i class="fa-solid fa-headphones" aria-hidden="true"></i></span>' : /youtube\.com/.test(x.url || '') ? '<span class="mx-sp" title="YouTube" style="color:#ff3b30"><i class="fa-brands fa-youtube" aria-hidden="true"></i></span>' : '<span class="mx-sp" title="Spotify">' + ICON_SP + '</span>') + '</span>'
       + '<span class="mx-t">' + esc(x.title || 'Untitled') + '</span>'
-      + '<span class="mx-a">' + esc(x.artist || (x.audio ? 'Uploaded' : /\/album\//.test(x.url) ? 'Album' : /\/playlist\//.test(x.url) ? 'Playlist' : 'Spotify')) + '</span>'
+      + '<span class="mx-a">' + esc(x.artist || (x.audio ? 'Uploaded' : /youtube\.com/.test(x.url || '') ? 'YouTube' : /\/album\//.test(x.url) ? 'Album' : /\/playlist\//.test(x.url) ? 'Playlist' : 'Spotify')) + '</span>'
       + (x.note ? '<span class="mx-note">“' + esc(x.note) + '”</span>' : '')
       + '</button></li>';
   }
@@ -168,13 +197,13 @@
     });
   }
   function play(item, p) {
-    var track = { url: item.url, audio: item.audio || '', durationMs: item.durationMs || 0, title: item.title || '', artist: item.artist || '', art: item.art || '', owner: p && p.name || '', slug: p && p.slug || '', lyrics: !!(p && p.lyrics === true) };
+    var track = { url: item.url, audio: item.audio || '', durationMs: item.durationMs || 0, title: item.title || '', artist: item.artist || '', art: item.art || '', owner: p && p.name || '', slug: p && p.slug || '', lyrics: !!(p && p.lyrics !== false) };
     if (window.MaplePlayer && window.MaplePlayer.play) return window.MaplePlayer.play(track);
     if (window.parent !== window) { try { window.parent.postMessage({ maple: 'mp-play', track: track }, location.origin); return; } catch (e) {} }
     if (item.url) window.open(item.url, '_blank', 'noopener');
   }
 
-  window.MX = { esc: esc, spotify: spotify, meta: meta, anilist: anilist, musicHTML: musicHTML, animeHTML: animeHTML, mount: mount, play: play,
+  window.MX = { esc: esc, spotify: spotify, youtube: youtube, meta: meta, anilist: anilist, musicHTML: musicHTML, animeHTML: animeHTML, mount: mount, play: play,
     STATUS: STATUS, artOk: function (u) { return ART_OK.test(u || ''); },
     musicOn: function (p) { return !!p && p.musicOn !== false && Array.isArray(p.musicLikes) && p.musicLikes.length > 0; },
     animeOn: function (p) { return !!p && p.animeOn !== false && Array.isArray(p.anime) && p.anime.length > 0; } };

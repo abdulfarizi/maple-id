@@ -22,7 +22,7 @@
   /* ───── music ───── */
   function musicUI() {
     var box = form.querySelector('[data-mxs-music]'); if (!box) return;
-    box.innerHTML = '<div class="mxs-add"><input type="text" inputmode="url" maxlength="200" data-mxs-url placeholder="Paste a Spotify song, album or playlist link" aria-label="Spotify link to add">'
+    box.innerHTML = '<div class="mxs-add"><input type="text" inputmode="url" maxlength="200" data-mxs-url placeholder="Paste a Spotify or YouTube link" aria-label="Spotify or YouTube link to add">'
       + '<button type="button" class="btn btn-sm btn-accent" data-mxs-addsong><i class="fa-solid fa-plus"></i> Add</button></div>'
       + '<div class="mxs-up"><label class="btn btn-sm"><i class="fa-solid fa-upload"></i> Upload a song<input type="file" accept="audio/*,.mp3,.m4a,.aac,.ogg,.wav,.flac" data-mxs-file hidden></label>'
       + '<small>MP3, M4A, OGG, WAV or FLAC, up to 18 MB. Uploaded songs play in full for every visitor. Only upload music you own or have permission to share.</small></div>'
@@ -46,18 +46,19 @@
     preview();
   }
   function addSong() {
-    var inp = form.querySelector('[data-mxs-url]'), msg = form.querySelector('[data-mxs-mmsg]'), sp = window.MX && MX.spotify(inp.value);
+    var inp = form.querySelector('[data-mxs-url]'), msg = form.querySelector('[data-mxs-mmsg]'), sp = window.MX && MX.spotify(inp.value), yv = !sp && window.MX && MX.youtube && MX.youtube(inp.value);
     msg.className = 'mxs-msg';
-    if (!sp) { msg.textContent = 'That doesn’t look like a Spotify link. Copy it from Share → Copy link.'; msg.classList.add('bad'); return; }
-    if (!/^(track|album|playlist|episode)$/.test(sp.type)) { msg.textContent = 'Use a song, album or playlist link.'; msg.classList.add('bad'); return; }
-    if (st.music.some(function (x) { return x.url === sp.url; })) { msg.textContent = 'That one is already in your list.'; msg.classList.add('bad'); return; }
+    if (!sp && !yv) { msg.textContent = 'That doesn’t look like a Spotify or YouTube link. Copy it from Share → Copy link.'; msg.classList.add('bad'); return; }
+    if (sp && !/^(track|album|playlist|episode)$/.test(sp.type)) { msg.textContent = 'Use a song, album or playlist link.'; msg.classList.add('bad'); return; }
+    var link = (sp || yv).url, brand = sp ? 'Spotify' : 'YouTube';
+    if (st.music.some(function (x) { return x.url === link; })) { msg.textContent = 'That one is already in your list.'; msg.classList.add('bad'); return; }
     if (st.music.length >= MAX_M) { msg.textContent = 'You can add up to ' + MAX_M + ' songs.'; msg.classList.add('bad'); return; }
-    var item = { url: sp.url, title: '', artist: '', art: '', note: '' };
+    var item = { url: link, title: '', artist: '', art: '', note: '' };
     st.music.push(item); inp.value = ''; paintMusic(); dirty();
-    msg.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Getting the song details from Spotify…';
-    MX.meta(sp.url).then(function (m) {
+    msg.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Getting the song details from ' + brand + '…';
+    MX.meta(link).then(function (m) {
       if (m && m.title) { item.title = item.title || m.title; item.artist = item.artist || m.artist || ''; item.art = item.art || m.art || ''; }
-      msg.textContent = m && m.title ? (m.artist ? 'Added. ' : 'Added. Spotify didn’t share the artist name, so type it in if you like. ') + 'Publish to save.' : 'Added, but Spotify didn’t return details. You can type the title and artist yourself.';
+      msg.textContent = m && m.title ? (m.artist ? 'Added. ' : 'Added. ' + brand + ' didn’t share the artist name, so type it in if you like. ') + 'Publish to save.' : 'Added, but ' + brand + ' didn’t return details. You can type the title and artist yourself.';
       paintMusic(); dirty();
     });
   }
@@ -111,14 +112,55 @@
       msg.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Uploading ' + esc(file.name) + '…'; bar(0.4);
       return sbPut(auth.uid + '/' + newId() + '.' + ext, file, type, false, auth);
     }).then(function (url) {
-      var title = String(file.name || 'Untitled').replace(/\.[a-z0-9]{2,5}$/i, '').replace(/[_]+/g, ' ').trim().slice(0, 120);
-      var artist = '', m = title.match(/^(.+?)\s+-\s+(.+)$/); if (m) { artist = m[1]; title = m[2]; }
-      st.music.push({ audio: url, title: title, artist: artist, art: '', durationMs: dur, note: '' });
-      if (!st.song) st.song = url;
-      paintMusic(); dirty(); bar(-1);
-      msg.textContent = 'Uploaded. Check the title and artist, add a cover if you like, then Publish.';
+      return readTags(file).then(function (tags) {
+        var title = String(file.name || 'Untitled').replace(/\.[a-z0-9]{2,5}$/i, '').replace(/[_]+/g, ' ').trim().slice(0, 120);
+        var artist = '', m = title.match(/^(.+?)\s+-\s+(.+)$/); if (m) { artist = m[1]; title = m[2]; }
+        if (tags && tags.title) { title = tags.title.slice(0, 120); artist = (tags.artist || artist).slice(0, 120); } else if (tags && tags.artist) artist = tags.artist.slice(0, 120);
+        var item = { audio: url, title: title, artist: artist, art: '', durationMs: dur, note: '' };
+        st.music.push(item);
+        if (!st.song) st.song = url;
+        paintMusic(); dirty(); bar(-1);
+        msg.textContent = 'Uploaded' + (tags && (tags.title || tags.artist) ? ' (title and artist read from the file).' : '.') + ' Check the details, then Publish. Lyrics are found automatically from the title and artist.';
+        if (tags && tags.art) {       // embedded cover art → the song's cover
+          shrink(tags.art).then(function (b) { return sbPut(url.replace(/^.*\/song-media\//, '').replace(/\.[a-z0-9]+$/, '-art.jpg'), b, 'image/jpeg', true, auth); })
+            .then(function (u) { item.art = u + '?v=' + Date.now().toString(36); paintMusic(); dirty(); }).catch(function () {});
+        }
+      });
     }).catch(function (e) { bad((e && e.message) || 'Upload failed. Try again.'); });
   }
+
+  /* ───── automatic title / artist / cover from the file's own ID3 tags (MP3) ───── */
+  function readTags(file) {
+    if (!file.slice || !file.slice(0, 1).arrayBuffer) return Promise.resolve(null);
+    return file.slice(0, 10).arrayBuffer().then(function (h) {
+      var v = new Uint8Array(h);
+      if (String.fromCharCode(v[0], v[1], v[2]) !== 'ID3') return null;
+      var ver = v[3], size = ((v[6] & 127) << 21) | ((v[7] & 127) << 14) | ((v[8] & 127) << 7) | (v[9] & 127);
+      return file.slice(0, Math.min(10 + size, 6 * 1048576)).arrayBuffer().then(function (buf) {
+        var b = new Uint8Array(buf), out = { title: '', artist: '', art: null }, i = 10, end = b.length;
+        if (v[5] & 0x40) { var ex = ver === 4 ? (((b[10] & 127) << 21) | ((b[11] & 127) << 14) | ((b[12] & 127) << 7) | (b[13] & 127)) : ((b[10] << 24) | (b[11] << 16) | (b[12] << 8) | b[13]) + 4; i += ex; }
+        function dec(enc, a) {
+          try { return new TextDecoder(enc === 1 ? 'utf-16' : enc === 2 ? 'utf-16be' : enc === 3 ? 'utf-8' : 'iso-8859-1').decode(a).replace(/\u0000+$/g, '').trim(); } catch (e) { return ''; }
+        }
+        while (i + 10 < end) {
+          var id = String.fromCharCode(b[i], b[i + 1], b[i + 2], b[i + 3]); if (!/^[A-Z0-9]{4}$/.test(id)) break;
+          var sz = ver === 4 ? (((b[i + 4] & 127) << 21) | ((b[i + 5] & 127) << 14) | ((b[i + 6] & 127) << 7) | (b[i + 7] & 127)) : ((b[i + 4] * 16777216) + (b[i + 5] << 16) + (b[i + 6] << 8) + b[i + 7]);
+          var body = b.subarray(i + 10, i + 10 + sz); if (sz <= 0 || i + 10 + sz > end) break;
+          if (id === 'TIT2') out.title = dec(body[0], body.subarray(1));
+          else if (id === 'TPE1') out.artist = dec(body[0], body.subarray(1)).split(/\u0000/)[0];
+          else if (id === 'APIC' && !out.art) {
+            var enc = body[0], j = 1, mime = ''; while (j < body.length && body[j] !== 0) mime += String.fromCharCode(body[j++]); j++;   // mime
+            j++;                                                                                                                         // picture type
+            if (enc === 1 || enc === 2) { while (j + 1 < body.length && !(body[j] === 0 && body[j + 1] === 0)) j += 2; j += 2; } else { while (j < body.length && body[j] !== 0) j++; j++; }   // description
+            var img = body.subarray(j); if (img.length > 200) out.art = new Blob([img], { type: /^image\//.test(mime) ? mime : (img[0] === 0x89 ? 'image/png' : 'image/jpeg') });
+          }
+          i += 10 + sz;
+        }
+        return out;
+      });
+    }).catch(function () { return null; });
+  }
+
   function shrink(file) {
     return new Promise(function (res, rej) {
       var img = new Image(), u = URL.createObjectURL(file);

@@ -5,8 +5,10 @@
  *    uploaded songs play in full for everyone; Spotify links play in full for listeners who connect Spotify
  *    Premium (Web Playback SDK) and as Spotify's preview for everyone else (official player, kept out of sight;
  *    it is only shown if a browser insists on a tap inside it). Nothing is downloaded from Spotify.
- *  · Lyrics: optional per profile (Studio → Music). Fetched from LRCLIB (open community lyrics database, no key);
- *    synced lines are highlighted from the embed's playback position. Unavailable → a calm empty state.
+ *  · YouTube links play through YouTube's official IFrame player (video shown in the expanded sheet).
+ *  · Lyrics: automatic for every source (switch off per profile in Studio → Music). Looked up in LRCLIB (open community
+ *    lyrics database, no key) from the song's title/artist, cleaned of "(Official Video)"-style noise, with several fallbacks;
+ *    synced lines are highlighted from the playback position. Unavailable → a calm empty state.
  *  · Star cards without a Spotify link keep their built-in theme music: the player drives it inside the card.
  *
  * The app tells it which profile is on screen: MaplePlayer.setProfile('card'|'profile', profile).
@@ -21,6 +23,8 @@
   var el = {}, ctrl = null, ctrlReady = false, apiP = null, pendingUri = '', lyr = { key: '', lines: null, plain: '', cur: -1, userAt: 0, msg: '', ver: 0, sent: -1 };
 
   function spotify(u) { return window.MX ? window.MX.spotify(u) : null; }
+  function youtube(u) { return window.MX && window.MX.youtube ? window.MX.youtube(u) : null; }
+  function srcOf(u) { return spotify(u) ? 'spotify' : youtube(u) ? 'youtube' : ''; }
   function pane() { if (window.dgPager && dgPager.layerKind && dgPager.layerKind() === 'studio') return ''; var p = document.body.dataset.page || ''; return p === 'card' || p === 'profile' ? p : ''; }
   function profileNow() { var p = pane(); return p ? (window.__mxCtx || {})[p] || null : null; }
   /* a star card on screen shows its own Audio Player section: the bottom mini-player steps aside for it */
@@ -69,6 +73,7 @@
       + '<button type="button" class="mpx-big" data-mpx="toggle" aria-label="Play">' + I.play + '</button>'
       + '<button type="button" class="mpx-ic lg" data-mpx="fwd" aria-label="Forward 10 seconds">' + I.fwd + '</button></div>'
       + '<div class="mpx-embed-wrap"><div id="mpx-embed"></div></div>'
+      + '<div class="mpx-yt-wrap" hidden><div id="mpx-yt"></div></div>'
       + '<p class="mpx-note"></p></div>'
       + '<section class="mpx-lyrics" aria-label="Lyrics"><header><b>Lyrics</b><small class="mpx-lsrc"></small></header><div class="mpx-lbody" tabindex="0"></div></section>'
       + '</div>';
@@ -127,7 +132,7 @@
   function paint() {
     if (!el.mini || !S.track) return;
     var t = S.track, art = t.art && window.MX && MX.artOk(t.art) ? t.art : '';
-    var title = t.title || (S.src === 'lofi' ? 'Theme music' : 'Spotify'), artist = t.artist || (S.src === 'lofi' ? (S.lofiName || 'Built-in lofi') : (t.type === 'track' ? '' : (t.type ? t.type[0].toUpperCase() + t.type.slice(1) : '')));
+    var title = t.title || (S.src === 'lofi' ? 'Theme music' : S.src === 'youtube' ? 'YouTube' : 'Spotify'), artist = t.artist || (S.src === 'lofi' ? (S.lofiName || 'Built-in lofi') : S.src === 'youtube' ? '' : (t.type === 'track' ? '' : (t.type ? t.type[0].toUpperCase() + t.type.slice(1) : '')));
     [el.mini, el.sheet].forEach(function (root) {
       root.querySelectorAll('.mpx-title').forEach(function (n) { n.textContent = title; });
       root.querySelectorAll('.mpx-artist').forEach(function (n) { n.textContent = artist; n.hidden = !artist; });
@@ -138,9 +143,10 @@
     el.mini.classList.toggle('compact', S.compact && !S.playing);
     el.sheet.classList.toggle('has-art', !!art);
     el.sheet.querySelector('.mpx-owner').textContent = t.owner ? 'from ' + t.owner + (/s$/i.test(t.owner) ? "'" : "'s") + ' profile' : '';
-    var isSp = S.src === 'spotify', canSeek = S.engine === 'file' || isSp;
+    var isSp = S.src === 'spotify', canSeek = S.engine === 'file' || S.engine === 'yt' || isSp;
     var wrap = el.sheet.querySelector('.mpx-embed-wrap');
     wrap.hidden = S.engine !== 'embed'; wrap.classList.toggle('mpx-ghost', !S.reveal);
+    var yw = el.sheet.querySelector('.mpx-yt-wrap'); if (yw) yw.hidden = S.engine !== 'yt';
     el.sheet.querySelectorAll('[data-mpx=back],[data-mpx=fwd]').forEach(function (b) { b.hidden = !canSeek; });
     el.sheet.querySelector('.mpx-prog').hidden = !(canSeek && S.dur > 0);
     el.sheet.querySelector('.mpx-note').innerHTML = noteHTML(t);
@@ -160,11 +166,12 @@
     syncLyric();
   }
 
-  function lyrOk(t) { return !!(t && t.lyrics && (S.src === 'file' || (S.src === 'spotify' && (t.type === 'track' || (S.engine === 'sdk' && t.title))))); }
+  function lyrOk(t) { return !!(t && t.lyrics && (S.src === 'file' || S.src === 'youtube' || (S.src === 'spotify' && (t.type === 'track' || (S.engine === 'sdk' && t.title))))); }
   function noteHTML(t) {
-    var open = t.url && !t.audio ? ' · <a href="' + esc(t.url) + '" target="_blank" rel="noopener noreferrer">Open in Spotify</a>' : '';
+    var open = t.url && !t.audio ? ' · <a href="' + esc(t.url) + '" target="_blank" rel="noopener noreferrer">Open in ' + (S.src === 'youtube' ? 'YouTube' : 'Spotify') + '</a>' : '';
     var err = S.err ? '<b>' + esc(S.err) + '</b> ' : '';
     if (S.engine === 'file') return err + '<i class="fa-solid fa-circle-check" aria-hidden="true"></i> Full song' + (t.owner ? ', shared by ' + esc(t.owner) : '') + '.';
+    if (S.engine === 'yt') return err + '<i class="fa-brands fa-youtube" aria-hidden="true" style="color:#ff3b30"></i> Playing from YouTube' + (t.owner ? ', shared by ' + esc(t.owner) : '') + open + '.';
     if (S.engine === 'lofi') return 'This card’s built-in theme music. It changes with the card theme.';
     if (S.engine === 'sdk') return err + '<i class="fa-brands fa-spotify" aria-hidden="true"></i> Full song through your Spotify Premium. <button type="button" class="mpx-login" data-mpx="disconnect">Disconnect</button>' + open;
     var why = sdk.fail === 'premium' ? 'Full songs need a Spotify Premium account. '
@@ -191,7 +198,7 @@
    *  lofi  · a star card's built-in theme music (plays inside the card) */
   function msp() { return window.MSP || null; }
   function sdkWanted() { return !!(msp() && msp().connected() && !sdk.fail); }
-  function pickEngine(src) { return src === 'file' ? 'file' : src === 'spotify' ? (sdkWanted() ? 'sdk' : 'embed') : 'lofi'; }
+  function pickEngine(src) { return src === 'file' ? 'file' : src === 'youtube' ? 'yt' : src === 'spotify' ? (sdkWanted() ? 'sdk' : 'embed') : 'lofi'; }
 
   /* file */
   var audio = null;
@@ -214,6 +221,79 @@
     var a = aud();
     if (a.getAttribute('src') !== t.audio) { a.src = t.audio; S.pos = 0; }
     if (go) { S.buffering = true; paint(); a.play().catch(function () { S.buffering = false; paint(); }); }
+  }
+
+
+  /* youtube (official IFrame player, shown in the expanded sheet) */
+  var yt = { p: null, ready: false, want: false, busy: false, id: '', apiP: null, tick: 0 };
+  function ytApi() {
+    if (yt.apiP) return yt.apiP;
+    yt.apiP = new Promise(function (res, rej) {
+      if (window.YT && window.YT.Player) return res(window.YT);
+      var prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function () { try { prev && prev(); } catch (e) {} res(window.YT); };
+      var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.async = true;
+      s.onerror = function () { yt.apiP = null; rej(new Error('load')); }; document.head.appendChild(s);
+    });
+    return yt.apiP;
+  }
+  function ytId() { var y = S.track && youtube(S.track.url); return y ? y.id : ''; }
+  function ytStopTick() { clearInterval(yt.tick); yt.tick = 0; }
+  function ytStartTick() {
+    if (yt.tick) return;
+    yt.tick = setInterval(function () {
+      if (S.engine !== 'yt' || !yt.p || !yt.ready) return;
+      try {
+        var d = yt.p.getDuration() || 0; if (d > 0) S.dur = d * 1000;
+        S.pos = (yt.p.getCurrentTime() || 0) * 1000; progress(); bcast();
+      } catch (e) {}
+    }, 250);
+  }
+  function ytEnsure(then) {
+    if (S.engine !== 'yt' || !S.track) return;
+    var id = ytId(); if (!id) return;
+    build();
+    if (yt.p && yt.ready) {
+      if (yt.id !== id) { yt.id = id; yt.want = !!then; try { then ? yt.p.loadVideoById(id) : yt.p.cueVideoById(id); } catch (e) {} }
+      else if (then) then();
+      return;
+    }
+    if (then) yt.want = true;
+    if (yt.busy) return; yt.busy = true; yt.id = id;
+    ytApi().then(function (YT) {
+      var host = document.getElementById('mpx-yt'); if (!host) { yt.busy = false; return; }
+      yt.p = new YT.Player(host, {
+        videoId: id, width: '100%', height: '100%',
+        playerVars: { playsinline: 1, controls: 1, rel: 0, modestbranding: 1, fs: 1, origin: location.origin },
+        events: {
+          onReady: function () {
+            yt.ready = true; yt.busy = false;
+            try { var v = yt.p.getVideoData && yt.p.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || String(v.author || '').replace(/\s*-\s*Topic$/i, ''); paint(); loadLyrics(); } } catch (e) {}
+            try { var d = yt.p.getDuration(); if (d > 0) S.dur = d * 1000; } catch (e) {}
+            if (yt.want) { yt.want = false; try { yt.p.playVideo(); } catch (e) {} setTimeout(function () { if (S.engine === 'yt' && !S.playing && !S.buffering) { S.reveal = true; setOpen(true); paint(); } }, 3500); }
+            ytStartTick();
+          },
+          onStateChange: function (e) {
+            if (S.engine !== 'yt') return;
+            var st = e.data;                       // -1 unstarted · 0 ended · 1 playing · 2 paused · 3 buffering · 5 cued
+            S.playing = st === 1 || st === 3; S.buffering = st === 3;
+            if (st === 1) { S.reveal = false; S.err = ''; ytStartTick(); }
+            if (st === 0) { S.playing = false; S.pos = 0; }
+            try { var d = yt.p.getDuration(); if (d > 0) S.dur = d * 1000; } catch (x) {}
+            paint();
+          },
+          onError: function (e) {
+            var c = e && e.data; S.playing = false; S.buffering = false;
+            S.err = c === 101 || c === 150 ? 'The owner of this video doesn’t allow it to play outside YouTube.' : c === 100 ? 'This video was removed or is private.' : 'YouTube couldn’t play this video.';
+            paint();
+          }
+        }
+      });
+    }).catch(function () { yt.busy = false; S.err = 'YouTube’s player could not load (blocked or offline).'; paint(); });
+  }
+  function ytToggle() {
+    if (yt.p && yt.ready && yt.id === ytId()) { try { var st = yt.p.getPlayerState(); if (st === 1 || st === 3) yt.p.pauseVideo(); else yt.p.playVideo(); } catch (e) {} return; }
+    ytEnsure(function () { try { yt.p.playVideo(); } catch (e) {} });
   }
 
   /* sdk (Spotify Premium) */
@@ -357,6 +437,7 @@
     if (!S.track) return;
     S.err = '';
     if (S.engine === 'lofi') { var f = starFrame(); if (f) try { f.contentWindow.postMessage({ maple: 'lofi', act: 'toggle' }, location.origin); } catch (e) {} return; }
+    if (S.engine === 'yt') { ytToggle(); return; }
     if (S.engine === 'file') { var a = aud(); if (a.getAttribute('src') !== S.track.audio) fileLoad(S.track, true); else if (a.paused) a.play().catch(function () {}); else a.pause(); return; }
     if (S.engine === 'sdk') {
       var sp = spotify(S.track.url);
@@ -371,6 +452,7 @@
   function seekMs(ms) {
     ms = Math.max(0, Math.min(S.dur || ms, ms));
     if (S.engine === 'file') { if (audio) audio.currentTime = ms / 1000; }
+    else if (S.engine === 'yt') { if (yt.p && yt.ready) { try { yt.p.seekTo(ms / 1000, true); } catch (e) {} S.pos = ms; } }
     else if (S.engine === 'sdk') { if (sdk.p) { try { sdk.p.seek(Math.round(ms)); } catch (e) {} sdk.base = S.pos = ms; sdk.at = performance.now(); } }
     else if (S.engine === 'embed' && ctrl) { try { ctrl.seek(Math.round(ms / 1000)); } catch (e) {} }
     progress();
@@ -378,6 +460,7 @@
   function skip(sec) { if (S.dur) seekMs(S.pos + sec * 1000); }
   function pauseAll() {
     if (audio && !audio.paused) audio.pause();
+    if (yt.p && yt.ready && S.engine === 'yt') { try { yt.p.pauseVideo(); } catch (e) {} }
     if (sdk.p && S.engine === 'sdk' && S.playing) { try { sdk.p.pause(); } catch (e) {} }
     if (ctrl && S.engine === 'embed' && S.playing) { try { ctrl.pause(); } catch (e) {} }
     if (S.engine === 'lofi' && S.playing) { var f = starFrame(); if (f) try { f.contentWindow.postMessage({ maple: 'lofi', act: 'stop' }, location.origin); } catch (e) {} }
@@ -393,10 +476,12 @@
     S.src = src; S.track = track; S.engine = pickEngine(src);
     if (!same) { S.pos = 0; S.dur = track.durationMs || 0; S.err = ''; S.reveal = false; sdk.loaded = ''; if (src !== 'lofi') S.playing = false; lyr.key = ''; lyr.lines = null; lyr.plain = ''; lyr.msg = src === 'lofi' ? 'The built-in theme music has no lyrics.' : (track.lyrics ? 'Tap play to start the music.' : ''); lyr.ver++; }
     build(); show(true); paint();
-    if (src === 'spotify' && !same && track.url && !(track.title && track.art) && window.MX) {
+    if ((src === 'spotify' || src === 'youtube') && !same && track.url && !(track.title && track.art) && window.MX) {
       MX.meta(track.url).then(function (m) {
         if (!m || S.track !== track) return;
-        track.title = track.title || m.title; track.artist = track.artist || m.artist; track.art = track.art || m.art; track.type = m.type || track.type;
+        var mt = m.title, ma = m.artist;
+        if (src === 'youtube' && mt) { var c0 = lyrCandidates({ title: mt, artist: ma })[0]; if (c0) { mt = c0.title; ma = c0.artist || ma; } }   // "Artist - Title (Official Video)" → clean title + artist
+        track.title = track.title || mt; track.artist = track.artist || ma; track.art = track.art || m.art; if (src === 'spotify') track.type = m.type || track.type;
         if (m.durationMs) { track.fullMs = m.durationMs; if (!S.dur) S.dur = m.durationMs; }
         paint(); if (S.open || inlineNow() || S.deckLyr) loadLyrics();
       });
@@ -404,12 +489,15 @@
     if (S.engine === 'file') fileLoad(track, !!autoplay);
     else if (S.engine === 'sdk') { if (autoplay) sdkStart(track); else sdkInit().catch(function () {}); }
     else if (S.engine === 'embed' && (autoplay || ctrl)) { if (autoplay) embedPlay(); else ensureCtrl(); }
+    else if (S.engine === 'yt') { if (autoplay) ytEnsure(function () { try { yt.p.playVideo(); } catch (e) {} }); else if (yt.p && yt.ready) ytEnsure(); }
     if (S.open || inlineNow() || S.deckLyr) loadLyrics();
   }
   function trackOf(t, p) {
     p = p || {};
     if (t && t.audio && /^https:\/\/qebbuxixnqsqjuprfpyv\.supabase\.co\/storage\/v1\/object\/public\/song-media\/[0-9a-f-]{36}\/[a-z0-9]{8,24}\.(?:mp3|m4a|aac|ogg|wav|flac|webm)$/.test(t.audio))
       return { audio: t.audio, url: t.audio, type: 'track', title: t.title || 'Untitled', artist: t.artist || '', art: t.art || '', durationMs: t.durationMs || 0, owner: t.owner || p.name || '', slug: t.slug || p.slug || '', lyrics: !!t.lyrics };
+    var yv = t && !spotify(t.url) ? youtube(t.url) : null;
+    if (yv) return { url: yv.url, type: 'video', title: t.title || '', artist: t.artist || '', art: t.art || '', owner: t.owner || p.name || '', slug: t.slug || p.slug || '', lyrics: !!t.lyrics };
     var sp = spotify(t && t.url); if (!sp) return null;
     return { url: sp.url, type: sp.type, title: t.title || '', artist: t.artist || '', art: t.art || '', owner: t.owner || p.name || '', slug: t.slug || p.slug || '', lyrics: !!t.lyrics };
   }
@@ -417,7 +505,7 @@
   function play(t) {
     var tr = trackOf(t); if (!tr) return;
     S.dismissed = '';
-    load(tr, tr.audio ? 'file' : 'spotify', true);
+    load(tr, tr.audio ? 'file' : srcOf(tr.url), true);
     if (!inlineNow()) setOpen(true);                                   // star cards play it in their own Audio Player
   }
 
@@ -428,16 +516,16 @@
       var own = p.song && p.song.audio ? trackOf(p.song, p) : null;
       if (own) {
         S.compact = p.musicAuto === false;
-        if (!S.track || (!S.playing && S.track.slug !== p.slug) || (!S.playing && S.track.url !== own.url && S.track.slug === p.slug)) { own.lyrics = p.lyrics === true; load(own, 'file', false); }
-        else { if (S.track.slug === p.slug) S.track.lyrics = p.lyrics === true; show(true); paint(); }
+        if (!S.track || (!S.playing && S.track.slug !== p.slug) || (!S.playing && S.track.url !== own.url && S.track.slug === p.slug)) { own.lyrics = p.lyrics !== false; load(own, 'file', false); }
+        else { if (S.track.slug === p.slug) S.track.lyrics = p.lyrics !== false; show(true); paint(); }
         return;
       }
-      var sp = spotify(p.spotify);
+      var sp = spotify(p.spotify) || youtube(p.spotify), spSrc = srcOf(p.spotify);
       if (sp) {
         S.compact = p.musicAuto === false;
         if (!S.track || (!S.playing && S.track.slug !== p.slug) || (!S.playing && S.track.url !== sp.url && S.track.slug === p.slug))
-          load({ url: sp.url, type: sp.type, title: '', artist: '', art: '', owner: p.name || '', slug: p.slug, lyrics: p.lyrics === true }, 'spotify', false);
-        else { if (S.track.slug === p.slug) S.track.lyrics = p.lyrics === true; show(true); paint(); }
+          load({ url: sp.url, type: sp.type, title: '', artist: '', art: '', owner: p.name || '', slug: p.slug, lyrics: p.lyrics !== false }, spSrc, false);
+        else { if (S.track.slug === p.slug) S.track.lyrics = p.lyrics !== false; show(true); paint(); }
         return;
       }
       if (p.layout === 'star' && !(S.src !== 'lofi' && S.playing)) {
@@ -463,23 +551,59 @@
     return out.length ? out : null;
   }
   function lyricState(html) { el.lbody.innerHTML = '<div class="mpx-lstate">' + html + '</div>'; lyr.msg = html.replace(/<\/(b|span)>/g, '. ').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').replace(/\.\s*\.?\s*$/, '').trim(); lyr.lines = null; lyr.plain = ''; lyr.ver++; bcast(); }
+  /* strip the noise YouTube titles carry: (Official Video), [Lyrics], "| Channel", feat. …, "- Topic" */
+  var NOISE = /official|lyric|video|audio|visuali[sz]er|\bm\/?v\b|\bhd\b|\b4k\b|remaster|full (song|version)|explicit|karaoke|sub(title)?s?\b|terjemahan|\bcc\b/i;
+  function tidy(s) {
+    return String(s || '').replace(/[\(\[\{【「『][^\)\]\}】」』]*[\)\]\}】」』]/g, function (m) { return NOISE.test(m) ? '' : m; })
+      .replace(/\s*[|｜•·].*$/, '').replace(/\b(official\s+(music\s+)?(video|audio)|lyric\s+video|lyrics?\s+video|music\s+video|lyrics?)\b/gi, '')
+      .replace(/\s+/g, ' ').replace(/^[\s\-–—:]+|[\s\-–—:]+$/g, '').trim();
+  }
+  function noFeat(s) { return s.replace(/\s*[\(\[]?\s*(feat|ft|featuring|with)\.?\s+[^\)\]]*[\)\]]?\s*$/i, '').trim(); }
+  /* the (title, artist) pairs worth trying, best guess first */
+  function lyrCandidates(t) {
+    var title = tidy(t.title), artist = tidy(String(t.artist || '').split(/,|&| x /i)[0]).replace(/\s*-\s*Topic$/i, '').replace(/VEVO$/i, '').trim();
+    var out = [], seen = {};
+    function add(ti, ar) { ti = noFeat(ti || '').trim(); ar = (ar || '').trim(); if (!ti) return; var k = (ti + '|' + ar).toLowerCase(); if (seen[k]) return; seen[k] = 1; out.push({ title: ti, artist: ar }); }
+    var m = title.match(/^(.+?)\s+[-–—~]\s+(.+)$/);
+    if (m) { add(m[2], m[1]); add(m[1], m[2]); }          // "Artist - Title" (or the other way round)
+    add(title, artist);
+    if (artist && title.toLowerCase().indexOf(artist.toLowerCase()) === 0) add(title.slice(artist.length).replace(/^[\s\-–—:]+/, ''), artist);
+    add(title, '');
+    return out.slice(0, 5);
+  }
+  function lrcFetch(path) { return fetch('https://lrclib.net/api/' + path).then(function (r) { if (r.status === 404) return null; if (!r.ok) throw new Error('lrclib ' + r.status); return r.json(); }); }
+  function hasLyrics(d) { return !!(d && (d.syncedLyrics || d.plainLyrics || d.instrumental)); }
+  function pickBest(list) {
+    list = (Array.isArray(list) ? list : []).filter(hasLyrics); if (!list.length) return null;
+    list.sort(function (a, b) {
+      var sa = a.syncedLyrics ? 0 : 1, sb = b.syncedLyrics ? 0 : 1; if (sa !== sb) return sa - sb;
+      return S.dur ? Math.abs((a.duration || 0) * 1000 - S.dur) - Math.abs((b.duration || 0) * 1000 - S.dur) : 0;
+    });
+    return list[0];
+  }
+  /* try LRCLIB's exact match, then its fuzzy search, for each candidate, until something with lyrics turns up */
+  function findLyrics(t) {
+    var cands = lyrCandidates(t), steps = [], dur = S.dur ? '&duration=' + Math.round(S.dur / 1000) : '';
+    cands.forEach(function (c) {
+      var q = 'track_name=' + encodeURIComponent(c.title) + (c.artist ? '&artist_name=' + encodeURIComponent(c.artist) : '');
+      if (c.artist) steps.push(function () { return lrcFetch('get?' + q + dur).then(function (d) { return hasLyrics(d) ? d : null; }); });
+      steps.push(function () { return lrcFetch('search?' + q).then(pickBest); });
+    });
+    var c0 = cands[0]; if (c0) steps.push(function () { return lrcFetch('search?q=' + encodeURIComponent((c0.artist + ' ' + c0.title).trim())).then(pickBest); });
+    var i = 0, failed = 0;
+    return (function next() {
+      if (i >= steps.length) { if (failed === steps.length && steps.length) throw new Error('offline'); return Promise.resolve(null); }
+      return steps[i++]().catch(function () { failed++; return null; }).then(function (d) { return d || next(); });
+    })();
+  }
   function loadLyrics() {
     var t = S.track; if (!(S.open || inlineNow() || S.deckLyr) || !lyrOk(t)) return;
     if (!t.title) { lyricState('<i class="fa-solid fa-circle-notch fa-spin"></i> Looking up the song…'); return; }
-    var key = t.url + '|' + t.title + '|' + t.artist; if (lyr.key === key) return;
+    var key = t.url + '|' + t.title + '|' + t.artist + '|' + (S.dur ? Math.round(S.dur / 5000) : 0); if (lyr.key === key) return;
     lyr.key = key; lyr.lines = null; lyr.plain = ''; lyr.cur = -1;
     lyricState('<i class="fa-solid fa-circle-notch fa-spin"></i> Finding lyrics…');
     el.sheet.querySelector('.mpx-lsrc').innerHTML = '';
-    var qs = 'track_name=' + encodeURIComponent(t.title) + (t.artist ? '&artist_name=' + encodeURIComponent(t.artist.split(',')[0]) : '');
-    var get = t.artist ? fetch('https://lrclib.net/api/get?' + qs + (S.dur ? '&duration=' + Math.round(S.dur / 1000) : '')).then(function (r) { if (r.status === 404) return null; if (!r.ok) throw 0; return r.json(); }) : Promise.resolve(null);
-    get.then(function (d) {
-      if (d && (d.syncedLyrics || d.plainLyrics || d.instrumental)) return d;
-      return fetch('https://lrclib.net/api/search?' + qs).then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (list) {
-        list = Array.isArray(list) ? list : [];
-        if (S.dur) list.sort(function (a, b) { return Math.abs(a.duration * 1000 - S.dur) - Math.abs(b.duration * 1000 - S.dur); });
-        return list.find(function (x) { return x.syncedLyrics; }) || list[0] || null;
-      });
-    }).then(function (d) {
+    findLyrics(t).then(function (d) {
       if (lyr.key !== key) return;
       if (!d) return lyricState('<i class="fa-regular fa-file-lines"></i><b>No lyrics for this song yet</b><span>Lyrics aren’t available for every track.</span>');
       if (d.instrumental) return lyricState('<i class="fa-solid fa-guitar"></i><b>Instrumental</b><span>Just the music on this one.</span>');

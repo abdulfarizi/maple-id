@@ -22,7 +22,7 @@
   function mainSong(p) {
     if (p.music === false) return null;
     if (p.song && p.song.audio) return { audio: p.song.audio, url: p.song.audio, title: p.song.title || 'Untitled', artist: p.song.artist || '', art: p.song.art || '', durationMs: p.song.durationMs || 0, note: p.song.note || '' };
-    var sp = window.MX && MX.spotify(p.spotify);
+    var sp = window.MX && (MX.spotify(p.spotify) || (MX.youtube && MX.youtube(p.spotify)));
     return sp ? { url: sp.url, title: '', artist: '', art: '', durationMs: 0, type: sp.type, note: '' } : null;
   }
 
@@ -53,7 +53,7 @@
   }
   function musicCard(x, i) {
     var art = x.art && artOk(x.art) ? '<img src="' + esc(x.art) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '';
-    var sub = x.artist || (x.audio ? 'Uploaded' : /\/album\//.test(x.url) ? 'Album' : /\/playlist\//.test(x.url) ? 'Playlist' : 'Spotify');
+    var sub = x.artist || (x.audio ? 'Uploaded' : /youtube\.com/.test(x.url || '') ? 'YouTube' : /\/album\//.test(x.url) ? 'Album' : /\/playlist\//.test(x.url) ? 'Playlist' : 'Spotify');
     return '<button type="button" class="dk-mus" data-dk-play="' + i + '" aria-label="Play ' + esc(x.title || 'song') + '">'
       + '<span class="dk-cover"><span class="dk-ph">' + first(x.title) + '</span>' + art + '<span class="dk-hover"><i class="fa-solid fa-play"></i></span></span>'
       + '<b>' + esc(x.title || 'Untitled') + '</b><small>' + esc(sub) + '</small></button>';
@@ -364,7 +364,11 @@
     }
     function canScroll(dir) { var s = slides[cur]; if (!s) return false; return dir > 0 ? s.scrollTop + s.clientHeight < s.scrollHeight - 2 : s.scrollTop > 1; }
     function step(dir) { if (Date.now() - lastNav < 800) return; go(cur + dir); }
-    function shown() { return document.body.contains(deck) && deck.getClientRects().length > 0; }
+    function shown() {
+      if (!document.body.contains(deck) || !deck.getClientRects().length) return false;
+      var pane = deck.closest('.pg'); if (pane && pane.dataset.pg && document.body.dataset.page && document.body.dataset.page !== pane.dataset.pg) return false;   // another pager pane is on screen
+      return true;
+    }
 
     deck.addEventListener('wheel', function (e) {
       if (e.ctrlKey || Math.abs(e.deltaY) < Math.abs(e.deltaX)) return;
@@ -456,7 +460,7 @@
 
     /* ── player: drives and mirrors the bottom player ── */
     function state() { return window.MaplePlayer && MaplePlayer.state ? MaplePlayer.state() : null; }
-    function track() { return { url: song.url, audio: song.audio || '', title: song.title, artist: song.artist, art: song.art, durationMs: song.durationMs, owner: p.name, slug: p.slug, lyrics: p.lyrics === true }; }
+    function track() { return { url: song.url, audio: song.audio || '', title: song.title, artist: song.artist, art: song.art, durationMs: song.durationMs, owner: p.name, slug: p.slug, lyrics: p.lyrics !== false }; }
     function mine(st) { return !!(song && st && st.track && (st.track.url === song.url || st.track.audio === song.url)); }
     function ours(st) { return !!(st && st.track && (mine(st) || (p.slug && st.track.slug === p.slug))); }
     function songCtl(a) {
@@ -474,7 +478,7 @@
         lyrVer = v; lyrCur = -1;
         if (L && L.ok && L.lines) box.innerHTML = L.lines.map(function (l) { return '<p>' + (esc(l.x) || '♪') + '</p>'; }).join('');
         else if (L && L.ok && L.plain) box.innerHTML = '<p class="dk-lplain">' + esc(L.plain) + '</p>';
-        else box.innerHTML = '<p class="dk-lmsg">' + esc((L && L.ok && L.msg) || song.note || (p.lyrics === true ? (on ? '♪' : 'Press play to see the lyrics') : '♪')) + '</p>';
+        else box.innerHTML = '<p class="dk-lmsg">' + esc((L && L.ok && L.msg) || song.note || (p.lyrics !== false ? (on ? '♪' : 'Press play to see the lyrics') : '♪')) + '</p>';
         box.style.transform = '';
       }
       if (L && L.ok && L.lines) {

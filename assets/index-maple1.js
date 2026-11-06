@@ -433,11 +433,11 @@ GoTrue REQUIRES HTTPS to work securely.`),t&&(this.audience=t),this.setCookie=n,
           <fieldset>
             <legend>Bottom music player</legend>
             <label class="toggle"><input type="checkbox" name="music" ${e.music===!1?``:`checked`}><span></span> Show the music player at the bottom of my profile</label>
-            <div class="field"><label>Featured track <small>a Spotify track, album or playlist link</small></label><input name="spotify" type="text" inputmode="url" maxlength="200" placeholder="https://open.spotify.com/track/…" value="${J(e.spotify||``)}"></div>
+            <div class="field"><label>Featured track <small>a Spotify or YouTube link</small></label><input name="spotify" type="text" inputmode="url" maxlength="200" placeholder="https://open.spotify.com/track/… or https://youtu.be/…" value="${J(e.spotify||``)}"></div>
             <div class="mxs-feat" data-mxs-feat></div>
             <label class="toggle"><input type="checkbox" name="musicAuto" ${e.musicAuto===!1?``:`checked`}><span></span> Show the full mini-player when my profile opens (off = a small play button)</label>
-            <label class="toggle"><input type="checkbox" name="lyrics" ${e.lyrics===!0?`checked`:``}><span></span> Show lyrics in the expanded player, when available</label>
-            <p class="hint">Played through Spotify's official player. Visitors logged in to Spotify in their browser hear full songs; everyone else gets Spotify's 30-second preview plus a Log in to Spotify button in the player. Lyrics come from LRCLIB, an open community lyrics database, and aren't available for every song. Star cards without a link keep their theme music in the same player.</p>
+            <label class="toggle"><input type="checkbox" name="lyrics" ${e.lyrics===!1?``:`checked`}><span></span> Find and show lyrics automatically, when available</label>
+            <p class="hint">YouTube links play through YouTube's official player (the video shows in the expanded player). Spotify links: visitors logged in to Spotify in their browser hear full songs; everyone else gets Spotify's 30-second preview plus a Log in to Spotify button in the player. Lyrics are looked up automatically in LRCLIB, an open community lyrics database, from the song's title and artist (it isn't available for every song). Star cards without a link keep their theme music in the same player.</p>
           </fieldset>
           <fieldset>
             <legend>Music I like</legend>
