@@ -8,7 +8,7 @@
   position:absolute;inset:0;z-index:1;overflow:hidden;isolation:isolate;
   color:var(--text);font-family:Inter,Geist,system-ui,-apple-system,sans-serif}
 body.pager-on .dk-deck{--top:var(--tb-h,64px)}
-/* v36 fix: the deck lives INSIDE its pager pane (absolute, not fixed). It used to be position:fixed, so it stayed on
+/* v36-1 fix: the deck lives INSIDE its pager pane (absolute, not fixed). It used to be position:fixed, so it stayed on
  * screen on top of Home and Explore after you swiped/clicked away from the card or Profile pane. */
 .pg:has(.dk-deck),.pg-layer:has(.dk-deck){position:relative;overflow:hidden}
 .pg-layer:has(.dk-deck){position:fixed}
