@@ -63,3 +63,17 @@ html.sh-open{overflow:hidden}
 
 @media (min-width:900px){.sh-drawer{width:340px}}
 @media (prefers-reduced-motion:reduce){.sh-drawer,.sh-scrim{transition-duration:.01ms!important}}
+
+/* owner-only badge manager */
+.sh-bd{position:fixed;inset:0;z-index:6000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.55)}
+.sh-bd-card{width:min(420px,100%);padding:16px;border-radius:20px;background:var(--panel-solid,var(--panel));border:1px solid var(--line);box-shadow:var(--shadow);color:var(--text)}
+.sh-bd-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.sh-bd-h b{font-size:18px}
+.sh-bd-p{margin:0 0 12px;font-size:13px;line-height:1.45;color:var(--muted)}
+.sh-bd-f{display:flex;gap:8px}
+.sh-bd-f input{flex:1;min-width:0;height:40px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg-2);color:var(--text);font:500 15px var(--sans)}
+.sh-bd-m{min-height:20px;margin:10px 2px 6px;font-size:13px;color:var(--muted)}
+.sh-bd-t{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sh-bd-t button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border-radius:14px;border:1px solid var(--line);background:var(--bg-2);color:var(--text);font:600 14px var(--sans);cursor:pointer}
+.sh-bd-t button[aria-pressed=true][data-k=verified]{background:rgba(47,155,255,.18);border-color:#2f9bff}
+.sh-bd-t button[aria-pressed=true][data-k=crown]{background:rgba(246,183,60,.2);border-color:#f6b73c}
+.sh-bd-t button[disabled]{opacity:.5}

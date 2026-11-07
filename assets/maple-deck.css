@@ -565,3 +565,18 @@ body.pager-on .dk-deck{--top:var(--tb-h,64px)}
 .dkg-rows{display:grid;gap:8px;margin-bottom:8px}
 .dkg-row{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:6px;align-items:center}
 @media (max-width:420px){.dkg-row{grid-template-columns:96px minmax(0,1fr) auto}}
+
+/* ───────── v36-12 · the music player lives INSIDE the "more" card, so the profile slide is shorter and the player is never cut in half ───────── */
+.dk-mini-in{margin:10px 0 0;border-top:1px solid var(--tile-line)}
+.dk-mini-in .dk-prow{padding:10px 14px 0}
+@media (max-height:760px){
+  .dk-main .dk-ban{height:64px}
+  .dk-av{width:68px;height:68px}.dk-id{margin-top:-30px}
+  .dk-main .dk-bio{margin-top:8px;-webkit-line-clamp:2;line-clamp:2}
+  .dk-cta{margin-top:10px}.dk-cbtn{height:36px}.dk-main{padding-bottom:10px}
+  .dk-more{padding:8px 0 8px}.dk-more .dk-reacts{margin-top:6px}.dk-mini-in{margin-top:8px}.dk-mini-in .dk-prow{padding-top:8px}
+  .dk-s-profile .dk-in{gap:8px}
+  .dk-main .dk-ban{margin-top:6px}.dk-more .dk-foot{margin-top:2px}
+}
+@media (max-height:700px){.dk-hint{display:none}}
+@media (max-height:600px){.dk-s-profile .dk-in{padding-bottom:28px}}

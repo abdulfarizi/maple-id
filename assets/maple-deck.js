@@ -271,9 +271,9 @@
 
     /* ── 1 · profile: ONE fixed main card (who + two buttons), a second card for everything else, then the mini player ── */
     var wa = waLink(p), gear = gearList(p);
-    var prof = '<div class="dk-card dk-main dk-item" style="--i:0">'
+    var prof = '<div class="dk-card dk-main dk-item" style="--i:0" data-frame="' + esc(p.frame || '') + '">'
       + '<div class="dk-ban" data-dk-slot="banner"><span class="dk-tag" data-dk-slot="tag"></span></div>'
-      + '<div class="dk-id"><div class="dk-av"><div data-dk-slot="avatar"></div><i class="dk-dot ' + (online ? 'on' : 'off') + '" title="' + (online ? 'Online' : 'Offline') + '"></i></div>'
+      + '<div class="dk-id"><div class="dk-av" data-adeco="' + esc(p.avatarDeco || '') + '" data-adeco-c="' + esc(p.avatarDecoColor || '') + '"><div data-dk-slot="avatar"></div><i class="dk-dot ' + (online ? 'on' : 'off') + '" title="' + (online ? 'Online' : 'Offline') + '"></i></div>'
       + '<div class="dk-who"><div class="dk-nm"><h1>' + esc(p.name || 'Creator') + '</h1><span class="dk-vbs" data-dk-vbs>' + badgeHTML(p.badges) + '</span></div>'
       + '<div class="dk-badges"><span><i class="dk-ldot ' + (online ? 'on' : 'off') + '"></i>' + (online ? 'Online' : 'Offline') + '</span><span data-dk-slot="clockw"><i class="fa-regular fa-clock"></i><span data-dk-slot="clock"></span></span></div>'
       + (p.role && p.role.trim() ? '<p class="dk-role">' + esc(p.role.trim()) + '</p>' : '') + '</div></div>'
@@ -287,11 +287,8 @@
       + (place ? '<span class="dk-stat"><i class="fa-solid fa-location-dot"></i>' + esc(place) + '</span>' : '')
       + '<span class="dk-right"><span data-dk-slot="actions" class="dk-acts"></span><span class="dk-stat" data-dk-slot="like"></span></span></div>'
       + '<div data-dk-slot="reactions" class="dk-reacts"></div>'
-      + '<div class="dk-own" data-dk-own hidden><span class="dk-own-l"><i class="fa-solid fa-crown" aria-hidden="true"></i> Owner · badges</span>'
-      + '<span class="dk-own-b"><button type="button" data-dk-bd="verified" aria-pressed="false"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Verified</button>'
-      + '<button type="button" data-dk-bd="crown" aria-pressed="false"><i class="fa-solid fa-crown" aria-hidden="true"></i> Crown</button></span></div>'
-      + '</div>'
-      + (song ? '<div class="dk-card dk-mini dk-item" style="--i:2" data-dk-player>' + playerRow(song, preview, false) + '</div>' : '');
+      + (song ? '<div class="dk-mini-in" data-dk-player>' + playerRow(song, preview, false) + '</div>' : '')
+      + '</div>';
     var html = slide('profile', prof);
 
     /* ── 1b · gear: its own card ── */
@@ -515,31 +512,6 @@
       if (isOwn) dgForum.open('inbox'); else dgForum.open('thread', String(p.slug || '').toLowerCase());
     }
 
-    /* ── v36-11 · owner-only badges: the control only appears for the site owner (the server checks it again) ── */
-    var vbs = deck.querySelector('[data-dk-vbs]'), own = deck.querySelector('[data-dk-own]');
-    function paintBadges() {
-      var b = p.badges || {};
-      if (vbs) vbs.innerHTML = badgeHTML(b);
-      if (own) own.querySelectorAll('[data-dk-bd]').forEach(function (x) { x.setAttribute('aria-pressed', String(!!b[x.dataset.dkBd])); });
-    }
-    function ownerCheck() {
-      if (!own || preview || !document.body.contains(deck)) return;
-      var f = window.dgForum && dgForum.badges && dgForum.badges();
-      own.hidden = !(f && f.mod && p.slug); paintBadges();
-    }
-    function toggleBadge(btn) {
-      var k = btn.dataset.dkBd, cur = p.badges || {}, next = { verified: !!cur.verified, crown: !!cur.crown }; next[k] = !next[k];
-      btn.disabled = true;
-      fetch('/api/badges/' + encodeURIComponent(p.slug), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) })
-        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
-        .then(function (r) {
-          btn.disabled = false;
-          if (!r.ok) { var lb = own.querySelector('.dk-own-l'), keep = lb.innerHTML; lb.textContent = r.d.error || 'Could not save the badge.'; setTimeout(function () { lb.innerHTML = keep; }, 3500); return; }
-          p.badges = { verified: !!r.d.verified, crown: !!r.d.crown }; paintBadges();
-        }, function () { btn.disabled = false; });
-    }
-    if (!preview) { window.addEventListener('maple:forum', ownerCheck); setTimeout(ownerCheck, 300); setTimeout(ownerCheck, 1500); }
-
     /* ── clicks ── */
     deck.addEventListener('click', function (e) {
       if (e.target.closest('[data-dk-enter]')) { enter(); return; }
@@ -548,7 +520,6 @@
       if (pg || pt) { var car = (pg || pt).closest('[data-dk-car]'); if (car && car.__go) car.__go(pt ? Number(pt.dataset.dkPgto) : car.__idx() + Number(pg.dataset.dkPg)); return; }
       if (preview) return;
       if (e.target.closest('[data-dk-dm]')) { messageMe(); return; }
-      var bdb = e.target.closest('[data-dk-bd]'); if (bdb) { toggleBadge(bdb); return; }
       if (e.target.closest('[data-dk-lsearch]')) { if (window.MaplePlayer && MaplePlayer.searchLyrics) MaplePlayer.searchLyrics(); return; }
       var pl = e.target.closest('[data-dk-play]');
       if (pl) { var item = (p.musicLikes || [])[Number(pl.dataset.dkPlay)]; if (item && window.MX) MX.play(item, p); return; }
@@ -558,7 +529,7 @@
 
     /* ── player: drives and mirrors the bottom player ── */
     function state() { return window.MaplePlayer && MaplePlayer.state ? MaplePlayer.state() : null; }
-    function track() { return { url: song.url, audio: song.audio || '', title: song.title, artist: song.artist, art: song.art, durationMs: song.durationMs, owner: p.name, slug: p.slug, lyrics: p.lyrics !== false }; }
+    function track() { return { url: song.url, audio: song.audio || '', title: song.title, artist: song.artist, art: song.art, durationMs: song.durationMs, owner: p.name, slug: p.slug, lyrics: p.lyrics !== false, lyricsAuto: p.lyricsAuto !== false }; }
     function mine(st) { return !!(song && st && st.track && (st.track.url === song.url || st.track.audio === song.url)); }
     function ours(st) { return !!(st && st.track && (mine(st) || (p.slug && st.track.slug === p.slug))); }
     function songCtl(a) {

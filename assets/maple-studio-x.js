@@ -309,6 +309,8 @@
 
   /* ───── lyrics for the featured track: search LRCLIB (or paste your own) and pick the right ones ───── */
   function lyrTarget() { var v = val('spotify'), yv = v && !MX.spotify(v) && MX.youtube && MX.youtube(v); return st.song || (yv ? yv.url : ''); }
+  /* YouTube channel names make poor "artist" values ("Artist - Topic", "ArtistVEVO", "Official"): clean them, and never let them block the search */
+  function cleanArtist(a) { return String(a || '').replace(/\s*-\s*topic$/i, '').replace(/vevo$/i, '').replace(/\b(official|music|records?|channel)\b/gi, '').replace(/\s+/g, ' ').trim(); }
   function lrc(path) {
     var rd = function (r) { if (r.status === 404) return null; if (!r.ok) throw new Error('lrclib'); return r.json(); };
     return fetch('https://lrclib.net/api/' + path).then(rd).catch(function () { return fetch('/api/lyrics?p=' + encodeURIComponent(path)).then(rd); });
@@ -318,7 +320,8 @@
     var f = st.lyricsFix, tg = lyrTarget(), on = form.elements.namedItem('lyrics');
     var off = on && !on.checked ? '<p class="mxs-msg bad">Lyrics are switched off above, so nothing will show until you turn them on.</p>' : '';
     if (!tg) { n.innerHTML = off + '<p class="mxs-msg">Add a YouTube link or upload a song first, then choose its lyrics here.</p>'; return; }
-    if (!f) { n.innerHTML = off + '<p class="mxs-msg"><i class="fa-solid fa-wand-magic-sparkles"></i> Automatic: lyrics are looked up from the song title. If they’re wrong or missing, search below.</p>'; return; }
+    var auto = form.elements.namedItem('lyricsAuto'), autoOff = auto && !auto.checked;
+    if (!f) { n.innerHTML = off + (autoOff ? '<p class="mxs-msg"><i class="fa-solid fa-ban"></i> Automatic search is off: no lyrics will show until you choose some below.</p>' : '<p class="mxs-msg"><i class="fa-solid fa-wand-magic-sparkles"></i> Automatic: lyrics are looked up from the song title. If they’re wrong or missing, search below.</p>'); return; }
     var same = f.url === tg;
     n.innerHTML = off + '<div class="mxs-featcard"><i class="fa-solid fa-align-center"></i><span><b>' + esc(f.custom ? 'Lyrics you pasted' : (f.trackName || 'Chosen lyrics')) + '</b><small>' + esc(f.custom ? 'Shown for visitors' : (f.artistName || '') + (f.syncedLyrics ? ' · time-synced' : ' · plain text')) + '</small></span>'
       + '<button type="button" class="btn btn-sm" data-lyr-clear>Remove</button></div>'
@@ -338,7 +341,7 @@
     var tg = lyrTarget();      // pre-fill the search from the song's name
     if (tg && MX.meta) MX.meta(tg).then(function (m) {
       if (!m || !m.title) return; var ti = box.querySelector('[data-lq-title]'), ar = box.querySelector('[data-lq-artist]');
-      if (ti && !ti.value) ti.value = m.title; if (ar && !ar.value) ar.value = m.artist || '';
+      if (ti && !ti.value) ti.value = m.title; if (ar && !ar.value) ar.value = cleanArtist(m.artist);
     });
   }
   function lyrSearch() {
@@ -347,7 +350,8 @@
     res.innerHTML = '<p class="mxs-msg"><i class="fa-solid fa-circle-notch fa-spin"></i> Searching…</p>';
     var q = (ar + ' ' + ti).trim();
     var first = ti ? 'search?track_name=' + encodeURIComponent(ti) + (ar ? '&artist_name=' + encodeURIComponent(ar) : '') : 'search?q=' + encodeURIComponent(q);
-    lrc(first).then(function (l) { return Array.isArray(l) && l.length ? l : lrc('search?q=' + encodeURIComponent(q)); }).then(function (list) {
+    lrc(first).then(function (l) { return Array.isArray(l) && l.length ? l : lrc('search?q=' + encodeURIComponent(q)); })
+      .then(function (l) { return Array.isArray(l) && l.length || !ti || !ar ? l : lrc('search?track_name=' + encodeURIComponent(ti)); }).then(function (list) {
       list = (Array.isArray(list) ? list : []).filter(function (d) { var t = String(d.syncedLyrics || d.plainLyrics || ''); return d.instrumental || (t.match(/\S+/g) || []).length >= 12; }).slice(0, 10);
       st.lyrResults = list;
       if (!list.length) { res.innerHTML = '<p class="mxs-msg">Nothing found. Try only the song title, or paste the lyrics yourself below.</p>'; return; }
@@ -413,7 +417,7 @@
       } else if (t.matches && t.matches('[data-mxs-theme]')) {
         st.themes = Array.prototype.map.call(form.querySelectorAll('[data-mxs-theme]:checked'), function (c) { return c.dataset.mxsTheme; });
       } else if (t.matches && t.matches('[data-mxs-q]')) { clearTimeout(searchT); var q = t.value; searchT = setTimeout(function () { search(q); }, 450); }
-      else if (t.name === 'lyrics') lyrStatus();
+      else if (t.name === 'lyrics' || t.name === 'lyricsAuto') lyrStatus();
       else if (t.name === 'spotify') { clearTimeout(feat.t); feat.t = setTimeout(feat, 400); clearTimeout(lyrStatus.t); lyrStatus.t = setTimeout(lyrStatus, 500); }
     };
     form.addEventListener('input', upd, true);           // capture: our state updates before the Studio reads it

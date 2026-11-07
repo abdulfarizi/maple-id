@@ -1,0 +1,8 @@
+/* M-ID · profile badges: tick (verified) and crown (special honor), sized to the name next to them */
+.mid-vbs{display:inline-flex;align-items:center;gap:.22em;margin-left:.35em;vertical-align:-.12em;white-space:nowrap;-webkit-text-fill-color:initial}
+.mid-vb{display:inline-grid;place-items:center;width:.9em;height:.9em;flex:none;min-width:16px;min-height:16px}
+.mid-vb svg{width:100%;height:100%;display:block}
+.mid-vb-tick{color:#2f9bff;filter:drop-shadow(0 0 4px rgba(47,155,255,.5))}
+.mid-vb-crown{color:#f6b73c;filter:drop-shadow(0 0 5px rgba(246,183,60,.55))}
+:root[data-mode=light] .mid-vb-tick{color:#1a7fe0}
+:root[data-mode=light] .mid-vb-crown{color:#d89412}

@@ -206,8 +206,9 @@ body.mp-inline .mpx-mini{display:none !important}
 /* ── flicker fixes ──
    1) the bar and the sheet each sit on their own GPU layer, so the blur is not recomputed while the progress bar / lyrics move
    2) the progress bar scrolls with transform only (no layout), 3) no transition while the song is only ticking forward */
-.mpx-mini,.mpx-sheet{transform-style:flat;backface-visibility:hidden;-webkit-backface-visibility:hidden;contain:layout paint}
-.mpx-mini{will-change:transform,opacity}
+/* v36-13: the old GPU-layer hints (contain:paint, backface-visibility, will-change) are removed: together with backdrop-filter they make some browsers draw the bar half-clipped or not at all */
+.mpx-mini,.mpx-sheet{contain:none;backface-visibility:visible;-webkit-backface-visibility:visible}
+.mpx-mini{will-change:auto}
 .mpx-sheet:not(.open){-webkit-backdrop-filter:none;backdrop-filter:none}        /* no blur work while it is off screen */
 .mpx-bar i{will-change:transform;transition:transform .25s linear}
 .mpx-mini.playing .mpx-art{animation:none;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent)}   /* the pulsing ring repainted the blur behind it every frame */
@@ -222,3 +223,11 @@ html.mode-swap .mpx-mini,html.mode-swap .mpx-sheet{transition:none!important}
 :root[data-mode=light] .mpx-lines li{color:color-mix(in srgb,var(--text,#111) 60%,transparent)}
 :root[data-mode=light] .mpx-lines li.on{color:var(--text,#111)}
 :root[data-mode=light] .mpx-lsrc,:root[data-mode=light] .mpx-lhint{color:color-mix(in srgb,var(--text,#111) 66%,transparent)}
+
+/* v36-13 · the bar is centred with margins (no horizontal transform), always whole on screen, above the dock/home bar on every device */
+.mpx-mini{left:0;right:0;margin-inline:auto;box-sizing:border-box;max-width:calc(100vw - 20px);min-height:62px;transform:translate3d(0,18px,0)}
+.mpx-mini.in{transform:none}
+.mpx-mini.under{transform:translate3d(0,12px,0)}
+.mpx-mini.compact{width:auto;min-width:0}
+.mpx-sheet{height:100vh;height:100dvh;max-height:100dvh}
+.mpx-sheet.open{visibility:visible}

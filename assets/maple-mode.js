@@ -1,6 +1,6 @@
 /* M-ID · light / dark mode (v3).
  * Loaded first in <head>, so the right palette is on the page before anything paints (no flash).
- * Choice order: the person's saved pick → the device setting.
+ * Choice: the person's saved pick, otherwise dark (v36-12: the device setting is no longer followed).
  *
  * Switching is ONE atomic swap:
  *   · the new palette is applied in a single style pass with every transition switched off, so nothing
@@ -24,7 +24,7 @@
   if (window.__mapleLite) root.setAttribute('data-lite', '');
 
   function read() { try { var s = localStorage.getItem(KEY); return s === 'light' || s === 'dark' ? s : ''; } catch (e) { return ''; } }
-  function current() { return read() || (mq && mq.matches ? 'dark' : 'light'); }
+  function current() { return read() || 'dark'; }   /* v36-12: no more "follow the device" standby: your pick, otherwise dark */
   function store(mode) { try { localStorage.setItem(KEY, mode); } catch (e) {} }
 
   /* the top page owns the animation; a frame asks it to run (same-origin only) */
@@ -123,8 +123,7 @@
     sync: function (m) { if (m === 'dark' || m === 'light') { if (root.getAttribute('data-mode') !== m) { root.classList.add('mode-swap'); paint(m); announce(m); setTimeout(function () { root.classList.remove('mode-swap'); }, 120); } } }
   };
 
-  /* follow the device until the person picks one; follow other tabs */
-  if (mq) { var f = function () { if (!read()) set(mq.matches ? 'dark' : 'light', false); }; mq.addEventListener ? mq.addEventListener('change', f) : mq.addListener(f); }
+  /* follow other tabs only */
   window.addEventListener('storage', function (e) { if (e.key === KEY) set(current(), false); });
 
   /* ---------- the toggle button ---------- */
@@ -149,17 +148,8 @@
     /* a button the page already carries (the owner card has one in its own header) */
     var own = document.getElementById('mode-btn');
     if (own) { wire(own); return; }
-    var tb = document.querySelector('.topbar');
-    if (tb && !tb.querySelector('.top-controls')) {
-      var acts = document.getElementById('nav-actions'), end = tb.querySelector('.tb-end');
-      if (!end) { end = document.createElement('div'); end.className = 'tb-end'; tb.appendChild(end); if (acts) end.appendChild(acts); }
-      var b = makeBtn(); b.id = 'mode-btn'; end.appendChild(b);
-    }
+    /* v36-12: no button in the top bar any more; the menu (maple-shell.js) carries it */
   }
-  function ready() {
-    mount();
-    var tb = document.querySelector('.topbar');
-    if (tb && window.MutationObserver) new MutationObserver(function () { if (!document.getElementById('mode-btn')) mount(); }).observe(tb, { childList: true, subtree: true });
-  }
+  function ready() { mount(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready); else ready();
 })();

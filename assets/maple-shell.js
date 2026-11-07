@@ -71,6 +71,14 @@
     var p = location.pathname.replace(/\/+$/, '') || '/';
     return { path: p, hash: location.hash };
   }
+  function curMode() { return window.mapleMode ? window.mapleMode.get() : 'dark'; }
+  function modeLabel() { return curMode() === 'dark' ? 'Light mode' : 'Dark mode'; }
+  function modeIcon() { return curMode() === 'dark' ? 'fa-sun' : 'fa-moon'; }
+  function paintMode() {
+    var b = drawer && drawer.querySelector('[data-act="mode"]'); if (!b) return;
+    b.querySelector('i').className = 'fa-solid ' + modeIcon(); b.querySelector('span').textContent = modeLabel();
+  }
+  window.addEventListener('maple:modepaint', paintMode);
   function entries() {
     var L = [], n = here(), forum = window.dgForum && S.in;
     L.push({ sec: 'Browse' });
@@ -83,10 +91,11 @@
       L.push({ t: 'Studio', i: 'fa-pen-ruler', href: '/studio', on: n.path === '/studio' });
       if (forum) {
         L.push({ t: 'Alerts', i: 'fa-bell', act: 'alerts', badge: 'alerts' });
-        if (S.mod) L.push({ t: 'Reports', i: 'fa-flag', act: 'reports' });
+        if (S.mod) { L.push({ t: 'Reports', i: 'fa-flag', act: 'reports' }); L.push({ t: 'Badges', i: 'fa-circle-check', act: 'badges' }); }   // owner only
       }
     }
     L.push({ sec: 'More' });
+    L.push({ t: modeLabel(), i: modeIcon(), act: 'mode', id: 'mode' });
     L.push({ t: 'Owner', i: 'fa-crown', href: '/maple', on: n.path === '/maple' });
     return L;
   }
@@ -105,6 +114,50 @@
       : '<button type="button" class="btn btn-sm wide" data-act="login">Log in</button><button type="button" class="btn btn-sm btn-accent wide" data-act="signup">Get your ID</button>';
     paintBadges();
   }
+
+  /* ───── owner-only badge manager: pick any profile and give or take the tick (verified) and crown (special honor) ───── */
+  var bdEl = null;
+  function badgeDialog() {
+    if (!S.mod) return;
+    if (bdEl) bdEl.remove();
+    var cur = null;
+    bdEl = h('div', { class: 'sh-bd', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Manage badges' },
+      '<div class="sh-bd-card"><div class="sh-bd-h"><b>Badges</b><button type="button" class="sh-x" data-x aria-label="Close">' + ICON_X + '</button></div>'
+      + '<p class="sh-bd-p">Give a <b>tick</b> (verified) or a <b>crown</b> (special honor) to any profile. Only you, the owner, can see this.</p>'
+      + '<form class="sh-bd-f"><input name="slug" placeholder="Profile name, e.g. maple" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Profile name" maxlength="30"><button class="btn btn-sm btn-accent" type="submit">Find</button></form>'
+      + '<p class="sh-bd-m" data-m></p><div class="sh-bd-t" data-t hidden>'
+      + '<button type="button" data-k="verified" aria-pressed="false"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Verified tick</button>'
+      + '<button type="button" data-k="crown" aria-pressed="false"><i class="fa-solid fa-crown" aria-hidden="true"></i> Crown</button></div></div>');
+    document.body.appendChild(bdEl);
+    var f = bdEl.querySelector('form'), m = bdEl.querySelector('[data-m]'), t = bdEl.querySelector('[data-t]');
+    function paint() { t.querySelectorAll('[data-k]').forEach(function (b) { b.setAttribute('aria-pressed', String(!!(cur && cur.b[b.dataset.k]))); }); }
+    function say(x) { m.textContent = x || ''; }
+    function close() { if (bdEl) { bdEl.remove(); bdEl = null; } document.removeEventListener('keydown', esc2); }
+    function esc2(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', esc2);
+    bdEl.addEventListener('click', function (e) { if (e.target === bdEl || e.target.closest('[data-x]')) close(); });
+    f.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var slug = f.elements.slug.value.trim().toLowerCase().replace(/^@/, '');
+      if (!/^[a-z0-9-]{1,30}$/.test(slug)) { say('Type the profile name (letters, numbers, dashes).'); return; }
+      say('Looking…'); t.hidden = true; cur = null;
+      fetch('/api/profiles/' + encodeURIComponent(slug) + '?preview=1').then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (r) {
+          if (!r.ok) { say('No profile called "' + slug + '".'); return; }
+          cur = { slug: slug, b: r.d.badges || {} }; say((r.d.name || slug) + '  ·  /' + slug); t.hidden = false; paint();
+        }, function () { say('Could not reach the server.'); });
+    });
+    t.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-k]'); if (!b || !cur) return;
+      var next = { verified: !!cur.b.verified, crown: !!cur.b.crown }; next[b.dataset.k] = !next[b.dataset.k];
+      b.disabled = true;
+      fetch('/api/badges/' + encodeURIComponent(cur.slug), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+        .then(function (r) { b.disabled = false; if (!r.ok) { say(r.d.error || 'Could not save.'); return; } cur.b = { verified: !!r.d.verified, crown: !!r.d.crown }; paint(); say('Saved.'); }, function () { b.disabled = false; say('Could not reach the server.'); });
+    });
+    setTimeout(function () { f.elements.slug.focus(); }, 30);
+  }
+
   function buildDrawer() {
     if (drawer) return;
     scrim = h('div', { id: 'sh-scrim', class: 'sh-scrim', 'aria-hidden': 'true' });
@@ -120,7 +173,10 @@
       var a = e.target.closest('a[data-link]'), b = e.target.closest('[data-act]');
       if (a) { closeDrawer(true); return; }                       // the app's router handles the link
       if (!b) return;
-      var act = b.dataset.act; closeDrawer(true);
+      var act = b.dataset.act;
+      if (act === 'mode') { var r = b.getBoundingClientRect(); window.mapleMode && window.mapleMode.toggle({ x: r.left + 34, y: r.top + r.height / 2 }); return; }   // stays open: the circle grows from the row
+      closeDrawer(true);
+      if (act === 'badges') { badgeDialog(); return; }
       if (act === 'alerts' || act === 'reports') openForum(act);
       else if (act === 'logout') { if (window.dgLogout) window.dgLogout(); }
       else if (act === 'login' || act === 'signup') { var t = document.querySelector('#nav-actions [data-auth="' + act + '"]'); if (t) t.click(); }
