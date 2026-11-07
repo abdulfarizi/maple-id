@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#0f0d0e">
     <meta name="color-scheme" content="dark light">
-    <script src="/assets/maple-mode.js?v=7"></script>
+    <script src="/assets/maple-mode.js?v=8"></script>
+    <link rel="stylesheet" href="/assets/maple-badges.css?v=2">
+    <script src="/assets/maple-badges.js?v=2"></script>
+    <script src="/assets/maple-frames.js?v=1" defer></script>
     <link rel="stylesheet" href="/assets/maple-mode.css?v=4">
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
@@ -794,9 +797,14 @@ html{background:var(--bg)}
             img.alt = p.name || ''; if (img.getAttribute('src') !== p.avatar) img.src = p.avatar;
         } else { img.hidden = true; img.removeAttribute('src'); ini.style.display = ''; }
         const nm = String(p.name || '');
-        $('name').innerHTML = nm.endsWith('☆') ? esc(nm.slice(0, -1)) + '<span class="star">☆</span>' : esc(nm);
+        $('name').innerHTML = (nm.endsWith('☆') ? esc(nm.slice(0, -1)) + '<span class="star">☆</span>' : esc(nm)) + (window.dgBadgeHTML ? window.dgBadgeHTML(p.badges) : '');
         $('role').textContent = p.role || '';
         $('role').classList.toggle('hidden', !p.role);
+        { /* v36-21: card frame + avatar decoration (drawn by maple-frames.js) */
+            const pn = document.querySelector('.panel.reveal'), av = pn && pn.querySelector('.avatar');
+            if (pn) { if (p.frame) pn.setAttribute('data-frame', p.frame); else pn.removeAttribute('data-frame'); }
+            if (av) { if (p.avatarDeco) { av.setAttribute('data-adeco', p.avatarDeco); av.setAttribute('data-adeco-c', p.avatarDecoColor || ''); } else { av.removeAttribute('data-adeco'); av.removeAttribute('data-adeco-c'); } }
+        }
         $('top-name').textContent = nm;
         document.title = nm + ' | ' + t('card');
     }
