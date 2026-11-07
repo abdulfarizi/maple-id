@@ -303,26 +303,40 @@
     if (document.getElementById(CSS_ID)) return;
     var s = document.createElement('style'); s.id = CSS_ID;
     s.textContent = '.mfr-layer{position:fixed;left:0;top:0;pointer-events:none;z-index:4;contain:layout style}.mfr-layer svg{display:block;overflow:visible}'
-      + '.idcard[data-frame=dragon],.panel[data-frame=dragon]{margin-top:64px}.idcard[data-frame=kitty],.panel[data-frame=kitty]{margin-top:40px}'
-      + '.idcard[data-frame=phoenix],.panel[data-frame=phoenix],.idcard[data-frame=cyber],.panel[data-frame=cyber],.idcard[data-frame=reactor],.panel[data-frame=reactor]{margin-top:48px}'
-      + '.idcard[data-frame=celestial],.panel[data-frame=celestial]{margin-top:44px}.idcard[data-frame=cloudkitty],.panel[data-frame=cloudkitty]{margin-top:40px}.idcard[data-frame=starbunny],.panel[data-frame=starbunny]{margin-top:44px}'
+      + Object.keys(KIT).map(function (k) { var g = kitGeom(k, 400, 400); return '.idcard[data-frame=' + k + '],.panel[data-frame=' + k + ']{margin-top:' + Math.ceil(g.mg.mt + 6) + 'px}'; }).join('')
+      + '.mfr-bi{position:absolute;inset:0;box-sizing:border-box;border-style:solid;border-color:transparent;pointer-events:none}.mfr-art{position:absolute;max-width:none;pointer-events:none}'
       + '.mfr-hue{animation:mfrhue 8s linear infinite}@keyframes mfrhue{to{filter:drop-shadow(0 0 5px #00e5ff) hue-rotate(360deg)}}'
       + '@media (prefers-reduced-motion:reduce){.mfr-hue{animation:none}}';
     document.head.appendChild(s);
   }
   function radiusOf(el) { var r = parseFloat(getComputedStyle(el).borderTopLeftRadius); return isFinite(r) ? Math.max(6, Math.min(r, 60)) : 16; }
   var ART = { dragon: '/assets/frame-art/dragon.png', garden: '/assets/frame-art/garden.png', phoenix: '/assets/frame-art/phoenix.png', celestial: '/assets/frame-art/celestial.png', tech: '/assets/frame-art/tech.png', cyber: '/assets/frame-art/cyber.png', reactor: '/assets/frame-art/reactor.png', neon: '/assets/frame-art/neon.png', kitty: '/assets/frame-art/kitty.png', cloudkitty: '/assets/frame-art/cloudkitty.png', starbunny: '/assets/frame-art/starbunny.png', mooncat: '/assets/frame-art/mooncat.png' };
+  /* v36-22: every illustrated frame is a 9-slice kit (assets/frame-kit/<id>.png): fixed-size corners and plain stretchable edges,
+   * so the artwork keeps its proportions and never covers the card whatever its shape. s = screen px per source px, sl = slice sizes
+   * in kit px (top,right,bottom,left), ins = how far the art band reaches inward (px), orn = optional centre-top sprite. */
+  var KIT = {"celestial":{"s":0.2924,"k":0.45,"sl":[104,117,104,117],"ins":[52.9,45.3,20.5,42.7],"kw":246,"kh":219,"ov":18},"cloudkitty":{"s":0.3056,"k":0.45,"sl":[104,117,104,117],"ins":[59.3,42.5,38.2,45.5],"kw":246,"kh":219,"ov":18},"cyber":{"s":0.33,"k":0.45,"sl":[100,117,100,117],"ins":[38.0,46.5,38.9,41.2],"kw":246,"kh":211,"ov":18},"dragon":{"s":0.2486,"k":0.45,"sl":[110,117,104,117],"ins":[57.4,38.0,19.4,50.0],"kw":246,"kh":225,"ov":18},"garden":{"s":0.2933,"k":0.45,"sl":[104,117,104,117],"ins":[48.7,44.0,12.0,44.0],"kw":246,"kh":219,"ov":18,"orn":{"x":280,"y":10,"w":295,"h":190,"cx":43.5}},"kitty":{"s":0.3188,"k":0.45,"sl":[104,117,104,117],"ins":[59.9,36.0,47.2,52.0],"kw":246,"kh":219,"ov":18,"orn":{"x":196,"y":0,"w":379,"h":205,"cx":1.5}},"mooncat":{"s":0.2885,"k":0.45,"sl":[104,117,104,117],"ins":[46.2,47.9,39.0,40.1],"kw":246,"kh":219,"ov":18},"neon":{"s":0.2839,"k":0.45,"sl":[100,117,100,117],"ins":[37.8,46.3,29.5,41.7],"kw":246,"kh":211,"ov":18},"phoenix":{"s":0.2521,"k":0.45,"sl":[116,117,104,117],"ins":[61.5,57.7,24.0,30.3],"kw":246,"kh":231,"ov":18},"reactor":{"s":0.2885,"k":0.45,"sl":[100,117,100,117],"ins":[39.5,43.9,42.1,44.1],"kw":246,"kh":211,"ov":18},"starbunny":{"s":0.2353,"k":0.45,"sl":[104,117,104,117],"ins":[41.6,48.7,24.7,39.3],"kw":246,"kh":219,"ov":18},"tech":{"s":0.33,"k":0.45,"sl":[100,117,100,117],"ins":[41.9,30.4,47.9,48.2],"kw":246,"kh":211,"ov":18}};
+  function kitGeom(kind, w, h) {
+    var c = KIT[kind]; if (!c) return null;
+    var f = 1, r, bT, bR, bB, bL, e;
+    function calc() { r = c.s * f / c.k; bT = c.sl[0] * r; bR = c.sl[1] * r; bB = c.sl[2] * r; bL = c.sl[3] * r; }
+    calc();
+    /* very small card: shrink the art so the corners never overlap each other */
+    f = Math.min(1, Math.max(.3, (w - 8) / (bL + bR + 8)), Math.max(.3, (h - 8) / (bT + bB + 8))); calc();
+    e = { mt: Math.max(4, c.ins[0] * f - c.ov), mr: Math.min(16, Math.max(4, c.ins[1] * f - c.ov)), mb: Math.min(30, Math.max(4, c.ins[2] * f - c.ov)), ml: Math.min(16, Math.max(4, c.ins[3] * f - c.ov)) };
+    return { c: c, f: f, b: [bT, bR, bB, bL], mg: e };
+  }
   var KINDS = { dragon: [DR, dragonBuild], kitty: [KT, kittyBuild], tech: [TG, techBuild], garden: [{ mt: 26, ml: 26, mr: 26, mb: 26 }, gardenBuild], neon: [{ mt: 16, ml: 16, mr: 16, mb: 16 }, neonBuild], phoenix: [{ mt: 52, ml: 34, mr: 34, mb: 30 }, function(c){ return collectionBuild(c, 'phoenix'); }], celestial: [{ mt: 48, ml: 30, mr: 30, mb: 28 }, function(c){ return collectionBuild(c, 'celestial'); }], cyber: [{ mt: 48, ml: 24, mr: 24, mb: 30 }, function(c){ return collectionBuild(c, 'cyber'); }], reactor: [{ mt: 48, ml: 24, mr: 24, mb: 30 }, function(c){ return collectionBuild(c, 'reactor'); }], cloudkitty: [{ mt: 42, ml: 28, mr: 28, mb: 28 }, function(c){ return collectionBuild(c, 'cloudkitty'); }], starbunny: [{ mt: 46, ml: 28, mr: 28, mb: 28 }, function(c){ return collectionBuild(c, 'starbunny'); }], mooncat: [{ mt: 34, ml: 24, mr: 24, mb: 30 }, function(c){ return collectionBuild(c, 'cloudkitty'); }] };
 
   function makeLayer(m, w, h) {
     var c, svgHTML, W, H;
     if (m.type === 'frame') {
       var def = KINDS[m.kind], mg;
-      if (ART[m.kind]) {
-        /* Illustrated transparent overlay: preserve the card beneath the open center. */
-        mg = { mt: Math.max(24, h * .075), ml: Math.max(18, w * .065), mr: Math.max(18, w * .065), mb: Math.max(24, h * .075) };
+      var kg = ART[m.kind] && kitGeom(m.kind, w, h);
+      if (kg) {
+        /* Illustrated frame: a 9-slice border drawn just outside the card edge (the art band overlaps the edge by a few px). */
+        mg = { mt: kg.mg.mt, ml: kg.mg.ml, mr: kg.mg.mr, mb: kg.mg.mb };
         W = w + mg.ml + mg.mr; H = h + mg.mt + mg.mb;
-        c = { id: ++uid, W: W, H: H, x0: mg.ml, y0: mg.mt, w: w, h: h, r: radiusOf(m.el), mg: mg };
+        c = { id: ++uid, W: W, H: H, x0: mg.ml, y0: mg.mt, w: w, h: h, r: radiusOf(m.el), mg: mg, kg: kg };
         svgHTML = '';
       } else {
         mg = def[0]; W = w + mg.ml + mg.mr; H = h + mg.mt + mg.mb;
@@ -335,13 +349,19 @@
       svgHTML = '<svg xmlns="' + NS + '" viewBox="0 0 100 100" width="' + W + '" height="' + H + '" aria-hidden="true">' + decoSVG(m.kind, m.color) + '</svg>';
     }
     if (!m.layer) { m.layer = document.createElement('div'); m.layer.className = 'mfr-layer'; m.layer.setAttribute('aria-hidden', 'true'); document.body.appendChild(m.layer); }
-    if (m.type === 'frame' && ART[m.kind]) {
-      m.layer.innerHTML = '<img class="mfr-art" draggable="false" alt="" src="' + ART[m.kind] + '" width="' + W + '" height="' + H + '">';
+    if (m.type === 'frame' && c.kg) {
+      var g = c.kg, b = g.b, u = '/assets/frame-kit/' + m.kind + '.png?v=1', sl = g.c.sl, px = function (n) { return f1(n) + 'px'; };
+      var html = '<div class="mfr-bi" style="border-width:' + px(b[0]) + ' ' + px(b[1]) + ' ' + px(b[2]) + ' ' + px(b[3]) + ';border-image:url(' + u + ') ' + sl.join(' ') + ' / ' + px(b[0]) + ' ' + px(b[1]) + ' ' + px(b[2]) + ' ' + px(b[3]) + ' stretch"></div>';
+      if (g.c.orn) {
+        var o = g.c.orn, sc = g.c.s * g.f, ow = o.w * sc, oh = o.h * sc;
+        html += '<img class="mfr-art" draggable="false" alt="" src="/assets/frame-kit/' + m.kind + '-top.png?v=1" style="left:' + px(c.mg.ml + w / 2 + o.cx * sc - ow / 2) + ';top:' + px(o.y * sc) + ';width:' + px(ow) + ';height:' + px(oh) + '">';
+      }
+      m.layer.innerHTML = html;
     } else if (m.type === 'frame') m.layer.innerHTML = '<svg xmlns="' + NS + '" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">' + svgHTML + '</svg>';
     else m.layer.innerHTML = svgHTML;
     m.layer.style.width = W + 'px'; m.layer.style.height = H + 'px';
     m.c = c; m.w = w; m.h = h; m.tick = null;
-    if (m.kind === 'dragon' && m.type === 'frame') { dragonFinish(c, m.layer.firstChild); m.tick = c.tick; }
+    if (m.kind === 'dragon' && m.type === 'frame' && !c.kg) { dragonFinish(c, m.layer.firstChild); m.tick = c.tick; }
   }
   function visible(el, r) {
     if (r.width < 24 || r.height < 24) return false;
@@ -359,7 +379,7 @@
         if (!el.isConnected) { drop(el); return; }
         var r = el.getBoundingClientRect();
         if (!visible(el, r)) { if (m.layer) m.layer.style.display = 'none'; return; }
-        if (!m.layer || Math.abs(r.width - m.w) > 1.5 || Math.abs(r.height - m.h) > 1.5) makeLayer(m, r.width, r.height);
+        if (!m.layer || Math.abs(r.width - m.w) > 1.5 || Math.abs(r.height - m.h) > 1.5) { try { makeLayer(m, r.width, r.height); } catch (err) { m.w = r.width; m.h = r.height; if (m.layer) m.layer.style.display = 'none'; return; } }
         var mg = m.mg; m.layer.style.display = '';
         m.layer.style.transform = 'translate(' + f1(r.left - mg.ml) + 'px,' + f1(r.top - mg.mt) + 'px)';
         if (m.tick) m.tick(m.c, t);
