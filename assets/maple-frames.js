@@ -303,8 +303,19 @@
     if (document.getElementById(CSS_ID)) return;
     var s = document.createElement('style'); s.id = CSS_ID;
     s.textContent = '.mfr-layer{position:fixed;left:0;top:0;pointer-events:none;z-index:4;contain:layout style}.mfr-layer svg{display:block;overflow:visible}'
-      + Object.keys(KIT).map(function (k) { var g = kitGeom(k, 400, 400); return '.idcard[data-frame=' + k + '],.panel[data-frame=' + k + ']{margin-top:' + Math.ceil(g.mg.mt + 6) + 'px}'; }).join('')
-      + '.mfr-bi{position:absolute;inset:0;box-sizing:border-box;border-style:solid;border-color:transparent;pointer-events:none}.mfr-art{position:absolute;max-width:none;pointer-events:none}'
+      + '/* Frames float outside the card; they must not change card width or push the layout down. */'
+      + '.mfr-bi{position:absolute;inset:0;box-sizing:border-box;border-style:solid;border-color:transparent;pointer-events:none;transform-origin:50% 50%;animation:mfrFramePulse 4.8s ease-in-out infinite,mfrFrameBreathe 6.4s ease-in-out infinite}.mfr-art{position:absolute;max-width:none;pointer-events:none;animation:mfrFrameFloat 5.6s ease-in-out infinite,mfrFramePulse 4.8s ease-in-out infinite;transform-origin:50% 50%}'
+      + '.mfr-dragon-side{position:absolute;top:9%;bottom:9%;width:clamp(12px,3.8vw,22px);background-repeat:repeat-y;background-position:center top;background-size:100% auto;opacity:.98;filter:drop-shadow(0 0 4px rgba(20,220,150,.45))}'
+      + '.mfr-dragon-left{left:0}.mfr-dragon-right{right:0}'
+      + '.mfr-dragon-orn{position:absolute;left:2%;width:96%;height:auto;max-height:100px;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 7px rgba(0,0,0,.55))}'
+      + '.mfr-dragon-top{top:0;transform-origin:50% 80%;animation:mfrDragonArrival 3.2s cubic-bezier(.2,.7,.25,1) both,mfrFrameFloat 5.6s 3.2s ease-in-out infinite}'
+      + '.mfr-dragon-bottom{bottom:0;transform:rotate(180deg);animation:mfrDragonBottom 5.6s ease-in-out infinite}'
+      + '@keyframes mfrDragonArrival{0%{opacity:0;transform:translate3d(-28px,-18px,0) rotate(-3deg) scale(.96)}65%{opacity:1;transform:translate3d(5px,2px,0) rotate(1deg) scale(1.01)}100%{opacity:1;transform:translate3d(0,0,0) rotate(0) scale(1)}}'
+      + '@keyframes mfrFramePulse{0%,100%{opacity:.88;filter:drop-shadow(0 2px 5px rgba(70,220,170,.22))}50%{opacity:1;filter:drop-shadow(0 3px 12px rgba(100,240,190,.58))}}'
+      + '@keyframes mfrFrameFloat{0%,100%{translate:0 0;filter:drop-shadow(0 2px 6px rgba(70,220,170,.2))}50%{translate:0 -3px;filter:drop-shadow(0 4px 11px rgba(100,240,190,.5))}}'
+      + '@keyframes mfrFrameBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.008)}}'
+      + '@keyframes mfrDragonBottom{0%,100%{translate:0 0;filter:drop-shadow(0 2px 6px rgba(70,220,170,.2))}50%{translate:0 3px;filter:drop-shadow(0 4px 11px rgba(100,240,190,.5))}}'
+      + '@media(prefers-reduced-motion:reduce){.mfr-bi,.mfr-art,.mfr-dragon-top,.mfr-dragon-bottom{animation:none!important;transform:none!important;translate:none!important}}'
       + '.mfr-hue{animation:mfrhue 8s linear infinite}@keyframes mfrhue{to{filter:drop-shadow(0 0 5px #00e5ff) hue-rotate(360deg)}}'
       + '@media (prefers-reduced-motion:reduce){.mfr-hue{animation:none}}';
     document.head.appendChild(s);
@@ -332,11 +343,16 @@
     if (m.type === 'frame') {
       var def = KINDS[m.kind], mg;
       var kg = ART[m.kind] && kitGeom(m.kind, w, h);
+      if (kg && m.kind === 'dragon') {
+        /* Dragon is composed from independent, aspect-ratio-preserving ornaments and tiled side rails. */
+        kg.mg = { mt: Math.max(54, Math.min(94, w * 0.18)), mr: 18, mb: Math.max(54, Math.min(94, w * 0.18)), ml: 18 };
+      }
       if (kg) {
-        /* Illustrated frame: a 9-slice border drawn just outside the card edge (the art band overlaps the edge by a few px). */
-        mg = { mt: kg.mg.mt, ml: kg.mg.ml, mr: kg.mg.mr, mb: kg.mg.mb };
-        W = w + mg.ml + mg.mr; H = h + mg.mt + mg.mb;
-        c = { id: ++uid, W: W, H: H, x0: mg.ml, y0: mg.mt, w: w, h: h, r: radiusOf(m.el), mg: mg, kg: kg };
+        /* Horizontal-only frame: ornamental bands sit above and below the card.
+         * No left/right rails, no added card width, and no stretched side panel. */
+        mg = { mt: kg.mg.mt, ml: 0, mr: 0, mb: kg.mg.mb };
+        W = w; H = h + mg.mt + mg.mb;
+        c = { id: ++uid, W: W, H: H, x0: 0, y0: mg.mt, w: w, h: h, r: radiusOf(m.el), mg: mg, kg: kg };
         svgHTML = '';
       } else {
         mg = def[0]; W = w + mg.ml + mg.mr; H = h + mg.mt + mg.mb;
@@ -351,7 +367,13 @@
     if (!m.layer) { m.layer = document.createElement('div'); m.layer.className = 'mfr-layer'; m.layer.setAttribute('aria-hidden', 'true'); document.body.appendChild(m.layer); }
     if (m.type === 'frame' && c.kg) {
       var g = c.kg, b = g.b, u = '/assets/frame-kit/' + m.kind + '.png?v=1', sl = g.c.sl, px = function (n) { return f1(n) + 'px'; };
-      var html = '<div class="mfr-bi" style="border-width:' + px(b[0]) + ' ' + px(b[1]) + ' ' + px(b[2]) + ' ' + px(b[3]) + ';border-image:url(' + u + ') ' + sl.join(' ') + ' / ' + px(b[0]) + ' ' + px(b[1]) + ' ' + px(b[2]) + ' ' + px(b[3]) + ' stretch"></div>';
+      var html;
+      if (m.kind === 'dragon') {
+        html = '<img class="mfr-dragon-orn mfr-dragon-top" draggable="false" alt="" src="/assets/frame-kit/dragon-top.png?v=2">' +
+          '<img class="mfr-dragon-orn mfr-dragon-bottom" draggable="false" alt="" src="/assets/frame-kit/dragon-bottom.png?v=2">';
+      } else {
+        html = '<div class="mfr-bi" style="border-width:' + px(b[0]) + ' 0 ' + px(b[2]) + ' 0;border-image:url(' + u + ') ' + sl[0] + ' 0 ' + sl[2] + ' 0 / ' + px(b[0]) + ' 0 ' + px(b[2]) + ' 0 stretch"></div>';
+      }
       if (g.c.orn) {
         var o = g.c.orn, sc = g.c.s * g.f, ow = o.w * sc, oh = o.h * sc;
         html += '<img class="mfr-art" draggable="false" alt="" src="/assets/frame-kit/' + m.kind + '-top.png?v=1" style="left:' + px(c.mg.ml + w / 2 + o.cx * sc - ow / 2) + ';top:' + px(o.y * sc) + ';width:' + px(ow) + ';height:' + px(oh) + '">';
