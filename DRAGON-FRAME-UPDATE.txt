@@ -1,0 +1,10 @@
+MAPLE ID Dragon Frame Update
+
+Changes:
+- Replaced the dragon's stretched single 9-slice appearance with independent top and bottom dragon ornaments.
+- Added narrow left and right side rails that repeat vertically without distorting the dragon artwork.
+- Kept the frame as a click-through overlay that follows the card dimensions.
+- Added a one-time 3.2 second dragon entrance animation on page load, with reduced-motion support.
+- Other frame themes and site files are unchanged.
+
+Install: replace the current project with the contents of this ZIP (or merge the changed assets).
