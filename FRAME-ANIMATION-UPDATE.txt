@@ -1,9 +1,0 @@
-MAPLE FRAME ANIMATION UPDATE
-
-- Extended motion beyond the dragon: every illustrated 9-slice frame now has a gentle breathing scale and a shared glow pulse.
-- Every independent top ornament now also receives the shared glow pulse while floating.
-- Existing SVG frame themes retain their built-in character/ornament animations.
-- Dragon entrance and bottom/top movement remain intact.
-- Reduced-motion preferences disable the added motion and preserve a still frame.
-
-Install by replacing the current project with this ZIP (or merge the changed assets).

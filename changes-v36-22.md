@@ -1,6 +1,0 @@
-# M-ID v36-22 · frames fit the card + Publish keeps every frame
-**Fixed: Publish reset the card to "default".** The save step (index.html `cleanOptions`) only allowed 5 frame ids (dragon, kitty, tech, garden, neon). The 7 newer frames (Solar phoenix, Celestial guardian, Cyber core, Neon reactor, Cloud kitty, Star bunny, Moonlight cat) were wiped to "none" on Publish, so the live card and the Studio both came back plain. All 12 ids are now allowed.
-**Fixed: giant, blurry frame covering the card.** The illustrated frames were stretched to the card's width AND height, so on a tall phone card they were blown up ~3x and covered the content. Each frame is now a 9-slice kit (`assets/frame-kit/<id>.png`): fixed-size corners and top ornament, plain stretchable edges. The artwork keeps its proportions, hugs the card edge (about 16px outside at the sides) and never needs to cover content.
-**Fixed:** choosing the Jade dragon frame threw an error inside the animation loop, which could stop every frame from updating. A frame that fails to draw can no longer affect the others.
-Files: index.html, owner/index.html (cache ?v=4), assets/maple-frames.js, assets/frame-kit/* (new).
-Note: because the frame is now a thin border, ornaments are smaller than in the original art. Dragon and Phoenix (long organic bodies) look the least crisp.
