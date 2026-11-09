@@ -1,5 +1,8 @@
-/* M-ID · Studio (new layout): save bar position fix, loaded only by /studio-new.
- * The publish bar floats centred on the screen, above the bottom dock. */
+/* M-ID · Studio (new layout) fixes, loaded only by /studio-new.
+ * 1. The publish bar floats centred on the screen, above the bottom dock.
+ * 2. Text boxes: the text sits centred vertically with a steady size and font, the same in every box. */
+
+/* ===== publish bar ===== */
 .studio-v2 .savebar{
   position:fixed !important;
   left:50% !important;
@@ -14,3 +17,56 @@
 }
 /* room at the end of the form so the last section isn't hidden behind the floating bar */
 .studio-v2 .editor{padding-bottom:110px}
+
+/* ===== text boxes: one-line fields centre their text vertically; the font and size match everywhere ===== */
+.studio-v2 .field input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):not([type=time]):not([type=number]),
+.studio-v2 input[type=search],
+.studio-v2 input[type=text],
+.studio-v2 input[type=url],
+.studio-v2 input[type=email],
+.studio-v2 input[type=tel],
+.studio-v2 input[type=number],
+.studio-v2 input[type=time]{
+  box-sizing:border-box;
+  height:50px;
+  min-height:50px;
+  padding:0 18px;
+  line-height:50px;
+  font-family:inherit;
+  font-size:15px;
+  font-weight:500;
+  letter-spacing:-.005em;
+  text-align:left;
+  vertical-align:middle;
+  color:var(--text);
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.studio-v2 input::placeholder{
+  color:var(--muted);
+  opacity:.75;
+  font-weight:400;
+  line-height:50px;
+}
+/* multi-line boxes keep their own space and start the text at the top */
+.studio-v2 textarea{
+  box-sizing:border-box;
+  padding:14px 18px;
+  line-height:1.5;
+  font-family:inherit;
+  font-size:15px;
+  font-weight:500;
+  letter-spacing:-.005em;
+  color:var(--text);
+  vertical-align:top;
+}
+.studio-v2 textarea::placeholder{color:var(--muted);opacity:.75;font-weight:400}
+/* the search box with an icon in front: keep the icon and the text on one line */
+.studio-v2 .ex-search input,
+.studio-v2 .anime-search input,
+.studio-v2 [data-mxs-anime] input[type=search]{
+  height:50px;
+  line-height:50px;
+  padding-left:44px;
+}
