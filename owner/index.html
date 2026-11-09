@@ -90,6 +90,11 @@
         .halo { position:fixed; z-index:0; pointer-events:none; width:640px; height:640px; left:50%; top:-310px; transform:translateX(-50%); background:radial-gradient(circle,var(--accent-soft),transparent 68%); }
 
         .shell { position:relative; z-index:1; width:100%; max-width:435px; display:flex; flex-direction:column; gap:20px; }
+        .shell > .pc-left { display:contents; }
+        #cta { order:3; }
+        .shell > .pager { order:2; }
+        .shell > .mx-stack { order:1; }
+        .shell > footer { order:4; }
         .panel { position:relative; border-radius:26px; padding:15px; background:var(--panel); border:1px solid var(--line); box-shadow:0 24px 60px -20px rgba(0,0,0,0.75); }
         .panel::before { content:''; position:absolute; inset:-1px; border-radius:26px; pointer-events:none; background:linear-gradient(var(--accent),var(--accent)) top left/16px 1.5px,linear-gradient(var(--accent),var(--accent)) top left/1.5px 16px,linear-gradient(var(--accent),var(--accent)) bottom right/16px 1.5px,linear-gradient(var(--accent),var(--accent)) bottom right/1.5px 16px; background-repeat:no-repeat; opacity:0.8; }
         .section-label { display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:9px; letter-spacing:0.22em; text-transform:uppercase; color:var(--dim); padding:0 6px 10px; }
@@ -291,9 +296,11 @@
         @media (min-width:900px) and (min-height:640px) {
             .shell { max-width:1240px; display:grid; grid-template-columns:minmax(360px,430px) minmax(0,1fr); column-gap:48px; row-gap:24px; align-items:start; padding:32px 48px 96px; box-sizing:border-box; }
             .shell > .topbar { grid-column:1 / -1; }
-            .shell > .panel:not(.pager) { grid-column:1; grid-row:2; position:sticky; top:calc(var(--tb-h,64px) + 24px); }
+            .shell > .pc-left { display:flex; flex-direction:column; gap:16px; grid-column:1; grid-row:2; min-width:0; position:sticky; top:calc(var(--tb-h,64px) + 24px); }
             .shell > .pager { grid-column:2; grid-row:2; min-width:0; }
-            .shell > *:not(.topbar):not(.panel):not(.pager):not(.modal):not(.music-panel) { grid-column:1; min-width:0; }
+            .shell > .mx-stack { grid-column:2; min-width:0; }
+            .shell > footer { grid-column:1 / -1; }
+            .shell > *:not(.topbar):not(.pc-left):not(.pager):not(.mx-stack):not(footer):not(.modal):not(.music-panel) { grid-column:1; min-width:0; }
             .pager.single .ptabs { display:none !important; }
             .pager.single .pslide.hidden { display:block !important; }
             .pager.single .pslide:empty { display:none !important; }
@@ -381,6 +388,7 @@ html{background:var(--bg)}
         </div>
     </div>
 
+    <div class="pc-left">
     <section class="panel reveal">
         <div class="banner" id="banner">
             <span class="banner-tag" id="banner-tag"></span>
@@ -423,6 +431,11 @@ html{background:var(--bg)}
             <span class="support-bottom"><span class="support-via"><span id="support-user"></span></span><span class="support-cta"><span data-i18n="supportCta">Give Support</span> <i class="fa-solid fa-arrow-right"></i></span></span>
         </a>
     </section>
+    <a id="cta" class="cta-card live hidden" href="/#auth" target="_top">
+        <span><span class="cta-tag" data-i18n="ctaTag">M-ID</span><span class="cta-title" data-i18n="ctaTitle"></span><span class="cta-desc" data-i18n="ctaDesc"></span></span>
+        <span class="cta-btn"><span data-i18n="ctaBtn">Create yours</span> <i class="fa-solid fa-arrow-right"></i></span>
+    </a>
+    </div>
 
     <div class="mx-stack" id="mx-stack" hidden></div>
 
@@ -447,11 +460,6 @@ html{background:var(--bg)}
         </div>
     </section>
 
-    <a id="cta" class="cta-card live hidden" href="/#auth" target="_top">
-        <span><span class="cta-tag" data-i18n="ctaTag">M-ID</span><span class="cta-title" data-i18n="ctaTitle"></span><span class="cta-desc" data-i18n="ctaDesc"></span></span>
-        <span class="cta-btn"><span data-i18n="ctaBtn">Create yours</span> <i class="fa-solid fa-arrow-right"></i></span>
-    </a>
-
     <footer style="display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:9px; letter-spacing:0.2em; text-transform:uppercase; color:var(--dim); padding:0 6px;"><span data-i18n="footer">Tap · Scan · Connect</span><span id="footer-right"></span></footer>
 </div>
 
@@ -466,11 +474,11 @@ html{background:var(--bg)}
 <div id="toast"></div>
 
 <script src="/assets/launch.js?v=2"></script>
-<link rel="stylesheet" href="/assets/maple-collections.css?v=3" />
-<script src="/assets/maple-collections.js?v=6"></script>
+<link rel="stylesheet" href="/assets/maple-collections.css?v=4" />
+<script src="/assets/maple-collections.js?v=7"></script>
 <script src="/assets/maple-music.js?v=1"></script>
 <link rel="stylesheet" href="/assets/maple-stack.css?v=7" />
-<script src="/assets/maple-stack.js?v=7"></script>
+<script src="/assets/maple-stack.js?v=8"></script>
 <link rel="stylesheet" href="/assets/maple-reveal.css?v=1" />
 <script src="/assets/maple-reveal.js?v=1" defer></script>
 <script>
