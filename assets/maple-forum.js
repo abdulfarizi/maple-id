@@ -139,7 +139,7 @@
       + '.fm-swipe{position:fixed;inset:0;z-index:80;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;background:#000;scrollbar-width:none;-webkit-overflow-scrolling:touch}'
       + '.fm-swipe::-webkit-scrollbar{display:none}'
       + '.fm-slide{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;background:#000;color:#fff}'
-      + '.fm-slide-media{position:absolute;left:0;top:104px;width:100%;height:calc(100% - 344px);object-fit:contain;background:transparent}'
+      + '.fm-slide-media{position:absolute;left:0;top:104px;width:100%;height:calc(100% - 344px);object-fit:cover;background:transparent}'
       + '.fm-swipe-top .fm-chips .fm-btn{background:transparent!important;border-color:#fff6;text-shadow:0 1px 6px #000c}'
       + '.fm-swipe-top .fm-chips .fm-btn.on{background:transparent!important;border-color:#fff;color:#fff}'
       + '.fm-namewrap{display:inline-flex;align-items:center;flex-wrap:wrap;max-width:100%}'
