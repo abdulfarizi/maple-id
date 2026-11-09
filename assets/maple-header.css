@@ -71,3 +71,6 @@ body.has-dock.star-mode:not(.pager-on) .star-frame{height:calc(100vh - var(--tb-
 @media (min-width:900px){.tb-ex{display:none}}
 .dock-i[data-dock="explore"]{display:none}   /* the pager no longer counts this tab, so it can leave the bar completely */
 body[data-page="explore"] .dock-ind{opacity:0!important}
+/* the bottom bar: Home, + and Profile sit evenly around the centre (the tabs no longer stretch to fill the bar) */
+body.pager-on .dock{justify-content:center}
+body.pager-on .dock-i{flex:0 0 auto!important;min-width:96px}
