@@ -294,11 +294,12 @@
         #star-intro { position:fixed; inset:0; z-index:99999; background:var(--bg); }
             /* PC only (wide screen + mouse): the card stays on the left and the sections fill the right, no tabs. */
         @media (min-width:900px) and (min-height:640px) {
-            .shell { max-width:1240px; display:grid; grid-template-columns:minmax(360px,430px) minmax(0,1fr); column-gap:48px; row-gap:24px; align-items:start; padding:32px 48px 96px; box-sizing:border-box; }
+            .shell { max-width:1240px; display:grid; grid-template-columns:minmax(340px,400px) minmax(0,1fr); column-gap:48px; row-gap:24px; align-items:start; padding:32px 48px 96px; box-sizing:border-box; }
             .shell > .topbar { grid-column:1 / -1; }
-            .shell > .pc-left { display:flex; flex-direction:column; gap:16px; grid-column:1; grid-row:2; min-width:0; position:sticky; top:calc(var(--tb-h,64px) + 24px); }
+            /* the ID card sits in the left column for the whole height (rows 1-2), so it never falls below the music block */
+            .shell > .pc-left { display:flex; flex-direction:column; gap:16px; grid-column:1; grid-row:1 / span 2; min-width:0; position:sticky; top:calc(var(--tb-h,64px) + 24px); align-self:start; }
+            .shell > .mx-stack { grid-column:2; grid-row:1; min-width:0; }
             .shell > .pager { grid-column:2; grid-row:2; min-width:0; }
-            .shell > .mx-stack { grid-column:2; min-width:0; }
             .shell > footer { grid-column:1 / -1; }
             .shell > *:not(.topbar):not(.pc-left):not(.pager):not(.mx-stack):not(footer):not(.modal):not(.music-panel) { grid-column:1; min-width:0; }
             .pager.single .ptabs { display:none !important; }
