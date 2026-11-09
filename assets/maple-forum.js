@@ -267,7 +267,17 @@
     if (!p.mine) items.push(['Report', function () { report('post', p.id); }]);
     if (S.mod) items.push([p.pinned ? 'Unpin' : 'Pin', function () { api('posts/' + p.id + '/pin', { method: 'POST', body: { pinned: !p.pinned } }).then(function (r) { if (r.ok) load(true); else alert((r.j && r.j.error) || 'Could not pin. Has the part-2 SQL been run?'); }); }]);
     if (p.mine || S.mod) items.push(['Delete', function () { if (!confirm('Delete this post?')) return; api('posts/' + p.id, { method: 'DELETE' }).then(function (r) { if (r.ok) { S.posts = S.posts.filter(function (x) { return x.id !== p.id; }); S.pinned = S.pinned.filter(function (x) { return x.id !== p.id; }); draw(); } else alert('Could not delete it.'); }); }, true]);
-    function closePop() { if (!pop) return; pop.remove(); pop = null; dots.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', outside, true); document.removeEventListener('click', outside, true); document.removeEventListener('keydown', esc); }
+    function closePop() { if (!pop) return; pop.remove(); pop = null; dots.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', outside, true); document.removeEventListener('click', outside, true); document.removeEventListener('keydown', esc); window.removeEventListener('scroll', closePop, true); window.removeEventListener('resize', closePop); }
+    // The menu is a fixed layer on <body>, anchored to its button: it is never clipped by the card or covered by the dock/player.
+    // Opens below the button, flips above it when there is no room, and stays inside the screen edges.
+    function placePop() {
+      var r = dots.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = window.innerHeight, m = 8, gap = 6;
+      var pw = pop.offsetWidth, ph = pop.offsetHeight;
+      var left = Math.max(m, Math.min(r.right - pw, vw - pw - m));
+      var top = r.bottom + gap;
+      if (top + ph > vh - m) { var up = r.top - gap - ph; top = up >= m ? up : Math.max(m, vh - ph - m); }
+      pop.style.left = left + 'px'; pop.style.top = top + 'px';
+    }
     function outside(e) { if (pop && !pop.contains(e.target) && !dots.contains(e.target)) closePop(); }
     function esc(e) { if (e.key === 'Escape' && pop) { closePop(); dots.focus(); } }
     if (items.length) {
@@ -275,7 +285,9 @@
         if (pop) { closePop(); return; }
         pop = h('div', { class: 'fm-pop', role: 'menu' }, items.map(function (it) { return h('button', { type: 'button', role: 'menuitem', class: 'fm-pop-i' + (it[2] ? ' bad' : ''), text: it[0], onclick: function () { closePop(); it[1](); } }); }));
         pop.addEventListener('click', function (e) { e.stopPropagation(); });
-        headAct.appendChild(pop); dots.setAttribute('aria-expanded', 'true'); document.addEventListener('pointerdown', outside, true); document.addEventListener('click', outside, true); document.addEventListener('keydown', esc);
+        document.body.appendChild(pop); placePop(); dots.setAttribute('aria-expanded', 'true');
+        document.addEventListener('pointerdown', outside, true); document.addEventListener('click', outside, true); document.addEventListener('keydown', esc);
+        window.addEventListener('scroll', closePop, true); window.addEventListener('resize', closePop);
         var f = pop.querySelector('button'); if (f) f.focus({ preventScroll: true });
       });
       dots.setAttribute('aria-haspopup', 'menu'); dots.setAttribute('aria-expanded', 'false'); headAct.appendChild(dots);

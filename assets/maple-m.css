@@ -38,7 +38,7 @@
 .fm-ico svg{width:20px;height:20px}
 .fm-ico:hover{background:var(--bg-2);color:var(--text)}.fm-ico:active{transform:scale(.92)}
 .fm-ico:focus-visible,.fm-pop-i:focus-visible,.fm-lnk:focus-visible,.fm-cb-in:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.fm-pop{position:absolute;top:calc(100% + 4px);right:0;z-index:50;min-width:150px;max-width:calc(100vw - 32px);padding:5px;border-radius:14px;background:var(--panel-solid,var(--bg));border:1px solid var(--line,#ffffff1f);box-shadow:var(--shadow,0 12px 40px #0006);transform-origin:top right;animation:fm-pop-in .16s ease-out}
+.fm-pop{position:fixed;top:0;left:0;z-index:3600;min-width:150px;max-width:calc(100vw - 16px);padding:5px;border-radius:14px;background:var(--panel-solid,var(--bg));border:1px solid var(--line,#ffffff1f);box-shadow:var(--shadow,0 12px 40px #0006);transform-origin:top right;animation:fm-pop-in .16s ease-out}
 @keyframes fm-pop-in{from{opacity:0;transform:translateY(-5px) scale(.97)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.fm-pop{animation:none}}
 .fm-pop-i{display:flex;align-items:center;width:100%;min-height:44px;text-align:left;padding:10px 14px;border:0;border-radius:10px;touch-action:manipulation;background:none;color:var(--text);font:600 14px var(--sans,system-ui);cursor:pointer}
