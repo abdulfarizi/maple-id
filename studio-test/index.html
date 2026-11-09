@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="dark">
+<title>Studio (test) · M-ID</title>
+<style>
+  html,body{margin:0;height:100%;background:#0f0d0e;color:#f4eff3;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  body{display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+  a{color:#d86aa0}
+</style>
+</head>
+<body>
+<p id="s">Loading Studio (test)…</p>
+<script>
+/* /studio-test (owner only) — testing copy of /studio-new.
+ * Loads the live index.html with the new organizing layer (assets/studio-test.css + .js).
+ * Unlike /studio-new, it never rewrites the address bar, so the app keeps routing normally. */
+(function () {
+  'use strict';
+  var OWNER_EMAIL = 'abdulfarizi15@gmail.com';
+
+  function cookie(n) {
+    var m = document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)'));
+    if (!m) return null;
+    try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; }
+  }
+  function claims(t) {
+    try {
+      var p = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      p += '='.repeat((4 - (p.length % 4)) % 4);
+      return JSON.parse(decodeURIComponent(escape(atob(p))));
+    } catch (e) { return null; }
+  }
+  function ownerEmail() {
+    var toks = [], best = null;
+    var c = cookie('nf_jwt'); if (c) toks.push(c);
+    try {
+      var g = JSON.parse(localStorage.getItem('gotrue.user') || 'null');
+      if (g && g.token && g.token.access_token) toks.push(g.token.access_token);
+    } catch (e) {}
+    toks.forEach(function (t) {
+      var cl = claims(t);
+      if (cl && cl.sub && (!best || cl.exp > best.exp)) best = cl;
+    });
+    return best ? String(best.email || '').toLowerCase() : '';
+  }
+
+  if (ownerEmail() !== OWNER_EMAIL) {
+    document.getElementById('s').innerHTML = 'This page is only available to the site owner.<br><a href="/">Back to M-ID</a>';
+    return;
+  }
+
+  // The app picks its screen from the address, so present it as /studio while it starts.
+  try { history.replaceState(null, '', '/studio'); } catch (e) {}
+
+  fetch('/index.html', { cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error('index'); return r.text(); })
+    .then(function (html) {
+      var add = '<link rel="stylesheet" href="/assets/studio-new.css?v=1">' +
+                '<script src="/assets/studio-test.js?v=1" defer><\/script>';
+      html = html.replace('</head>', add + '</head>');
+      document.open();
+      document.write(html);
+      document.close();
+    })
+    .catch(function () { location.replace('/studio'); });
+})();
+</script>
+</body>
+</html>
