@@ -323,8 +323,9 @@
     if (e.key === 'ArrowRight' && i < v.length - 1) go(v[i + 1]); else if (e.key === 'ArrowLeft' && i > 0) go(v[i - 1]);
   });
 
-  /* Explore opens as a full-screen layer from the header search icon (no sideways swipe to it) */
+  /* Explore opens as a floating panel under the top bar (maple-header.js owns it); the old full-screen layer is no longer used */
   function openExplore() {
+    if (window.dgSearch) { window.dgSearch.open(); return; }
     ensure(); ensureLayer();
     if (layerKind === 'explore') return;
     openLayer('explore');

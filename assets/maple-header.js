@@ -132,6 +132,11 @@
     closeT = setTimeout(finish, 220);
   }
 
+  window.dgSearch = {
+    open: openSearch, close: closeSearch, toggle: toggleSearch,
+    isOpen: function () { return !!(sp && !sp.hidden && !sp.classList.contains('out')); }
+  };
+
   /* ───── the View popover ───── */
   function renderPop() {
     var p = prof(), c = controls(p); if (!pop || !c) return;

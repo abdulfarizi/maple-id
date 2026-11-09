@@ -14,7 +14,9 @@ body.has-dock.star-mode:not(.pager-on) .star-frame{height:calc(100vh - var(--tb-
   -webkit-backdrop-filter:blur(14px) saturate(1.2)!important;backdrop-filter:blur(14px) saturate(1.2)!important;border-bottom:1px solid transparent!important}
 .topbar::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;pointer-events:none;
   background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 55%,var(--line)) 30%,color-mix(in srgb,var(--accent-2,var(--accent)) 45%,var(--line)) 70%,transparent)}
-.topbar .brand{transition:opacity .2s}
+.topbar .brand{transition:opacity .2s;flex:0 0 auto;min-width:0;white-space:nowrap}
+.topbar .tb-end{flex:0 1 auto;min-width:0;justify-content:flex-end}
+.topbar .brand .brand-name,.topbar .brand>span{white-space:nowrap}
 .topbar .brand:hover .leaf-ico{transform:rotate(-12deg) scale(1.05)}
 .topbar .brand .leaf-ico{transition:transform .35s var(--ease)}
 
