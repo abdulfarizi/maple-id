@@ -47,7 +47,8 @@
     if (!ex || !ex.isConnected) {
       ex = document.createElement('a'); ex.href = '/#explore'; ex.className = 'tb-ex';
       ex.setAttribute('aria-label', 'Explore'); ex.title = 'Explore';
-      ex.addEventListener('click', function (e) { if (window.dgPager && dgPager.explore) { e.preventDefault(); dgPager.explore(); } });
+      ex.setAttribute('aria-haspopup', 'dialog'); ex.setAttribute('aria-expanded', 'false');
+      ex.addEventListener('click', function (e) { e.preventDefault(); toggleSearch(); });
       ex.innerHTML = '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>';
       end.insertBefore(ex, end.firstChild);
     }
@@ -78,6 +79,56 @@
     btn.hidden = !c;
     if (!c) closePop();
     else if (pop && !pop.hidden) renderPop();
+  }
+
+  /* ───── the search panel: Explore drops down from under the top bar ───── */
+  var sp = null, slot = null, sbox = null, closeT = 0;
+  var REDUCE_M = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+  function toggleSearch() { if (sp && !sp.hidden && !sp.classList.contains('out')) closeSearch(); else openSearch(); }
+  function openSearch() {
+    var box = document.getElementById('explore');
+    if (!box) { if (window.dgNavigate) window.dgNavigate('/#explore'); else location.href = '/#explore'; return; }
+    if (!sp) {
+      sp = document.createElement('div'); sp.id = 'tb-search'; sp.className = 'tb-search'; sp.hidden = true;
+      sp.setAttribute('role', 'dialog'); sp.setAttribute('aria-label', 'Explore creators');
+      sp.innerHTML = '<div class="tb-search-h"><span><i class="fa-solid fa-compass" aria-hidden="true"></i>Explore</span>'
+        + '<button type="button" class="tb-search-x" aria-label="Close explore"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>'
+        + '<div class="tb-search-body"></div>';
+      sp.querySelector('.tb-search-x').addEventListener('click', closeSearch);
+      // a tap on a creator's card navigates away, so the panel closes with it
+      sp.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('a[href]')) closeSearch(); });
+      document.body.appendChild(sp);
+      document.addEventListener('click', function (e) { if (sp && !sp.hidden && !sp.contains(e.target) && !(ex && ex.contains(e.target))) closeSearch(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && sp && !sp.hidden) { closeSearch(); ex && ex.focus({ preventScroll: true }); } });
+    }
+    var bodyEl = sp.querySelector('.tb-search-body');
+    if (sp.classList.contains('out') && sbox === box) {       // re-opened while the close animation was still running
+      clearTimeout(closeT); sp.classList.remove('out'); sp.classList.add('in');
+      ex && ex.setAttribute('aria-expanded', 'true'); return;
+    }
+    sbox = box; slot = document.createComment('tb-search-slot');
+    box.parentNode.insertBefore(slot, box);
+    bodyEl.appendChild(box); bodyEl.scrollTop = 0;
+    sp.classList.remove('out'); sp.hidden = false;
+    if (!REDUCE_M || !REDUCE_M.matches) { void sp.offsetWidth; sp.classList.add('in'); }
+    ex && ex.setAttribute('aria-expanded', 'true');
+    var q = document.getElementById('ex-q');
+    if (q && window.matchMedia && window.matchMedia('(min-width:900px)').matches) setTimeout(function () { q.focus({ preventScroll: true }); }, 240);
+  }
+  function closeSearch() {
+    if (!sp || sp.hidden || sp.classList.contains('out')) return;
+    ex && ex.setAttribute('aria-expanded', 'false');
+    var finish = function () {
+      clearTimeout(closeT); sp.hidden = true; sp.classList.remove('in', 'out');
+      if (sbox) {                                              // hand the Explore section back to the page it came from
+        if (slot && slot.parentNode) slot.parentNode.insertBefore(sbox, slot); else sbox.remove();
+      }
+      if (slot) slot.remove();
+      sbox = null; slot = null;
+    };
+    if (REDUCE_M && REDUCE_M.matches) return finish();
+    sp.classList.remove('in'); sp.classList.add('out');
+    closeT = setTimeout(finish, 220);
   }
 
   /* ───── the View popover ───── */
