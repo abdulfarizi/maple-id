@@ -322,11 +322,18 @@
     dots.setAttribute('aria-haspopup', 'menu'); dots.setAttribute('aria-expanded', 'false');
     return dots;
   }
+  /* remove a deleted post from the feed (the full-screen feed keeps its own list of slides, so drop that slide too) */
+  function removePost(id) {
+    S.posts = S.posts.filter(function (x) { return x.id !== id; }); S.pinned = S.pinned.filter(function (x) { return x.id !== id; });
+    delete rendered[id];
+    var el = swipeEl && swipeEl.querySelector('.fm-slide[data-id="' + id + '"]'); if (el) el.remove();
+    draw();
+  }
   function postItems(p) {
     var items = [];
     if (!p.mine) items.push(['Report', function () { report('post', p.id); }]);
     if (S.mod) items.push([p.pinned ? 'Unpin' : 'Pin', function () { api('posts/' + p.id + '/pin', { method: 'POST', body: { pinned: !p.pinned } }).then(function (r) { if (r.ok) load(true); else alert((r.j && r.j.error) || 'Could not pin. Has the part-2 SQL been run?'); }); }]);
-    if (p.mine || S.mod) items.push(['Delete', function () { if (!confirm('Delete this post?')) return; api('posts/' + p.id, { method: 'DELETE' }).then(function (r) { if (r.ok) { S.posts = S.posts.filter(function (x) { return x.id !== p.id; }); S.pinned = S.pinned.filter(function (x) { return x.id !== p.id; }); draw(); } else alert('Could not delete it.'); }); }, true]);
+    if (p.mine || S.mod) items.push(['Delete', function () { if (!confirm('Delete this post?')) return; api('posts/' + p.id, { method: 'DELETE' }).then(function (r) { if (r.ok) removePost(p.id); else alert('Could not delete it.'); }); }, true]);
     return items;
   }
   function card(p) {
@@ -455,6 +462,7 @@
   }
   function openCreate() {
     if (newPage) return;
+    if (window.MaplePlayer && MaplePlayer.pause) MaplePlayer.pause();   // writing a post stops the music
     var media = null, busy = false, pickFile = h('input', { type: 'file', accept: 'image/*,video/*', hidden: '' });
     var cat = h('select', { 'aria-label': 'Category' }, CATS.slice(1).map(function (c) { return h('option', { value: c[0], text: c[1] }); }));
     var title = h('input', { type: 'text', maxlength: '120', placeholder: 'Title', 'aria-label': 'Title' });

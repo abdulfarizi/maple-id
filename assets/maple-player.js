@@ -585,7 +585,7 @@
   function setProfile(which, p) { if (which === 'card' || which === 'profile') { (window.__mxCtx = window.__mxCtx || {})[which] = p || null; try { window.dispatchEvent(new CustomEvent('maple:ctx')); } catch (e) {} } }
   window.addEventListener('maple:ctx', soon);
   /* leaving the app or the site (switching app/tab, locking the phone, going to another page) pauses the music; it does not start again by itself */
-  function quietNow() { if (S.playing) toggle(); }
+  function quietNow() { pauseAll(); if (S.playing) { S.playing = false; paint(); } }
   window.addEventListener('pagehide', quietNow);
   document.addEventListener('visibilitychange', function () { if (document.hidden) quietNow(); });
 
@@ -759,7 +759,7 @@
   window.addEventListener('popstate', soon);
   soon();
 
-  window.MaplePlayer = { setProfile: setProfile, play: play, ctl: function (a) { if (a === 'toggle') toggle(); else if (a === 'back' || a === 'fwd') skip(a === 'fwd' ? 10 : -10); }, open: function () { setOpen(true); }, close: function () { setOpen(false); }, state: function () { return S; },
+  window.MaplePlayer = { setProfile: setProfile, pause: quietNow, play: play, ctl: function (a) { if (a === 'toggle') toggle(); else if (a === 'back' || a === 'fwd') skip(a === 'fwd' ? 10 : -10); }, open: function () { setOpen(true); }, close: function () { setOpen(false); }, state: function () { return S; },
     /* the Sections layout's Audio Player slide reads the lyrics too */
     searchLyrics: function () { if (!S.track) return; setOpen(true); lyricForm(true); },
     lyrics: function (want) { if (want !== undefined) { S.deckLyr = !!want; if (want && S.track) loadLyrics(); } return { lines: lyr.lines, plain: lyr.plain, msg: lyr.msg, ver: lyr.ver, ok: lyrOk(S.track) }; } };
