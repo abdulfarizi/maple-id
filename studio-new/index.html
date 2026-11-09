@@ -1,52 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="grape">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f0d0e">
+<meta name="color-scheme" content="dark light">
 <meta name="robots" content="noindex,nofollow">
-<meta name="color-scheme" content="dark">
 <title>Studio · M-ID</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/assets/themes.css?v=4" />
+<link rel="stylesheet" href="/assets/maple-theme.css?v=4" />
+<link rel="stylesheet" href="/assets/maple.css?v=3" />
+<link rel="stylesheet" href="/assets/glass.css?v=4" />
+<link rel="stylesheet" href="/assets/card-ui.css?v=2" />
+<link rel="stylesheet" href="/assets/maple-ui.css?v=5" />
+<link rel="stylesheet" href="/assets/studio.css?v=3" />
 <style>
-:root{--bg:#0f0d0e;--panel:#18151a;--line:#2c272e;--text:#f4eff3;--muted:#a79ca6;--accent:#c24d8a;--ok:#4caf7d;--err:#e5484d}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:860px;margin:0 auto;padding:18px 16px 130px}
-header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-header.top h1{font-size:20px;margin:0}
-.pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:middle}
-a{color:var(--accent)}
-nav.tabs{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:14px;overflow-x:auto;margin-bottom:14px}
-nav.tabs button{flex:1 0 auto;height:38px;border:0;border-radius:10px;background:transparent;color:var(--muted);font:inherit;font-size:13px;padding:0 12px;cursor:pointer}
-nav.tabs button.on{background:var(--accent);color:#fff}
-.panel{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:18px}
-.panel h2{font-size:15px;margin:20px 0 10px}
-.panel h2:first-child{margin-top:0}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.wide{grid-column:1/-1}
-label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
-input[type=text],input[type=time],select,textarea{width:100%;background:#120f12;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font:inherit;font-size:14px}
-textarea{min-height:90px;resize:vertical}
-input[type=color]{width:52px;height:38px;border:1px solid var(--line);border-radius:10px;background:none;padding:2px}
-.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;color:var(--text);font-size:14px}
-.toggle input{width:20px;height:20px;accent-color:var(--accent)}
-.rows .row{display:grid;grid-template-columns:1fr 2fr 42px;gap:8px;margin-bottom:8px}
-.rows .row button{height:40px;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:10px;cursor:pointer;font:inherit}
-.add{height:38px;padding:0 14px;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:10px;cursor:pointer;font:inherit;margin-top:4px}
-.savebar{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(15,13,14,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
-.savebar #state{flex:1;font-size:13px;color:var(--muted)}
-.savebar #state.dirty{color:var(--accent)}
-.savebar button{height:42px;padding:0 22px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
-.savebar button:disabled{opacity:.4;cursor:default}
-#msg{font-size:13px;min-height:1.2em;margin:12px 4px 0}
-#msg.err{color:var(--err)}
-#msg.ok{color:var(--ok)}
-.muted{color:var(--muted)}
-.note{border:1px dashed var(--line);border-radius:12px;padding:14px;color:var(--muted);font-size:14px}
-@media (max-width:640px){.grid{grid-template-columns:1fr}.rows .row{grid-template-columns:1fr 1fr 42px}}
+  /* page-only layout helpers; colours, type and buttons come from the site's stylesheets */
+  .st-page{max-width:1180px;margin:0 auto;padding:12px 16px 120px}
+  .st-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .st-top h1{font-size:20px;margin:0;font-weight:700}
+  .st-top .eyebrow{font-size:11px;opacity:.7;letter-spacing:.06em;text-transform:uppercase}
+  .st-msg{min-height:1.3em;font-size:13px;margin:10px 4px 0}
+  .st-msg.err{color:#ff7b82}
+  .st-msg.ok{color:#7fd8a6}
+  .st-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .st-wide{grid-column:1/-1}
+  .st-rows{display:grid;gap:8px}
+  .st-row{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;align-items:center}
+  .st-row input{width:100%}
+  .st-add{margin-top:8px}
+  .st-note{padding:14px;border:1px dashed var(--line);border-radius:14px;font-size:14px;opacity:.85}
+  @media (max-width:640px){.st-grid{grid-template-columns:1fr}.st-row{grid-template-columns:1fr 1fr auto}}
+  .st-page .field input[type=color]{height:42px;padding:3px;width:64px}
 </style>
 </head>
 <body>
-<main id="app"><p class="muted">Loading…</p></main>
+<main class="st-page" id="app"><p class="st-note">Loading…</p></main>
 <script>
 (function () {
   'use strict';
@@ -111,12 +103,26 @@ input[type=color]{width:52px;height:38px;border:1px solid var(--line);border-rad
   };
 
   var TABS = [
-    { id: 'profile', label: 'Profile', fields: ['name', 'role', 'bio', 'country', 'city', 'timezone', 'openTime', 'closeTime', 'avatar', 'banner'] },
-    { id: 'look', label: 'Look', fields: ['layout', 'theme', 'accent', 'accent2', 'cardStyle', 'avatarShape', 'frame', 'cardTag', 'statusText', 'footerText'] },
-    { id: 'links', label: 'Links', fields: ['donate', 'donateLabel', 'contactPhone', 'contactEmail', 'shopWhatsApp'], rows: ['channels', 'gaming'] },
-    { id: 'extras', label: 'Extras', toggles: ['intro', 'showVisits', 'showTime', 'showReactions', 'showCta', 'confetti', 'sfx', 'music', 'themeSwitch', 'grid'], rows: ['specs'] },
-    { id: 'shop', label: 'Shop', toggles: ['shopEnabled'], fields: ['shopTitle', 'shopNote', 'currency'] },
-    { id: 'media', label: 'Media', media: true }
+    { id: 'profile', label: 'Profile', icon: 'fa-user', sections: [
+      { title: 'Identity', fields: ['name', 'role', 'bio'] },
+      { title: 'Location & hours', fields: ['country', 'city', 'timezone', 'openTime', 'closeTime'] },
+      { title: 'Images', fields: ['avatar', 'banner'] }
+    ] },
+    { id: 'look', label: 'Look', icon: 'fa-palette', sections: [
+      { title: 'Layout & theme', fields: ['layout', 'theme', 'cardStyle'] },
+      { title: 'Colours', fields: ['accent', 'accent2'] },
+      { title: 'Avatar', fields: ['avatarShape', 'frame'] },
+      { title: 'Card text', fields: ['cardTag', 'statusText', 'footerText'] }
+    ] },
+    { id: 'links', label: 'Links', icon: 'fa-link', sections: [
+      { title: 'Contact', fields: ['contactPhone', 'contactEmail', 'shopWhatsApp'] },
+      { title: 'Donate', fields: ['donate', 'donateLabel'] }
+    ], rows: ['channels', 'gaming'] },
+    { id: 'extras', label: 'Extras', icon: 'fa-sliders', toggles: ['intro', 'showVisits', 'showTime', 'showReactions', 'showCta', 'confetti', 'sfx', 'music', 'themeSwitch', 'grid'], rows: ['specs'] },
+    { id: 'shop', label: 'Shop', icon: 'fa-bag-shopping', sections: [
+      { title: 'Shop', fields: ['shopTitle', 'shopNote', 'currency'] }
+    ], toggles: ['shopEnabled'] },
+    { id: 'media', label: 'Media', icon: 'fa-music', media: true }
   ];
 
   var S = null; // { token, uid, raw, data, dirty, tab }
@@ -220,24 +226,26 @@ input[type=color]{width:52px;height:38px;border:1px solid var(--line);border-rad
     }).filter(function (o) { return o[R.a] && o[R.b]; });
   }
 
-  // ---------- rendering ----------
+  // ---------- rendering (uses the Studio classes from studio.css) ----------
   function fieldHtml(k) {
-    var s = SPEC[k], v = S.data[k] == null ? '' : S.data[k], cls = s.wide ? ' class="wide"' : '';
+    var s = SPEC[k], v = S.data[k] == null ? '' : S.data[k];
+    var cls = s.wide ? ' st-wide' : '';
+    var lbl = '<label for="f-' + k + '">' + s.l + '</label>';
+    var input;
     if (s.t === 'textarea') {
-      return '<label' + cls + '>' + s.l + '<textarea data-k="' + k + '" maxlength="' + s.max + '">' + esc(v) + '</textarea></label>';
-    }
-    if (s.t === 'select') {
-      return '<label' + cls + '>' + s.l + '<select data-k="' + k + '">' + s.opts.map(function (o) {
+      input = '<textarea id="f-' + k + '" data-k="' + k + '" maxlength="' + s.max + '">' + esc(v) + '</textarea>';
+    } else if (s.t === 'select') {
+      input = '<select id="f-' + k + '" data-k="' + k + '">' + s.opts.map(function (o) {
         return '<option value="' + esc(o) + '"' + (o === v ? ' selected' : '') + '>' + (o || 'None') + '</option>';
-      }).join('') + '</select></label>';
+      }).join('') + '</select>';
+    } else if (s.t === 'color') {
+      input = '<input id="f-' + k + '" type="color" data-k="' + k + '" value="' + (HEX.test(v) ? v : '#000000') + '">';
+    } else if (s.t === 'time') {
+      input = '<input id="f-' + k + '" type="time" data-k="' + k + '" value="' + esc(v) + '">';
+    } else {
+      input = '<input id="f-' + k + '" type="text" data-k="' + k + '" maxlength="' + Math.min(s.max, 2000) + '" value="' + esc(v) + '">';
     }
-    if (s.t === 'color') {
-      return '<label' + cls + '>' + s.l + '<input type="color" data-k="' + k + '" value="' + (HEX.test(v) ? v : '#000000') + '"></label>';
-    }
-    if (s.t === 'time') {
-      return '<label' + cls + '>' + s.l + '<input type="time" data-k="' + k + '" value="' + esc(v) + '"></label>';
-    }
-    return '<label' + cls + '>' + s.l + '<input type="text" data-k="' + k + '" maxlength="' + Math.min(s.max, 2000) + '" value="' + esc(v) + '"></label>';
+    return '<div class="field' + cls + '">' + lbl + input + '</div>';
   }
   function toggleHtml(k) {
     var on = S.data[k] === true || S.data[k] === 'true';
@@ -245,35 +253,43 @@ input[type=color]{width:52px;height:38px;border:1px solid var(--line);border-rad
   }
   function rowsHtml(k) {
     var R = ROWS[k], rows = S.data[k] || [];
-    return '<h2>' + R.l + '</h2><div class="rows">' + rows.map(function (r, i) {
-      return '<div class="row">' +
+    return '<div class="st-rows">' + rows.map(function (r, i) {
+      return '<div class="st-row">' +
         '<input type="text" data-rk="' + k + '" data-i="' + i + '" data-p="' + R.a + '" maxlength="60" value="' + esc(r[R.a]) + '" placeholder="' + R.a + '">' +
         '<input type="text" data-rk="' + k + '" data-i="' + i + '" data-p="' + R.b + '" maxlength="200" value="' + esc(r[R.b]) + '" placeholder="' + R.b + '">' +
-        '<button type="button" data-del="' + k + '" data-i="' + i + '" aria-label="Remove">✕</button></div>';
-    }).join('') + '</div><button type="button" class="add" data-add="' + k + '">+ Add</button>';
+        '<button class="btn" type="button" data-del="' + k + '" data-i="' + i + '" aria-label="Remove"><i class="fa-solid fa-xmark"></i></button></div>';
+    }).join('') + '</div><button class="btn st-add" type="button" data-add="' + k + '"><i class="fa-solid fa-plus"></i> Add ' + R.l.toLowerCase().replace(/s$/, '') + '</button>';
+  }
+  function sectionHtml(title, inner) {
+    return '<fieldset><legend>' + title + '</legend>' + inner + '</fieldset>';
   }
   function panelHtml(id) {
     var T = TABS.filter(function (t) { return t.id === id; })[0] || TABS[0];
     if (T.media) {
-      return '<div class="note">Music, anime and lyrics are still edited in the current Studio. ' +
-        '<a href="/studio">Open the current Studio</a>. They move here in the next update.</div>';
+      return sectionHtml('Music & anime', '<div class="st-note">Music, anime and lyrics are still edited in the current Studio. ' +
+        '<a href="/studio">Open the current Studio</a>. They move here in the next update.</div>');
     }
     var h = '';
-    if (T.fields) h += '<div class="grid">' + T.fields.map(fieldHtml).join('') + '</div>';
-    if (T.toggles) h += '<h2>Options</h2>' + T.toggles.map(toggleHtml).join('');
-    if (T.rows) h += T.rows.map(rowsHtml).join('');
+    (T.sections || []).forEach(function (sec) {
+      h += sectionHtml(sec.title, '<div class="st-grid">' + sec.fields.map(fieldHtml).join('') + '</div>');
+    });
+    if (T.toggles) h += sectionHtml('Options', T.toggles.map(toggleHtml).join(''));
+    (T.rows || []).forEach(function (k) { h += sectionHtml(ROWS[k].l, rowsHtml(k)); });
     return h;
   }
   function render() {
     $('#app').innerHTML =
-      '<header class="top"><h1>Studio <span class="pill">new</span></h1>' +
-      '<a href="/maple" target="_blank" rel="noopener">View my card ↗</a></header>' +
-      '<nav class="tabs" role="tablist">' + TABS.map(function (t) {
-        return '<button type="button" role="tab" data-tab="' + t.id + '"' + (t.id === S.tab ? ' class="on"' : '') + '>' + t.label + '</button>';
-      }).join('') + '</nav>' +
-      '<section class="panel" id="panel">' + panelHtml(S.tab) + '</section>' +
-      '<div class="savebar"><span id="state"></span><button type="button" id="save">Save</button></div>' +
-      '<p id="msg" role="status"></p>';
+      '<div class="st-top"><div><div class="eyebrow">Studio</div><h1>Your card</h1></div>' +
+      '<a class="btn" href="/maple" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> View card</a></div>' +
+      '<div class="studio-grid"><form class="editor" id="editor" onsubmit="return false">' +
+      '<div class="tabs" role="tablist">' + TABS.map(function (t) {
+        return '<button class="tab' + (t.id === S.tab ? ' active' : '') + '" type="button" role="tab" data-tab="' + t.id + '"><i class="fa-solid ' + t.icon + '"></i> ' + t.label + '</button>';
+      }).join('') + '</div>' +
+      '<div class="tab-panel" id="panel">' + panelHtml(S.tab) + '</div>' +
+      '<div class="savebar"><span class="save-state" id="state"></span>' +
+      '<button class="btn primary" type="button" id="save"><i class="fa-solid fa-floppy-disk"></i> Save</button></div>' +
+      '<p class="st-msg" id="msg" role="status"></p>' +
+      '</form></div>';
     updateBar();
   }
   function renderPanel() { $('#panel').innerHTML = panelHtml(S.tab); updateBar(); }
@@ -282,14 +298,14 @@ input[type=color]{width:52px;height:38px;border:1px solid var(--line);border-rad
     if (!S || !st || !b) return;
     var n = Object.keys(S.dirty).length;
     st.textContent = n ? 'Unsaved changes' : 'All changes saved';
-    st.className = n ? 'dirty' : '';
+    st.className = n ? 'save-state dirty' : 'save-state';
     b.disabled = !n;
   }
   function showMsg(text, isErr) {
     var m = $('#msg');
-    if (m) { m.textContent = text; m.className = isErr ? 'err' : 'ok'; }
+    if (m) { m.textContent = text; m.className = 'st-msg ' + (isErr ? 'err' : 'ok'); }
   }
-  function notice(text) { $('#app').innerHTML = '<div class="note">' + esc(text) + '</div>'; }
+  function notice(text) { $('#app').innerHTML = '<div class="st-note">' + esc(text) + '</div>'; }
   function mark(k) { S.dirty[k] = true; updateBar(); }
 
   // ---------- save ----------
