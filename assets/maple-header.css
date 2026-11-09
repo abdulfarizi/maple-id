@@ -69,6 +69,5 @@ body.has-dock.star-mode:not(.pager-on) .star-frame{height:calc(100vh - var(--tb-
 .tb-ex{flex:none;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;margin-right:8px;border-radius:50%;border:1px solid var(--line);background:var(--panel-solid,var(--panel));color:var(--text);font-size:15px;text-decoration:none}
 .tb-ex:active{transform:scale(.92)}
 @media (min-width:900px){.tb-ex{display:none}}
-.dock-i[data-dock="explore"]{width:0;flex:0 0 0;min-width:0;padding:0;margin:0;overflow:hidden;opacity:0;pointer-events:none;border:0}
-.dock-i[data-dock="explore"] span,.dock-i[data-dock="explore"] i{display:none}
+.dock-i[data-dock="explore"]{display:none}   /* the pager no longer counts this tab, so it can leave the bar completely */
 body[data-page="explore"] .dock-ind{opacity:0!important}
