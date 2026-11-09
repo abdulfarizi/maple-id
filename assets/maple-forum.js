@@ -537,7 +537,7 @@
     document.body.appendChild(swipeTop); document.body.appendChild(swipeEl);
     placeSwipe(); window.addEventListener('resize', placeSwipe);
     // the pager slides the panes sideways: only show the full-screen feed while its pane is on screen
-    swipeIO = new IntersectionObserver(function (es) { var on = !!es[0] && es[0].isIntersecting && es[0].intersectionRect.width > 0; if (swipeEl) swipeEl.style.display = swipeTop.style.display = on ? '' : 'none'; document.body.classList.toggle('fm-swipe-on', on); }, { threshold: [0, 1] });
+    swipeIO = new IntersectionObserver(function (es) { var on = !!es[0] && es[0].isIntersecting && es[0].intersectionRect.width > 0; if (swipeEl) swipeEl.style.display = swipeTop.style.display = on ? '' : 'none'; if (on) playInView(); document.body.classList.toggle('fm-swipe-on', on); }, { threshold: [0, 1] });
     swipeIO.observe(sec);
     // videos play while their slide is mostly on screen, and pause when it scrolls away
     vidIO = new IntersectionObserver(function (es) {
@@ -570,6 +570,16 @@
   window.addEventListener('focus', resumeFeed);
   document.addEventListener('freeze', quietFeed);
   document.addEventListener('visibilitychange', function () { if (document.hidden) quietFeed(); else resumeFeed(); });
+  /* coming back to the feed (e.g. from + or another page): play the slide that is on screen */
+  function playInView() {
+    if (!swipeEl) return;
+    var box = swipeEl.getBoundingClientRect();
+    swipeEl.querySelectorAll('.fm-slide').forEach(function (sl) {
+      var v = sl.querySelector('video'); if (!v || !v.paused) return;
+      var r = sl.getBoundingClientRect(), shown = Math.min(r.bottom, box.bottom) - Math.max(r.top, box.top);
+      if (shown >= r.height * 0.6) v.play().catch(function () {});
+    });
+  }
   function closeSwipe() {
     if (swipeIO) swipeIO.disconnect(); if (vidIO) vidIO.disconnect();
     if (swipeEl) swipeEl.remove(); if (swipeTop) swipeTop.remove();
