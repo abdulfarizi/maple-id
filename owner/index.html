@@ -308,6 +308,10 @@
             .pager.single .pslide.hidden { display:block !important; }
             .pager.single .pslide:empty { display:none !important; }
             .pager.single .pslide + .pslide { margin-top:24px; }
+            /* Anime sits in the same row as the profile card: it is the first block on the right */
+            .pager.single .pslides { display:flex; flex-direction:column; }
+            .pager.single .pslide { flex:none; }
+            .pager.single #pane-anime { order:-1; margin-top:0; }
         }
 </style>
     <style id="mode-tokens">
