@@ -1,10 +1,8 @@
 /* M-ID · profile badges: tick (verified), crown (special honor), music artist, seller — sized to the name next to them.
- * Several badges share one slot; the JS in maple-badges.js switches between them. */
-.mid-vbs{display:inline-grid;align-items:center;justify-items:center;margin-left:.35em;vertical-align:-.12em;white-space:nowrap;-webkit-text-fill-color:initial}
-.mid-vb{grid-area:1/1;display:inline-grid;place-items:center;width:.95em;height:.95em;flex:none;min-width:16px;min-height:16px;
-  opacity:0;transform:scale(.55) rotate(-12deg);transition:opacity .45s ease,transform .6s cubic-bezier(.22,1,.36,1),filter .35s ease}
-.mid-vb.on{opacity:1;transform:none}
-.mid-vbs:not([data-bcycle]) .mid-vb{opacity:1;transform:none}
+ * Badges show side by side, all at once. (The cycling version is kept below as a comment, to switch back.) */
+.mid-vbs{display:inline-flex;align-items:center;gap:.26em;margin-left:.35em;vertical-align:-.12em;white-space:nowrap;-webkit-text-fill-color:initial}
+.mid-vb{display:inline-grid;place-items:center;width:.95em;height:.95em;flex:none;min-width:16px;min-height:16px;
+  opacity:1;transform:none;transition:transform .35s cubic-bezier(.22,1,.36,1),filter .35s ease;animation:mid-vb-in .6s cubic-bezier(.22,1,.36,1) both;will-change:transform}
 .mid-vb:hover{transform:translateY(-1px) scale(1.08)}
 .mid-vb svg{width:100%;height:100%;display:block;overflow:visible}
 
@@ -21,8 +19,14 @@
 :root[data-mode=light] .mid-vb-tick{filter:drop-shadow(0 2px 5px rgba(26,127,224,.28))}
 :root[data-mode=light] .mid-vb-seller{filter:drop-shadow(0 2px 5px rgba(21,128,61,.3))}
 
+@keyframes mid-vb-in{from{opacity:0;transform:scale(.6) rotate(-12deg)}to{opacity:1;transform:none}}
 @keyframes mid-vb-sheen{0%,60%{background-position:150% 0}100%{background-position:-50% 0}}
 @media (prefers-reduced-motion:reduce){
   .mid-vb,.mid-vb-tick::after{animation:none!important;transition:none}
-  .mid-vbs[data-bcycle] .mid-vb:not(:first-child){display:none}
 }
+
+/* Cycling version (one slot, badges take turns), to switch back: replace the .mid-vbs and .mid-vb rules above with
+ * .mid-vbs{display:inline-grid;align-items:center;justify-items:center}
+ * .mid-vb{grid-area:1/1;opacity:0;transform:scale(.55) rotate(-12deg);transition:opacity .45s ease,transform .6s cubic-bezier(.22,1,.36,1)}
+ * .mid-vb.on{opacity:1;transform:none}
+ */
