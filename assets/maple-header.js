@@ -132,6 +132,15 @@
     closeT = setTimeout(finish, 220);
   }
 
+  // the Explore tab in the top bar (wide screens) opens and closes the same panel as the search icon.
+  // Handled first (capture) so the router does not treat it as a navigation and the outside-click rule does not close it at once.
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest && e.target.closest('.topbar a.tb-nl[href="/#explore"]');
+    if (!t) return;
+    e.preventDefault(); e.stopPropagation();
+    toggleSearch();
+  }, true);
+
   window.dgSearch = {
     open: openSearch, close: closeSearch, toggle: toggleSearch,
     isOpen: function () { return !!(sp && !sp.hidden && !sp.classList.contains('out')); }

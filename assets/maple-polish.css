@@ -117,6 +117,9 @@ body { letter-spacing: -.012em; }
   transform: scale(.94);
 }
 .tb-view { font: 650 12px/1 var(--sans) !important; }
+/* the View button sizes to its label (the shared 40px square above clipped the word) */
+.tb-view { width: auto !important; min-width: 40px; padding: 0 13px !important; gap: 7px; }
+@media (max-width: 520px) { .tb-view { padding: 0 !important; width: 40px !important; } .tb-view span { display: none; } }
 .tb-ex { margin-right: 0 !important; }
 
 @media (max-width: 520px) {
