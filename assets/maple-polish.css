@@ -1,0 +1,149 @@
+/* M-ID · refined header + typography
+   Add this stylesheet after maple-header.css in index.html.
+   Existing navigation and application behaviour remain unchanged. */
+
+:root {
+  --sans: "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --display: "Space Grotesk", var(--sans);
+}
+
+body, button, input, select, textarea { font-family: var(--sans); }
+h1, h2, h3, h4, .brand, .sec-head h2, .bx h3 { font-family: var(--display); }
+h1, h2, h3 { letter-spacing: -.045em; text-wrap: balance; }
+body { letter-spacing: -.012em; }
+
+/* Refined glass header */
+.topbar {
+  min-height: 72px !important;
+  padding: 10px clamp(16px, 4vw, 42px) !important;
+  gap: clamp(10px, 2vw, 20px) !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--panel-solid, var(--panel)) 92%, transparent),
+    color-mix(in srgb, var(--bg) 88%, transparent)
+  ) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.35) !important;
+  backdrop-filter: blur(22px) saturate(1.35) !important;
+  box-shadow: 0 10px 30px -26px rgba(0, 0, 0, .65);
+}
+
+.topbar .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px !important;
+  min-width: 0;
+  margin-right: clamp(10px, 2vw, 20px) !important;
+  color: var(--text);
+  text-decoration: none;
+  line-height: 1;
+  transition: transform .24s cubic-bezier(.22, 1, .36, 1), opacity .2s;
+}
+.topbar .brand:hover { opacity: .96; transform: translateY(-1px); }
+
+.topbar .brand .leaf-img {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  padding: 4px !important;
+  border-radius: 13px !important;
+  object-fit: cover;
+  background: linear-gradient(145deg, #ffb27d, #f16b50 52%, #b82b43) !important;
+  border: 1px solid rgba(255, 255, 255, .24);
+  box-shadow: 0 7px 20px -9px color-mix(in srgb, var(--accent) 65%, transparent) !important;
+}
+
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+.brand-word {
+  font: 700 22px/.92 var(--display);
+  letter-spacing: -.075em;
+  color: var(--text);
+  white-space: nowrap;
+}
+.brand-hyphen { color: var(--accent); padding: 0 .015em; }
+.brand-caption {
+  font: 700 8px/1 var(--sans);
+  letter-spacing: .19em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Quiet navigation surface */
+.tb-nav {
+  gap: 3px !important;
+  padding: 4px !important;
+  border-radius: 14px !important;
+  background: color-mix(in srgb, var(--text) 4%, var(--panel-solid, var(--panel))) !important;
+  border: 1px solid var(--line) !important;
+}
+.tb-nl {
+  padding: 9px 15px !important;
+  border-radius: 10px !important;
+  font: 650 12.5px/1 var(--sans) !important;
+  letter-spacing: -.015em;
+  color: var(--muted) !important;
+  transition: background .2s, color .2s, transform .2s;
+}
+.tb-nl:hover {
+  background: color-mix(in srgb, var(--text) 5%, transparent);
+  color: var(--text) !important;
+}
+.tb-nl.on {
+  background: color-mix(in srgb, var(--accent) 13%, var(--panel-solid, var(--panel))) !important;
+  color: var(--accent-t, var(--accent)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 17%, transparent);
+}
+
+.topbar .tb-end { gap: 9px !important; }
+.sh-burger, .pm-btn, .tb-ex, .tb-view, .tb-bell {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px !important;
+  border-color: var(--line-strong) !important;
+  background: color-mix(in srgb, var(--panel-solid, var(--panel)) 90%, transparent) !important;
+  box-shadow: 0 2px 8px -6px rgba(0, 0, 0, .45) !important;
+  transition: transform .2s cubic-bezier(.22, 1, .36, 1), border-color .2s, background .2s;
+}
+.sh-burger:hover, .pm-btn:hover, .tb-ex:hover, .tb-view:hover, .tb-bell:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line)) !important;
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel-solid, var(--panel))) !important;
+}
+.sh-burger:active, .pm-btn:active, .tb-ex:active, .tb-view:active, .tb-bell:active {
+  transform: scale(.94);
+}
+.tb-view { font: 650 12px/1 var(--sans) !important; }
+.tb-ex { margin-right: 0 !important; }
+
+@media (max-width: 520px) {
+  .topbar { min-height: 64px !important; padding: 8px 13px !important; }
+  .topbar .brand { gap: 9px !important; margin-right: auto !important; }
+  .topbar .brand .leaf-img {
+    width: 35px !important;
+    height: 35px !important;
+    min-width: 35px !important;
+    border-radius: 12px !important;
+  }
+  .brand-word { font-size: 20px; }
+  .brand-caption { font-size: 7px; letter-spacing: .17em; }
+  .topbar .tb-end { gap: 7px !important; }
+}
+@media (max-width: 359px) {
+  .topbar .brand { font-size: inherit !important; gap: 8px !important; }
+  .brand-word { font-size: 19px; }
+  .brand-caption { display: none; }
+  .topbar .brand .leaf-img {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topbar .brand, .tb-nl, .sh-burger, .pm-btn, .tb-ex, .tb-view, .tb-bell {
+    transition: none !important;
+  }
+}

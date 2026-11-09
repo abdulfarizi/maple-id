@@ -165,7 +165,7 @@
     if (drawer) return;
     scrim = h('div', { id: 'sh-scrim', class: 'sh-scrim', 'aria-hidden': 'true' });
     drawer = h('aside', { id: 'sh-drawer', class: 'sh-drawer', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Menu', 'aria-hidden': 'true' },
-      '<div class="sh-head"><a href="/" data-link class="brand sh-brand"><img class="leaf-ico leaf-img" src="/icon-192.png?v=2" alt="" aria-hidden="true" width="30" height="30"/> M<b>-</b>ID</a>'
+      '<div class="sh-head"><a href="/" data-link class="brand sh-brand" aria-label="M-ID home"><img class="leaf-ico leaf-img" src="/icon-192.png?v=2" alt="" aria-hidden="true" width="38" height="38"/><span class="brand-lockup"><span class="brand-word">M<span class="brand-hyphen">-</span>ID</span><span class="brand-caption">YOUR DIGITAL ID</span></span></a>'
       + '<button type="button" class="sh-x" aria-label="Close menu">' + ICON_X + '</button></div>'
       + '<nav class="sh-nav" aria-label="Main"></nav><div class="sh-foot"></div>');
     drawer.inert = true;
