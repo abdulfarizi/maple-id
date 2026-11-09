@@ -10,7 +10,7 @@
 (function () {
   'use strict';
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var picked = {}, btn = null, pop = null, nav = null, bell = null, ex = null;
+  var picked = {}, btn = null, pop = null, nav = null, bell = null;
   var HEX = /^#[0-9a-f]{6}$/i;
 
   function pane() { if (window.dgPager && dgPager.layerKind && dgPager.layerKind() === 'studio') return ''; var p = document.body.dataset.page || ''; return p === 'card' || p === 'profile' ? p : ''; }
@@ -43,10 +43,6 @@
       btn.innerHTML = '<i class="fa-solid fa-sliders" aria-hidden="true"></i><span>View</span>';
       btn.addEventListener('click', function (e) { e.stopPropagation(); pop && !pop.hidden ? closePop() : openPop(); });
       end.insertBefore(btn, end.firstChild);
-    }
-    if (!ex || !ex.isConnected) {
-      ex = document.createElement('a'); ex.href = '/#explore'; ex.setAttribute('data-link', ''); ex.className = 'tb-ex'; ex.textContent = 'Explore';
-      end.insertBefore(ex, end.firstChild);
     }
     if (!bell || !bell.isConnected) {
       bell = document.createElement('button'); bell.type = 'button'; bell.className = 'tb-bell'; bell.hidden = true; bell.setAttribute('aria-label', 'Alerts');
