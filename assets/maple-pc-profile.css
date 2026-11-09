@@ -32,9 +32,10 @@
   .card-page:not(.dk-page) > .pc-cta .pc-cta-title { font-size: 16px; font-weight: 500; line-height: 1.2; display: block; }
   .card-page:not(.dk-page) > .pc-cta .pc-cta-desc { font-size: 12px; color: var(--muted, inherit); font-weight: 300; display: block; margin-top: 4px; }
   .card-page:not(.dk-page) > .pc-cta .pc-cta-btn { flex-shrink: 0; font-family: var(--mono, monospace); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; padding: 11px 15px; border-radius: 999px; background: var(--accent, #ff8a3d); color: #fff; display: inline-flex; align-items: center; gap: 8px; }
-  .card-page:not(.dk-page) > .pf-nav { position: sticky; top: calc(var(--tb-h, 64px) + 8px); z-index: 3; }
   .card-page:not(.dk-page) > section.list ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .card-page:not(.dk-page) .idcard-body { display: block; }
+  /* the pane around a basic card was capped at 1120px; let the card page use the whole screen so the ID card and the content line up */
+  .pg-main:has(> .card-page:not(.dk-page)) { max-width: none !important; padding-left: 0 !important; padding-right: 0 !important; }
 }
 
 /* v2 · the deck profile on a PC: the identity card on the left, every other section stacked on the right.
@@ -44,7 +45,7 @@
     position: absolute; inset: var(--top, 64px) 0 0 0;
     display: grid; grid-template-columns: minmax(360px, 440px) minmax(0, 1fr);
     column-gap: 56px; row-gap: 24px; align-items: start; align-content: start; grid-auto-rows: min-content;
-    padding: 28px 64px 56px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin;
+    padding: 28px 64px 120px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin;
   }
   .dk-deck .dk-slide {
     position: relative; inset: auto; height: auto; overflow: visible;
@@ -52,7 +53,8 @@
   }
   .dk-deck .dk-slide[data-dk="profile"] { grid-column: 1; grid-row: 1; position: sticky; top: 0; }
   .dk-deck .dk-slide:not([data-dk="profile"]) { grid-column: 2; }
-  .dk-deck .dk-item { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .dk-deck .dk-item { opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important; }
+  .dk-deck:not(.dk-on) .dk-item { filter: none !important; }
   .dk-deck .dk-in { max-width: none; width: 100%; margin: 0; }
   .dk-deck .dk-dots, .dk-deck .dk-hint { display: none !important; }
 }
