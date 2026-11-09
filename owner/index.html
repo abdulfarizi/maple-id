@@ -297,10 +297,10 @@
                Right column: everything else (music, links, footer) scrolls. Phones and tablets keep the single column. */
         @media (min-width:900px) and (min-height:640px), (min-width:640px) and (orientation:landscape) {
             :root { --pc-gut: clamp(24px,3vw,72px); }
-            .shell:not([hidden]) { display:grid; grid-template-columns:340px minmax(0,1fr); column-gap:28px; row-gap:20px; align-items:start; max-width:none; width:100%; box-sizing:border-box; margin:0; padding:20px var(--pc-gut) 96px; }
-            .shell:not([hidden]) > * { grid-column:2; min-width:0; }
-            .shell:not([hidden]) > .topbar { grid-column:1 / -1; }
-            .shell:not([hidden]) > .pc-left { display:flex; flex-direction:column; gap:14px; position:fixed; z-index:2; width:340px; top:calc(var(--tb-h,64px) + 12px); left:var(--pc-gut); max-height:calc(100vh - var(--tb-h,64px) - 24px); overflow-y:auto; overscroll-behavior:auto; scrollbar-width:none; padding:2px; }
+            .shell:not([hidden]) { display:flow-root; max-width:none; width:100%; box-sizing:border-box; margin:0; padding:20px var(--pc-gut) 96px; }
+            .shell:not([hidden]) > * { margin-left:368px; min-width:0; }
+            .shell:not([hidden]) > .topbar { margin-left:0; }
+            .shell:not([hidden]) > .pc-left { display:flex; flex-direction:column; gap:14px; float:left; width:340px; margin-left:0; margin-right:28px; }
             @media (max-height:560px) { .shell:not([hidden]) > .pc-left { zoom:.78; } }
             .shell:not([hidden]) > .pc-left > .panel { position:relative; }
             .pager.single .pslides { overflow:visible; }
