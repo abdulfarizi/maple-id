@@ -85,9 +85,11 @@
     }
     return el;
   }
+  function badgeEl(p) { var s = h('span', { class: 'fm-badges' }); s.innerHTML = window.dgBadgeHTML ? window.dgBadgeHTML(p.badges) : ''; return s; }
   function who(p) {
     var name = p.name || 'Member';
-    return [avatar(name, p.slug), okSlug(p.slug) ? h('a', { class: 'fm-name', href: '/' + p.slug, 'data-link': '', text: name }) : h('span', { class: 'fm-name', text: name })];
+    var nm = okSlug(p.slug) ? h('a', { class: 'fm-name', href: '/' + p.slug, 'data-link': '', text: name }) : h('span', { class: 'fm-name', text: name });
+    return [avatar(name, p.slug), h('span', { class: 'fm-namewrap' }, [nm, badgeEl(p)])];
   }
   function btn(text, cls, fn, extra) { var b = h('button', Object.assign({ type: 'button', class: 'fm-btn' + (cls ? ' ' + cls : ''), text: text }, extra || {})); if (fn) b.addEventListener('click', fn); return b; }
   function css() {
@@ -137,7 +139,10 @@
       + '.fm-swipe{position:fixed;inset:0;z-index:80;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;background:#000;scrollbar-width:none;-webkit-overflow-scrolling:touch}'
       + '.fm-swipe::-webkit-scrollbar{display:none}'
       + '.fm-slide{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;background:#000;color:#fff}'
-      + '.fm-slide-media{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}'
+      + '.fm-slide-media{position:absolute;left:0;right:0;top:96px;bottom:240px;width:100%;height:auto;object-fit:contain;background:transparent}'
+      + '.fm-swipe-top .fm-chips .fm-btn{background:transparent!important;border-color:#fff6;text-shadow:0 1px 6px #000c}'
+      + '.fm-swipe-top .fm-chips .fm-btn.on{background:transparent!important;border-color:#fff;color:#fff}'
+      + '.fm-namewrap{display:inline-flex;align-items:center;flex-wrap:wrap;max-width:100%}'
       + '.fm-slide-shade{position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(#0000,#000e);pointer-events:none}'
       + '.fm-slide-info{position:absolute;left:14px;right:84px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);text-shadow:0 1px 8px #000a}'
       + '.fm-slide-info h3{margin:8px 0 4px;font-size:17px;line-height:1.25;color:#fff}'
@@ -150,7 +155,8 @@
       + '.fm-swipe-top{position:fixed;left:0;right:0;top:0;z-index:85;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 26px;background:linear-gradient(#000d,#0000);pointer-events:none}'
       + '.fm-swipe-top .fm-chips{pointer-events:auto;padding:0}'
       + '.fm-slide-pin{position:absolute;left:14px;top:calc(env(safe-area-inset-top,0px) + 70px)}'
-      + '.fm-slide-msg{height:100%;display:grid;place-items:center;padding:24px;text-align:center;color:#ddd;scroll-snap-align:start}';
+      + '.fm-slide-msg{height:100%;display:grid;place-items:center;padding:24px;text-align:center;color:#ddd;scroll-snap-align:start}'
+      + 'body.fm-swipe-on .mpx-mini{display:none!important}';
     document.head.appendChild(st);
   }
 
@@ -521,8 +527,9 @@
     swipeEl = h('div', { class: 'fm-swipe', role: 'feed', 'aria-label': 'Posts' });
     swipeEl.addEventListener('scroll', function () { if (S.more && !S.busy && swipeEl.scrollTop + swipeEl.clientHeight > swipeEl.scrollHeight - swipeEl.clientHeight * 1.5) load(false); }, { passive: true });
     document.body.appendChild(swipeTop); document.body.appendChild(swipeEl);
+    placeSwipe(); window.addEventListener('resize', placeSwipe);
     // the pager slides the panes sideways: only show the full-screen feed while its pane is on screen
-    swipeIO = new IntersectionObserver(function (es) { var on = !!es[0] && es[0].isIntersecting; if (swipeEl) swipeEl.style.display = swipeTop.style.display = on ? '' : 'none'; });
+    swipeIO = new IntersectionObserver(function (es) { var on = !!es[0] && es[0].isIntersecting && es[0].intersectionRect.width > 0; if (swipeEl) swipeEl.style.display = swipeTop.style.display = on ? '' : 'none'; document.body.classList.toggle('fm-swipe-on', on); }, { threshold: [0, 1] });
     swipeIO.observe(sec);
     // videos play while their slide is mostly on screen, and pause when it scrolls away
     vidIO = new IntersectionObserver(function (es) {
@@ -537,7 +544,13 @@
   function closeSwipe() {
     if (swipeIO) swipeIO.disconnect(); if (vidIO) vidIO.disconnect();
     if (swipeEl) swipeEl.remove(); if (swipeTop) swipeTop.remove();
+    document.body.classList.remove('fm-swipe-on'); window.removeEventListener('resize', placeSwipe);
     swipeEl = swipeTop = swipeIO = vidIO = swipeMsg = null; rendered = {};
+  }
+  function placeSwipe() {
+    if (!swipeEl) return;
+    var hd = document.querySelector('.topbar'), top = hd ? Math.round(hd.getBoundingClientRect().bottom) : 0;
+    swipeEl.style.top = swipeTop.style.top = top + 'px';
   }
   function resetSwipe() { rendered = {}; if (swipeEl) { swipeEl.textContent = ''; swipeEl.scrollTop = 0; } }
   function drawSwipe() {
@@ -561,7 +574,7 @@
     el.appendChild(h('div', { class: 'fm-slide-shade' }));
     if (p.pinned) el.appendChild(h('span', { class: 'fm-pinned fm-slide-pin', text: 'Pinned' }));
     el.appendChild(h('div', { class: 'fm-slide-info' }, [
-      h('div', { class: 'fm-slide-who' }, [avatar(p.name, p.slug), h('strong', { text: '@' + (p.slug || p.name || 'member') })]),
+      h('div', { class: 'fm-slide-who' }, [avatar(p.name, p.slug), h('strong', { text: '@' + (p.slug || p.name || 'member') }), badgeEl(p)]),
       h('h3', { text: p.title }),
       pb.text ? h('p', { text: pb.text }) : null,
       h('div', { class: 'fm-meta', text: ago(p.at) + ' · ' + (CAT_NAME[p.cat] || 'General') })

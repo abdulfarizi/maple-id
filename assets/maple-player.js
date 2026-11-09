@@ -486,6 +486,8 @@
     S.playing = false; S.dismissed = (S.track && S.track.slug) || '*';
     show(false);
   }
+  /* the player only plays the song of the profile on screen: leaving that profile stops it (and forgets it, so coming back autoplays) */
+  function halt() { pauseAll(); S.playing = false; S.track = null; S.src = ''; show(false); if (el.mini) el.mini.classList.remove('playing'); if (el.sheet) el.sheet.classList.remove('playing'); }
   function load(track, src, autoplay) {
     var same = S.track && S.track.url === track.url && S.src === src;
     if (!same) pauseAll();
@@ -570,18 +572,22 @@
         else { if (S.track.slug === p.slug) S.track.lyrics = p.lyrics !== false; S.track.lyricsAuto = p.lyricsAuto !== false; show(true); paint(); }
         return;
       }
-      if (p.layout === 'star' && !(S.src !== 'lofi' && S.playing)) {
+      if (p.layout === 'star') {
         S.compact = p.musicAuto === false;
         load({ url: 'lofi:' + p.slug, title: 'Theme music', artist: '', owner: p.name || '', slug: p.slug }, 'lofi', false);
         return;
       }
     }
-    if (S.playing && S.src !== 'lofi') { show(true); return; }        // keeps playing while you browse
+    if (S.track && (!p || S.track.slug !== p.slug)) halt();          // another profile's song (or no profile on screen): stop it
     show(false);
   }
   var syncT = 0; function soon() { clearTimeout(syncT); syncT = setTimeout(sync, 60); }
   function setProfile(which, p) { if (which === 'card' || which === 'profile') { (window.__mxCtx = window.__mxCtx || {})[which] = p || null; try { window.dispatchEvent(new CustomEvent('maple:ctx')); } catch (e) {} } }
   window.addEventListener('maple:ctx', soon);
+  /* leaving the app or the site (switching app/tab, locking the phone, going to another page) pauses the music; it does not start again by itself */
+  function quietNow() { if (S.playing) toggle(); }
+  window.addEventListener('pagehide', quietNow);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) quietNow(); });
 
   /* ───── lyrics (LRCLIB) ───── */
   function parseLrc(s) {

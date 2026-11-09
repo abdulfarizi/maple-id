@@ -6,3 +6,5 @@
 .mid-vb-crown{color:#f6b73c;filter:drop-shadow(0 0 5px rgba(246,183,60,.55))}
 :root[data-mode=light] .mid-vb-tick{color:#1a7fe0}
 :root[data-mode=light] .mid-vb-crown{color:#d89412}
+.mid-vb-music{color:#b57bff;filter:drop-shadow(0 0 5px rgba(181,123,255,.55))}
+:root[data-mode=light] .mid-vb-music{color:#8f4fe0}

@@ -438,11 +438,11 @@
 
   // ===== Owner badges (v36-11): a tick for verified people, a crown for special honors. Only the owner account can change them. =====
   async function badgesFor(slug) {
-    const r = await sb(`/rest/v1/profile_badges?select=verified,crown&slug=eq.${encodeURIComponent(slug)}`);
-    if (!r || !r.ok) return { verified: false, crown: false };      // table not created yet: no badges
+    const r = await sb(`/rest/v1/profile_badges?select=verified,crown,music_artist&slug=eq.${encodeURIComponent(slug)}`);
+    if (!r || !r.ok) return { verified: false, crown: false, musicArtist: false };      // table not created yet: no badges
     const rows = await r.json().catch(() => []);
     const b = Array.isArray(rows) && rows[0] ? rows[0] : {};
-    return { verified: !!b.verified, crown: !!b.crown };
+    return { verified: !!b.verified, crown: !!b.crown, musicArtist: !!b.music_artist };
   }
   function withStats(profile, stats) {
     const ok = stats && typeof stats === 'object' && !Array.isArray(stats) && stats.slug;
@@ -624,7 +624,10 @@
         const ids = rows.concat(pinRows).map((x) => x.id).filter(isId);
         let mine = [];
         if (ids.length) { const lr = await sb('/rest/v1/forum_likes?select=post&user_id=eq.' + au.uid + '&post=in.(' + ids.join(',') + ')', { token: T }); if (lr && lr.ok) mine = (await lr.json().catch(() => [])).map((x) => x.post); }
-        const map = (x) => ({ id: x.id, mine: x.author === au.uid, slug: x.author_slug, name: x.author_name, cat: x.category, title: x.title, body: x.body, image: x.image, at: x.created_at, pinned: !!x.pinned, likes: cnt(x, 'forum_likes'), comments: cnt(x, 'forum_comments'), liked: mine.includes(x.id) });
+        // the badges of every author on this page (one query), so each name can show its tick / crown / music badge
+        const bmap = {}, aslugs = [...new Set(rows.concat(pinRows).map((x) => x.author_slug).filter((s) => /^[a-z0-9-]{1,30}$/.test(s || '')))];
+        if (aslugs.length) { const br = await sb('/rest/v1/profile_badges?select=slug,verified,crown,music_artist&slug=in.(' + aslugs.join(',') + ')'); if (br && br.ok) (await br.json().catch(() => [])).forEach((b) => { bmap[b.slug] = { verified: !!b.verified, crown: !!b.crown, musicArtist: !!b.music_artist }; }); }
+        const map = (x) => ({ id: x.id, badges: bmap[x.author_slug] || null, mine: x.author === au.uid, slug: x.author_slug, name: x.author_name, cat: x.category, title: x.title, body: x.body, image: x.image, at: x.created_at, pinned: !!x.pinned, likes: cnt(x, 'forum_likes'), comments: cnt(x, 'forum_comments'), liked: mine.includes(x.id) });
         return json({ more, me: { mod: !!au.isOwner }, pinned: pinRows.map(map), posts: rows.map(map) });
       }
       if (rest[0] === 'posts' && rest.length === 1 && method === 'POST') {
@@ -875,10 +878,10 @@
       if (!au.isOwner) return json({ error: 'Only the site owner can change badges.' }, 403);
       const slug = normSlug(decodeURIComponent(url.split('/api/badges/')[1].split('?')[0]));
       if (!/^[a-z0-9-]{1,30}$/.test(slug)) return json({ error: 'Unknown profile.' }, 400);
-      const b = parse(options.body), next = { slug, verified: b.verified === true, crown: b.crown === true, updated_at: new Date().toISOString() };
+      const b = parse(options.body), next = { slug, verified: b.verified === true, crown: b.crown === true, music_artist: b.musicArtist === true, updated_at: new Date().toISOString() };
       const r = await sb('/rest/v1/profile_badges?on_conflict=slug', { method: 'POST', token: au.token, headers: { Prefer: 'resolution=merge-duplicates,return=representation' }, body: next });
-      if (!r || !r.ok) return json({ error: 'Could not save. Run supabase_badges.sql in Supabase first.' }, 400);
-      return json({ verified: next.verified, crown: next.crown });
+      if (!r || !r.ok) return json({ error: 'Could not save. Run supabase_badges.sql and supabase_badges_music.sql in Supabase first.' }, 400);
+      return json({ verified: next.verified, crown: next.crown, musicArtist: next.music_artist });
     }
 
     // ===== Public profiles, likes, reactions =====
@@ -996,8 +999,8 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <script src="/assets/maple-frames.js?v=4" defer></script>
     <script src="/assets/maple-frame-studio.js?v=4" defer></script>
     <script src="/assets/maple-profile.js?v=2" defer></script>
-    <link rel="stylesheet" href="/assets/maple-badges.css?v=2" />
-    <script src="/assets/maple-badges.js?v=2"></script>
+    <link rel="stylesheet" href="/assets/maple-badges.css?v=3" />
+    <script src="/assets/maple-badges.js?v=3"></script>
     <script type="module" crossorigin src="/assets/index-maple1.js?v=25"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css?v=2" />
     <link rel="stylesheet" href="/assets/maple.css?v=3" />
@@ -1019,11 +1022,11 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <link rel="stylesheet" href="/assets/maple-deck.css?v=13" />
     <script src="/assets/maple-studio.js?v=1" defer></script>
     <script src="/assets/maple-builder.js?v=3" defer></script>
-    <script src="/assets/maple-forum.js?v=9" defer></script>
-    <script src="/assets/maple-shell.js?v=3" defer></script>
+    <script src="/assets/maple-forum.js?v=11" defer></script>
+    <script src="/assets/maple-shell.js?v=4" defer></script>
     <script src="/assets/maplefx.js?v=7" defer></script>
     <script src="/assets/maple-spauth.js?v=1" defer></script>
-    <script src="/assets/maple-player.js?v=17" defer></script>
+    <script src="/assets/maple-player.js?v=19" defer></script>
     <script src="/assets/maple-header.js?v=2" defer></script>
     <script src="/assets/maple-studio-x.js?v=9" defer></script>
     <script src="/assets/maple.js?v=6"></script>
