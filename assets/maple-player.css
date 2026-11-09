@@ -256,4 +256,4 @@ html.mode-swap .mpx-mini,html.mode-swap .mpx-sheet{transition:none!important}
 
 /* v15 · the full-screen player: no empty box or gap where the embed is not loaded, and the artwork and controls sit centred in the space under the header */
 .mpx-embed-wrap:not(.mpx-ghost):not(:has(iframe)){display:none}
-.mpx-body{align-content:safe center}
+.mpx-main{margin-block:auto}   /* centred when there is room; when the content is taller it starts at the top and scrolls, never clipped */
