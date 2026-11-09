@@ -763,21 +763,17 @@
   /* the centre "+" in the bottom dock: opens the post form on the feed */
   function compose() { openCreate(); }
   function dockPost() {
-    var nav = document.querySelector('nav.dock'); if (!nav || nav.querySelector('.dock-post')) return;
-    var b = h('button', { type: 'button', class: 'dock-post', 'aria-label': 'Create a post', title: 'Create a post' }, [h('i', { class: 'fa-solid fa-plus', 'aria-hidden': 'true' })]);
+    var tb = document.querySelector('.topbar'); if (!tb || tb.querySelector('.tb-post')) return;
+    var b = h('button', { type: 'button', class: 'tb-post', 'aria-label': 'Create a post', title: 'Create a post' }, [h('i', { class: 'fa-solid fa-plus', 'aria-hidden': 'true' })]);
     b.addEventListener('click', compose);
-    nav.insertBefore(b, nav.querySelector('.dock-i[data-dock="profile"]') || null);
+    tb.appendChild(b);
   }
   // the dock is rebuilt on every page change (innerHTML), so put the "+" back whenever that happens
   var dockWatch = null;
   function watchDock() {
     if (dockWatch) return;
-    dockWatch = setInterval(function () {
-      var nav = document.querySelector('nav.dock'); if (!nav) return;
-      clearInterval(dockWatch); dockWatch = 'on';
-      new MutationObserver(dockPost).observe(nav, { childList: true });
-      dockPost();
-    }, 300);
+    dockWatch = setInterval(dockPost, 400);   // idempotent: puts the header "+" back if the header is rebuilt
+    dockPost();
   }
   function mount(pane) {
     if (!pane || pane.querySelector('#forum')) return; css();
