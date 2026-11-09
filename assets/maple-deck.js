@@ -350,6 +350,25 @@
       cm.addEventListener('error', function () { cm.remove(); themeBg(); });
       par.appendChild(cm); if (cm.tagName === 'VIDEO') playMuted(cm);
     } else themeBg();
+    /* The homepage video only plays while the homepage is on screen and the app is open. */
+    (function () {
+      var deckOn = false;
+      function vids() { return deck.querySelectorAll('.dk-bg video, .dk-ban video, .dk-par video'); }
+      function setPlay(on) {
+        vids().forEach(function (v) {
+          if (on) { if (v.paused) { var pr = v.play && v.play(); if (pr && pr.catch) pr.catch(function () {}); } }
+          else if (!v.paused) v.pause();
+        });
+      }
+      if (window.IntersectionObserver) {
+        new IntersectionObserver(function (es) {
+          var e = es[es.length - 1];
+          deckOn = !!(e.isIntersecting && e.intersectionRect.width > 0 && e.intersectionRatio >= 0.5);
+          setPlay(deckOn && !document.hidden);
+        }, { threshold: [0, 0.5, 1] }).observe(deck);
+      }
+      document.addEventListener('visibilitychange', function () { setPlay(deckOn && !document.hidden); });
+    })();
     if (bannerMedia) {
       deck.querySelector('[data-dk-slot="banner"]').prepend(take(bannerMedia));
     } else deck.querySelector('[data-dk-slot="banner"]').classList.add('dk-ban-none');
