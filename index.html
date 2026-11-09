@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="flame">
+<html lang="en" data-theme="grape">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
@@ -314,7 +314,7 @@
   };
   const defaultNew = () => ({
     layout: 'basic', name: 'Creator', role: '', bio: '', country: 'Malaysia', city: '', avatar: '', banner: '',
-    theme: 'flame', openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
+    theme: 'grape', openTime: '09:00', closeTime: '23:00', timezone: 'Asia/Kuala_Lumpur',
     sociabuzzEnabled: false, sociabuzz: '', widgetEnabled: false, widgetCode: '',
     gaming: [], channels: [], createdAt: new Date().toISOString().slice(0, 10),
     shopEnabled: false, shopTitle: '', shopNote: '', shopWhatsApp: '', currency: 'auto', products: [], spotify: '', musicAuto: true,
@@ -864,7 +864,7 @@
       for (const row of (Array.isArray(rows) ? rows : [])) {
         const p = unpackRow(row);
         if (p.listed === false) continue;                     // creator opted out in Studio
-        cards[row.slug] = { slug: row.slug, name: p.name, role: p.role || '', city: p.city || '', country: p.country || '', theme: p.theme || 'flame',
+        cards[row.slug] = { slug: row.slug, name: p.name, role: p.role || '', city: p.city || '', country: p.country || '', theme: p.theme || 'grape',
           avatar: typeof p.avatar === 'string' && p.avatar.length < 160000 ? p.avatar : '' };
       }
       return json({ cards });
@@ -987,7 +987,7 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
 </script>
     <script src="/assets/qr-lib.js"></script>
     <script src="/assets/qr-icons.js?v=1"></script>
-    <script src="/assets/maple-ui.js?v=3"></script>
+    <script src="/assets/maple-ui.js?v=4"></script>
     <script src="/assets/maple-explore.js?v=2"></script>
     <script src="/assets/maple-pay.js?v=4" defer></script>
     <script src="/assets/maple-pager.js?v=9"></script>

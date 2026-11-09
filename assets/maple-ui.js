@@ -28,12 +28,12 @@
   var theme = {
     read: function () { try { var o = JSON.parse(localStorage.getItem(UI_KEY) || 'null'); return o && KNOWN.indexOf(o.theme) > -1 ? o : null; } catch (e) { return null; } },
     save: function (t, a, b) {
-      try { localStorage.setItem(UI_KEY, JSON.stringify({ theme: KNOWN.indexOf(t) > -1 ? t : 'flame', accent: HEX.test(a || '') ? a : '', accent2: HEX.test(b || '') ? b : '' })); } catch (e) {}
+      try { localStorage.setItem(UI_KEY, JSON.stringify({ theme: KNOWN.indexOf(t) > -1 ? t : 'grape', accent: HEX.test(a || '') ? a : '', accent2: HEX.test(b || '') ? b : '' })); } catch (e) {}
     },
     clear: function () { try { localStorage.removeItem(UI_KEY); } catch (e) {} },
     /* paint the page with a theme (and optional custom colours) */
     apply: function (t, a, b) {
-      t = KNOWN.indexOf(t) > -1 ? t : 'flame';
+      t = KNOWN.indexOf(t) > -1 ? t : 'grape';
       root.setAttribute('data-theme', t);
       ['--accent', '--accent-2', '--accent-soft', '--accent-glow', '--soft'].forEach(function (v) { root.style.removeProperty(v); });
       if (HEX.test(a || '')) {
@@ -46,7 +46,7 @@
       theme.meta();
     },
     /* the visitor's own saved Studio theme (or the default) */
-    restore: function () { var o = theme.read(); theme.apply(o ? o.theme : 'flame', o && o.accent, o && o.accent2); },
+    restore: function () { var o = theme.read(); theme.apply(o ? o.theme : 'grape', o && o.accent, o && o.accent2); },
     /* browser / PWA bar colour follows the theme */
     meta: function () {
       var m = document.querySelector('meta[name=theme-color]'); if (!m) return;
