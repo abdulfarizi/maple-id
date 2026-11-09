@@ -171,7 +171,7 @@ GoTrue REQUIRES HTTPS to work securely.`),t&&(this.audience=t),this.setCookie=n,
     </section>
     ${G?``:`
     <div class="join">
-    <div class="join-copy"><svg class="leaf-ico" aria-hidden="true"><use href="#leaf"/></svg><p class="mh2-kicker">Join M-ID</p><h2>Make your ID.</h2><p>Create an account to claim your link and open your Studio. It takes about a minute.</p><ul class="mh2-perks"><li><i class="fa-solid fa-check"></i>Your own permanent link</li><li><i class="fa-solid fa-check"></i>Unlimited game IDs and socials</li><li><i class="fa-solid fa-check"></i>Themes, music and anime shelf</li></ul></div>
+    <div class="join-copy"><img class="leaf-ico leaf-img" src="/icon-192.png?v=2" alt="" aria-hidden="true" width="30" height="30"/><p class="mh2-kicker">Join M-ID</p><h2>Make your ID.</h2><p>Create an account to claim your link and open your Studio. It takes about a minute.</p><ul class="mh2-perks"><li><i class="fa-solid fa-check"></i>Your own permanent link</li><li><i class="fa-solid fa-check"></i>Unlimited game IDs and socials</li><li><i class="fa-solid fa-check"></i>Themes, music and anime shelf</li></ul></div>
     <section class="auth" id="auth">
       <div class="auth-tabs" role="tablist">
         <button type="button" data-mode="signup" role="tab">Create account</button>
