@@ -36,22 +36,40 @@
   .studio .toggle input[type=checkbox] { transition: none; }
 }
 
-/* QR code symbol section (added by maple-builder.js after Card layout): centre the preview and the picker */
-#qr-sym > div[style*="display:flex"] {
-  justify-content: center !important;
+/* QR code symbol section (added by maple-builder.js after Card layout): stack everything and centre it */
+#qr-sym {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
   text-align: center;
 }
-#qr-sym #qr-prev {
-  margin: 0 auto;
+#qr-sym > legend,
+#qr-sym > .hint {
+  align-self: stretch;
+  text-align: center;
 }
-#qr-sym .field {
+#qr-sym > div {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  gap: 12px !important;
+}
+#qr-sym > div > div {
+  width: 100%;
+  max-width: 320px;
+  min-width: 0 !important;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-#qr-sym .field > label {
-  align-self: center;
-}
-#qr-sym select {
+#qr-sym #qr-prev {
   margin: 0 auto;
+}
+#qr-sym .field,
+#qr-sym label,
+#qr-sym select {
+  width: 100%;
+  text-align: center;
 }
