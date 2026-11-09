@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="dark">
+<title>Studio · M-ID</title>
+<style>
+:root{--bg:#0f0d0e;--panel:#18151a;--line:#2c272e;--text:#f4eff3;--muted:#a79ca6;--accent:#c24d8a;--ok:#4caf7d;--err:#e5484d}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:18px 16px 130px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+header.top h1{font-size:20px;margin:0}
+.pill{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);margin-left:6px;vertical-align:middle}
+a{color:var(--accent)}
+nav.tabs{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:14px;overflow-x:auto;margin-bottom:14px}
+nav.tabs button{flex:1 0 auto;height:38px;border:0;border-radius:10px;background:transparent;color:var(--muted);font:inherit;font-size:13px;padding:0 12px;cursor:pointer}
+nav.tabs button.on{background:var(--accent);color:#fff}
+.panel{border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:18px}
+.panel h2{font-size:15px;margin:20px 0 10px}
+.panel h2:first-child{margin-top:0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wide{grid-column:1/-1}
+label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+input[type=text],input[type=time],select,textarea{width:100%;background:#120f12;color:var(--text);border:1px solid var(--line);border-radius:11px;padding:10px 12px;font:inherit;font-size:14px}
+textarea{min-height:90px;resize:vertical}
+input[type=color]{width:52px;height:38px;border:1px solid var(--line);border-radius:10px;background:none;padding:2px}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;color:var(--text);font-size:14px}
+.toggle input{width:20px;height:20px;accent-color:var(--accent)}
+.rows .row{display:grid;grid-template-columns:1fr 2fr 42px;gap:8px;margin-bottom:8px}
+.rows .row button{height:40px;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:10px;cursor:pointer;font:inherit}
+.add{height:38px;padding:0 14px;border:1px solid var(--line);background:transparent;color:var(--text);border-radius:10px;cursor:pointer;font:inherit;margin-top:4px}
+.savebar{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(15,13,14,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line)}
+.savebar #state{flex:1;font-size:13px;color:var(--muted)}
+.savebar #state.dirty{color:var(--accent)}
+.savebar button{height:42px;padding:0 22px;border:0;border-radius:12px;background:var(--accent);color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.savebar button:disabled{opacity:.4;cursor:default}
+#msg{font-size:13px;min-height:1.2em;margin:12px 4px 0}
+#msg.err{color:var(--err)}
+#msg.ok{color:var(--ok)}
+.muted{color:var(--muted)}
+.note{border:1px dashed var(--line);border-radius:12px;padding:14px;color:var(--muted);font-size:14px}
+@media (max-width:640px){.grid{grid-template-columns:1fr}.rows .row{grid-template-columns:1fr 1fr 42px}}
+</style>
+</head>
+<body>
+<main id="app"><p class="muted">Loading…</p></main>
+<script>
+(function () {
+  'use strict';
+
+  var SB_URL = 'https://qebbuxixnqsqjuprfpyv.supabase.co';
+  var SB_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
+  var OWNER_EMAIL = 'abdulfarizi15@gmail.com';
+  var HEX = /^#[0-9a-f]{6}$/i;
+  var MEDIA_RE = /^(https?:\/\/\S+|data:image\/(?:jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+)$/i;
+  var FRAMES = ['', 'dragon', 'phoenix', 'celestial', 'tech', 'cyber', 'reactor', 'neon', 'kitty', 'cloudkitty', 'starbunny', 'mooncat', 'garden'];
+  var CURRENCIES = ['auto', 'MYR', 'SGD', 'IDR', 'BND', 'PHP', 'THB', 'USD'];
+  var MAPLE_DEFAULTS = { layout: 'star', theme: 'maple', timezone: 'Asia/Kuala_Lumpur', openTime: '00:00', closeTime: '00:00', cardTag: 'ID / 001' };
+
+  // Every field this page can edit. Only edited fields are written back.
+  var SPEC = {
+    name: { l: 'Display name', t: 'text', max: 80 },
+    role: { l: 'Role', t: 'text', max: 60 },
+    bio: { l: 'Bio', t: 'textarea', max: 300, wide: 1 },
+    country: { l: 'Country', t: 'text', max: 40 },
+    city: { l: 'City', t: 'text', max: 60 },
+    timezone: { l: 'Timezone (e.g. Asia/Kuala_Lumpur)', t: 'text', max: 60 },
+    openTime: { l: 'Open time', t: 'time' },
+    closeTime: { l: 'Close time', t: 'time' },
+    avatar: { l: 'Avatar image (https link)', t: 'text', max: 600000, wide: 1 },
+    banner: { l: 'Banner image (https link)', t: 'text', max: 600000, wide: 1 },
+    layout: { l: 'Card layout', t: 'select', opts: ['basic', 'star', 'builder', 'deck'] },
+    theme: { l: 'Theme', t: 'text', max: 24 },
+    accent: { l: 'Accent colour', t: 'color' },
+    accent2: { l: 'Second colour', t: 'color' },
+    cardStyle: { l: 'Card style', t: 'select', opts: ['default', 'outline', 'solid', 'neon', 'bubble', 'tinted'] },
+    avatarShape: { l: 'Avatar shape', t: 'select', opts: ['circle', 'rounded', 'square'] },
+    frame: { l: 'Avatar frame', t: 'select', opts: FRAMES },
+    cardTag: { l: 'Card tag (e.g. ID / 001)', t: 'text', max: 24 },
+    statusText: { l: 'Status line', t: 'text', max: 90, wide: 1 },
+    footerText: { l: 'Footer text', t: 'text', max: 40 },
+    donate: { l: 'Donate link or SociaBuzz name', t: 'text', max: 300, wide: 1 },
+    donateLabel: { l: 'Donate button label', t: 'text', max: 24 },
+    contactPhone: { l: 'Phone', t: 'text', max: 30 },
+    contactEmail: { l: 'Email', t: 'text', max: 120 },
+    shopWhatsApp: { l: 'WhatsApp number', t: 'text', max: 120 },
+    shopTitle: { l: 'Shop title', t: 'text', max: 60 },
+    shopNote: { l: 'Shop note', t: 'textarea', max: 200, wide: 1 },
+    currency: { l: 'Currency', t: 'select', opts: CURRENCIES },
+    intro: { t: 'toggle', l: 'Intro animation' },
+    showVisits: { t: 'toggle', l: 'Show visit count' },
+    showTime: { t: 'toggle', l: 'Show local time' },
+    showReactions: { t: 'toggle', l: 'Show reactions' },
+    showCta: { t: 'toggle', l: 'Show contact buttons' },
+    confetti: { t: 'toggle', l: 'Confetti effect' },
+    sfx: { t: 'toggle', l: 'Sound effects' },
+    music: { t: 'toggle', l: 'Background music' },
+    themeSwitch: { t: 'toggle', l: 'Theme switch button' },
+    grid: { t: 'toggle', l: 'Grid background' },
+    shopEnabled: { t: 'toggle', l: 'Show shop on my card' }
+  };
+
+  // Repeating lists: each row has two text fields (a, b)
+  var ROWS = {
+    channels: { l: 'Channels', a: 'platform', b: 'value', max: 24 },
+    gaming: { l: 'Gaming profiles', a: 'platform', b: 'value', max: 24 },
+    specs: { l: 'Specs', a: 'label', b: 'value', max: 12 }
+  };
+
+  var TABS = [
+    { id: 'profile', label: 'Profile', fields: ['name', 'role', 'bio', 'country', 'city', 'timezone', 'openTime', 'closeTime', 'avatar', 'banner'] },
+    { id: 'look', label: 'Look', fields: ['layout', 'theme', 'accent', 'accent2', 'cardStyle', 'avatarShape', 'frame', 'cardTag', 'statusText', 'footerText'] },
+    { id: 'links', label: 'Links', fields: ['donate', 'donateLabel', 'contactPhone', 'contactEmail', 'shopWhatsApp'], rows: ['channels', 'gaming'] },
+    { id: 'extras', label: 'Extras', toggles: ['intro', 'showVisits', 'showTime', 'showReactions', 'showCta', 'confetti', 'sfx', 'music', 'themeSwitch', 'grid'], rows: ['specs'] },
+    { id: 'shop', label: 'Shop', toggles: ['shopEnabled'], fields: ['shopTitle', 'shopNote', 'currency'] },
+    { id: 'media', label: 'Media', media: true }
+  ];
+
+  var S = null; // { token, uid, raw, data, dirty, tab }
+
+  function $(sel) { return document.querySelector(sel); }
+  function clampStr(v, max) { return String(v == null ? '' : v).trim().slice(0, max); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // ---------- session ----------
+  function readCookie(name) {
+    var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    if (!m) return null;
+    try { return decodeURIComponent(m[1]); } catch (e) { return m[1]; }
+  }
+  function decodeJwt(t) {
+    try {
+      var p = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      p += '='.repeat((4 - (p.length % 4)) % 4);
+      return JSON.parse(decodeURIComponent(escape(atob(p))));
+    } catch (e) { return null; }
+  }
+  function session() {
+    var cands = [];
+    var c = readCookie('nf_jwt');
+    if (c) cands.push(c);
+    try {
+      var g = JSON.parse(localStorage.getItem('gotrue.user') || 'null');
+      if (g && g.token && g.token.access_token) cands.push(g.token.access_token);
+    } catch (e) {}
+    var best = null, bestClaims = null;
+    cands.forEach(function (t) {
+      var cl = decodeJwt(t);
+      if (cl && cl.sub && (!bestClaims || cl.exp > bestClaims.exp)) { best = t; bestClaims = cl; }
+    });
+    if (!best) return null;
+    if (bestClaims.exp * 1000 - Date.now() < 15000) return null; // token about to expire: reload the main site first
+    return { token: best, uid: bestClaims.sub, email: String(bestClaims.email || '').toLowerCase() };
+  }
+
+  // ---------- database ----------
+  function sb(path, o) {
+    o = o || {};
+    var h = { apikey: SB_KEY, Authorization: 'Bearer ' + o.token, 'Content-Type': 'application/json' };
+    if (o.prefer) h.Prefer = o.prefer;
+    return fetch(SB_URL + path, { method: o.method || 'GET', headers: h, body: o.body ? JSON.stringify(o.body) : undefined });
+  }
+  // The profile is stored as one JSON string in the `name` column (prefix {"__dig":).
+  function parseRow(row) {
+    var raw = {};
+    if (typeof row.name === 'string' && row.name.indexOf('{"__dig":') === 0) {
+      try { raw = JSON.parse(row.name); } catch (e) {}
+    } else {
+      raw = { name: row.name || 'Creator' };
+    }
+    delete raw.__dig; delete raw.likes; delete raw.visits; delete raw.reactions; delete raw.id;
+    return raw;
+  }
+
+  // ---------- cleaning (same rules the main site applies) ----------
+  function cleanDonate(v) {
+    v = String(v || '').trim().replace(/^@/, '');
+    if (!v) return '';
+    if (/^[A-Za-z0-9_.-]{1,60}$/.test(v)) return 'https://sociabuzz.com/' + v + '/donate';
+    try {
+      var u = new URL(/^https?:\/\//i.test(v) ? v : 'https://' + v);
+      if (!/^https?:$/.test(u.protocol) || u.hostname.indexOf('.') < 0) return '';
+      return u.toString().slice(0, 300);
+    } catch (e) { return ''; }
+  }
+  function cleanOne(k, v) {
+    var s = SPEC[k];
+    if (s.t === 'toggle') return v === true || v === 'true';
+    if (s.t === 'select') return s.opts.indexOf(v) >= 0 ? v : s.opts[0];
+    if (s.t === 'color') return HEX.test(v || '') ? v : '';
+    if (s.t === 'time') return /^\d{2}:\d{2}$/.test(v || '') ? v : '00:00';
+    if (k === 'name') return clampStr(v, 80) || 'Creator';
+    if (k === 'donate') return cleanDonate(v);
+    if (k === 'contactEmail') {
+      v = clampStr(v, 120);
+      if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) throw new Error('Check the email address.');
+      return v;
+    }
+    if (k === 'avatar' || k === 'banner') {
+      v = clampStr(v, 600000);
+      if (v && !MEDIA_RE.test(v)) throw new Error((k === 'avatar' ? 'Avatar' : 'Banner') + ' must be a full https:// link.');
+      return v;
+    }
+    return clampStr(v, s.max || 200);
+  }
+  function cleanRows(k, arr) {
+    var R = ROWS[k];
+    return (Array.isArray(arr) ? arr : []).slice(0, R.max).map(function (r) {
+      var o = {};
+      o[R.a] = clampStr(r && r[R.a], 60);
+      o[R.b] = clampStr(r && r[R.b], 200);
+      return o;
+    }).filter(function (o) { return o[R.a] && o[R.b]; });
+  }
+
+  // ---------- rendering ----------
+  function fieldHtml(k) {
+    var s = SPEC[k], v = S.data[k] == null ? '' : S.data[k], cls = s.wide ? ' class="wide"' : '';
+    if (s.t === 'textarea') {
+      return '<label' + cls + '>' + s.l + '<textarea data-k="' + k + '" maxlength="' + s.max + '">' + esc(v) + '</textarea></label>';
+    }
+    if (s.t === 'select') {
+      return '<label' + cls + '>' + s.l + '<select data-k="' + k + '">' + s.opts.map(function (o) {
+        return '<option value="' + esc(o) + '"' + (o === v ? ' selected' : '') + '>' + (o || 'None') + '</option>';
+      }).join('') + '</select></label>';
+    }
+    if (s.t === 'color') {
+      return '<label' + cls + '>' + s.l + '<input type="color" data-k="' + k + '" value="' + (HEX.test(v) ? v : '#000000') + '"></label>';
+    }
+    if (s.t === 'time') {
+      return '<label' + cls + '>' + s.l + '<input type="time" data-k="' + k + '" value="' + esc(v) + '"></label>';
+    }
+    return '<label' + cls + '>' + s.l + '<input type="text" data-k="' + k + '" maxlength="' + Math.min(s.max, 2000) + '" value="' + esc(v) + '"></label>';
+  }
+  function toggleHtml(k) {
+    var on = S.data[k] === true || S.data[k] === 'true';
+    return '<label class="toggle"><span>' + SPEC[k].l + '</span><input type="checkbox" data-k="' + k + '"' + (on ? ' checked' : '') + '></label>';
+  }
+  function rowsHtml(k) {
+    var R = ROWS[k], rows = S.data[k] || [];
+    return '<h2>' + R.l + '</h2><div class="rows">' + rows.map(function (r, i) {
+      return '<div class="row">' +
+        '<input type="text" data-rk="' + k + '" data-i="' + i + '" data-p="' + R.a + '" maxlength="60" value="' + esc(r[R.a]) + '" placeholder="' + R.a + '">' +
+        '<input type="text" data-rk="' + k + '" data-i="' + i + '" data-p="' + R.b + '" maxlength="200" value="' + esc(r[R.b]) + '" placeholder="' + R.b + '">' +
+        '<button type="button" data-del="' + k + '" data-i="' + i + '" aria-label="Remove">✕</button></div>';
+    }).join('') + '</div><button type="button" class="add" data-add="' + k + '">+ Add</button>';
+  }
+  function panelHtml(id) {
+    var T = TABS.filter(function (t) { return t.id === id; })[0] || TABS[0];
+    if (T.media) {
+      return '<div class="note">Music, anime and lyrics are still edited in the current Studio. ' +
+        '<a href="/studio">Open the current Studio</a>. They move here in the next update.</div>';
+    }
+    var h = '';
+    if (T.fields) h += '<div class="grid">' + T.fields.map(fieldHtml).join('') + '</div>';
+    if (T.toggles) h += '<h2>Options</h2>' + T.toggles.map(toggleHtml).join('');
+    if (T.rows) h += T.rows.map(rowsHtml).join('');
+    return h;
+  }
+  function render() {
+    $('#app').innerHTML =
+      '<header class="top"><h1>Studio <span class="pill">new</span></h1>' +
+      '<a href="/maple" target="_blank" rel="noopener">View my card ↗</a></header>' +
+      '<nav class="tabs" role="tablist">' + TABS.map(function (t) {
+        return '<button type="button" role="tab" data-tab="' + t.id + '"' + (t.id === S.tab ? ' class="on"' : '') + '>' + t.label + '</button>';
+      }).join('') + '</nav>' +
+      '<section class="panel" id="panel">' + panelHtml(S.tab) + '</section>' +
+      '<div class="savebar"><span id="state"></span><button type="button" id="save">Save</button></div>' +
+      '<p id="msg" role="status"></p>';
+    updateBar();
+  }
+  function renderPanel() { $('#panel').innerHTML = panelHtml(S.tab); updateBar(); }
+  function updateBar() {
+    var st = $('#state'), b = $('#save');
+    if (!S || !st || !b) return;
+    var n = Object.keys(S.dirty).length;
+    st.textContent = n ? 'Unsaved changes' : 'All changes saved';
+    st.className = n ? 'dirty' : '';
+    b.disabled = !n;
+  }
+  function showMsg(text, isErr) {
+    var m = $('#msg');
+    if (m) { m.textContent = text; m.className = isErr ? 'err' : 'ok'; }
+  }
+  function notice(text) { $('#app').innerHTML = '<div class="note">' + esc(text) + '</div>'; }
+  function mark(k) { S.dirty[k] = true; updateBar(); }
+
+  // ---------- save ----------
+  function save() {
+    if (!S || !Object.keys(S.dirty).length) return;
+    var out = {};
+    try {
+      Object.keys(S.dirty).forEach(function (k) {
+        out[k] = ROWS[k] ? cleanRows(k, S.data[k]) : cleanOne(k, S.data[k]);
+      });
+    } catch (e) { return showMsg(e.message, true); }
+
+    // Start from what is stored, change only the edited keys, keep everything else as it was.
+    var packed = Object.assign({ __dig: 1 }, S.raw, out);
+    packed.slug = 'maple';
+    if (!packed.name) packed.name = S.data.name || 'Creator';
+    var body = JSON.stringify(packed);
+    if (body.length > 1500000) return showMsg('Your card is too large. Remove a few images and try again.', true);
+
+    $('#save').disabled = true;
+    showMsg('Saving…', false);
+    sb('/rest/v1/profiles?id=eq.' + encodeURIComponent(S.uid), {
+      method: 'PATCH', token: S.token, prefer: 'return=representation', body: { name: body }
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.json().catch(function () { return {}; }).then(function (er) {
+          throw new Error(er.message || 'Could not save. Please try again.');
+        });
+      }
+      return res.json();
+    }).then(function (rows) {
+      if (!Array.isArray(rows) || !rows.length) throw new Error('Not allowed to edit this profile.');
+      var copy = Object.assign({}, packed);
+      delete copy.__dig;
+      S.raw = copy;
+      S.dirty = {};
+      updateBar();
+      showMsg('Saved. Your card is updated.', false);
+    }).catch(function (e) {
+      showMsg(e.message, true);
+      updateBar();
+    });
+  }
+
+  // ---------- events ----------
+  document.addEventListener('click', function (e) {
+    if (!S) return;
+    var t = e.target.closest('[data-tab]');
+    if (t) { S.tab = t.getAttribute('data-tab'); render(); return; }
+    var add = e.target.closest('[data-add]');
+    if (add) {
+      var ka = add.getAttribute('data-add');
+      var blank = {}; blank[ROWS[ka].a] = ''; blank[ROWS[ka].b] = '';
+      S.data[ka] = (S.data[ka] || []).concat([blank]);
+      mark(ka); renderPanel(); return;
+    }
+    var del = e.target.closest('[data-del]');
+    if (del) {
+      var kd = del.getAttribute('data-del');
+      S.data[kd] = S.data[kd].filter(function (_, i) { return i !== +del.getAttribute('data-i'); });
+      mark(kd); renderPanel(); return;
+    }
+    if (e.target.closest('#save')) save();
+  });
+  function onEdit(e) {
+    if (!S) return;
+    var el = e.target;
+    if (el.getAttribute('data-k')) {
+      var k = el.getAttribute('data-k');
+      S.data[k] = el.type === 'checkbox' ? el.checked : el.value;
+      mark(k);
+    } else if (el.getAttribute('data-rk')) {
+      var kr = el.getAttribute('data-rk'), i = +el.getAttribute('data-i');
+      S.data[kr][i][el.getAttribute('data-p')] = el.value;
+      mark(kr);
+    }
+  }
+  document.addEventListener('input', onEdit);
+  document.addEventListener('change', onEdit);
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') { e.preventDefault(); save(); }
+  });
+
+  // ---------- boot ----------
+  function boot() {
+    var s = session();
+    if (!s) return notice('Log in on the main site first, then reload this page.');
+    if (s.email !== OWNER_EMAIL) return notice('Page not found.');
+    sb('/rest/v1/profiles?slug=eq.maple&select=*', { token: s.token }).then(function (r) {
+      if (!r.ok) throw new Error('Could not load your profile. Please try again.');
+      return r.json();
+    }).then(function (rows) {
+      if (!Array.isArray(rows) || !rows.length) throw new Error('Profile not found.');
+      var row = rows[0];
+      if (row.id !== s.uid) throw new Error('Not allowed.');
+      var raw = parseRow(row);
+      S = {
+        token: s.token,
+        uid: s.uid,
+        raw: raw,
+        data: Object.assign({}, MAPLE_DEFAULTS, JSON.parse(JSON.stringify(raw))),
+        dirty: {},
+        tab: 'profile'
+      };
+      render();
+    }).catch(function (e) { notice(e.message); });
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
