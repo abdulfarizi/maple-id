@@ -148,10 +148,14 @@ body { letter-spacing: -.012em; }
   }
 }
 
-/* the full logo image (mark + M-ID + tagline) replaces the text wordmark */
 .topbar .brand { border: 0 !important; outline: none !important; box-shadow: none !important; background: transparent !important; }
-.topbar .brand .brand-logo, .brand-logo { display: block; height: 42px !important; width: auto !important; min-width: 0 !important; padding: 0 !important; border: 0 !important; outline: none !important; box-shadow: none !important; background: transparent !important; border-radius: 0 !important; object-fit: contain; }
-@media (max-width: 520px) { .topbar .brand .brand-logo, .brand-logo { height: 36px !important; } }
 .brand:focus, .brand:focus-visible { outline: none !important; box-shadow: none !important; }
-/* the logo's dark backdrop blends into the dark header instead of showing as a box */
-.topbar .brand .brand-logo, .brand-logo { mix-blend-mode: screen; }
+
+/* the emblem and the wordmark are separate transparent images */
+.topbar .brand { display: inline-flex; align-items: center; gap: 9px; }
+.topbar .brand .brand-emblem { display: block; height: 40px !important; width: auto !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+.topbar .brand .brand-wordmark { display: block; height: 24px !important; width: auto !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+@media (max-width: 520px) {
+  .topbar .brand .brand-emblem { height: 34px !important; }
+  .topbar .brand .brand-wordmark { height: 20px !important; }
+}
