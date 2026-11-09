@@ -29,3 +29,23 @@
   body[data-page="card"] .card-page:not(.dk-page) section.list h2, body[data-page="profile"] .card-page:not(.dk-page) section.list h2 { margin-top: 14px; }
   body[data-page="card"] .card-page:not(.dk-page) .mx-sec, body[data-page="profile"] .card-page:not(.dk-page) .mx-sec { margin-top: 0; }
 }
+
+/* v2 · the deck profile on a PC: the identity card on the left, every other section stacked on the right.
+   Nothing is paged, blurred or hidden, so the wide screen is used fully. Phones and tablets keep the slides. */
+@media (min-width: 1100px) and (pointer: fine) {
+  .dk-deck .dk-stage {
+    position: absolute; inset: var(--top, 64px) 0 0 0;
+    display: grid; grid-template-columns: minmax(360px, 440px) minmax(0, 1fr);
+    column-gap: 56px; row-gap: 24px; align-items: start; align-content: start; grid-auto-rows: min-content;
+    padding: 28px 64px 56px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin;
+  }
+  .dk-deck .dk-slide {
+    position: relative; inset: auto; height: auto; overflow: visible;
+    opacity: 1; visibility: visible; filter: none; transform: none; transition: none; padding: 0; display: block;
+  }
+  .dk-deck .dk-slide[data-dk="profile"] { grid-column: 1; grid-row: 1; position: sticky; top: 0; }
+  .dk-deck .dk-slide:not([data-dk="profile"]) { grid-column: 2; }
+  .dk-deck .dk-item { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .dk-deck .dk-in { max-width: none; width: 100%; margin: 0; }
+  .dk-deck .dk-dots, .dk-deck .dk-hint { display: none !important; }
+}
