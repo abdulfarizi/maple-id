@@ -64,3 +64,9 @@ body.has-dock.star-mode:not(.pager-on) .star-frame{height:calc(100vh - var(--tb-
 
 @media (max-width:359px){.tb-view{width:34px;height:34px}}
 @media (prefers-reduced-motion:reduce){.tv-pop,.topbar .brand .leaf-ico{transition:none}}
+/* v37: Explore lives in the header on phones (the bottom bar keeps its slot, hidden, so the swipe pages still line up) */
+.tb-ex{flex:none;display:inline-flex;align-items:center;height:38px;padding:0 14px;margin-right:8px;border-radius:999px;border:1px solid var(--line);background:var(--panel-solid,var(--panel));color:var(--text);font:600 14px var(--sans,system-ui);text-decoration:none}
+.tb-ex:active{transform:scale(.94)}
+@media (min-width:900px){.tb-ex{display:none}}
+.dock-i[data-dock="explore"]{width:0;flex:0 0 0;min-width:0;padding:0;margin:0;overflow:hidden;opacity:0;pointer-events:none;border:0}
+.dock-i[data-dock="explore"] span,.dock-i[data-dock="explore"] i{display:none}
