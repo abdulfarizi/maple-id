@@ -300,7 +300,8 @@
             .shell:not([hidden]) { display:grid; grid-template-columns:340px minmax(0,1fr); column-gap:28px; row-gap:20px; align-items:start; max-width:none; width:100%; box-sizing:border-box; margin:0; padding:20px var(--pc-gut) 96px; }
             .shell:not([hidden]) > * { grid-column:2; min-width:0; }
             .shell:not([hidden]) > .topbar { grid-column:1 / -1; }
-            .shell:not([hidden]) > .pc-left { display:flex; flex-direction:column; gap:14px; grid-column:1; grid-row:2 / span 99; align-self:start; width:340px; }
+            .shell:not([hidden]) > .pc-left { display:flex; flex-direction:column; gap:14px; position:fixed; z-index:2; width:340px; top:calc(var(--tb-h,64px) + 12px); left:var(--pc-gut); max-height:calc(100vh - var(--tb-h,64px) - 24px); overflow-y:auto; overscroll-behavior:auto; scrollbar-width:none; padding:2px; }
+            @media (max-height:560px) { .shell:not([hidden]) > .pc-left { zoom:.78; } }
             .shell:not([hidden]) > .pc-left > .panel { position:relative; }
             .pager.single .pslides { overflow:visible; }
             .pager.single .ptabs { display:none !important; }
