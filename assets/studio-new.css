@@ -55,3 +55,77 @@
 @media (prefers-reduced-motion:reduce){
   .studio-v2 .st2-chev,.studio-v2 .editor fieldset.st2-acc,.studio-v2 .editor fieldset.st2-acc > legend{transition:none}
 }
+
+/* Custom checkbox: replaces the browser's native checkbox inside Studio toggles.
+ * The input stays in the page, so every script that reads or sets .checked keeps working. */
+.studio-v2 .toggle input[type=checkbox],
+.studio-v2 label.toggle > input[type=checkbox],
+.studio-v2 .mxs-themes input[type=checkbox] {
+  -webkit-appearance: none; appearance: none;
+  position: relative; flex: none;
+  width: 22px; height: 22px; margin: 0 10px 0 0;
+  border-radius: 7px;
+  border: 1.5px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+  cursor: pointer; vertical-align: middle;
+  transition: background .28s cubic-bezier(.22,1,.36,1), border-color .28s ease, box-shadow .28s ease, transform .18s ease;
+  background-repeat: no-repeat; background-position: center;
+  background-size: 0 0;
+}
+.studio-v2 .toggle input[type=checkbox]:hover { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
+.studio-v2 .toggle input[type=checkbox]:active { transform: scale(.9); }
+.studio-v2 .toggle input[type=checkbox]:checked {
+  border-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.5 12.6l3.6 3.5 7.4-7.6' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 78% 78%;
+  background-color: var(--accent);
+  box-shadow: 0 4px 14px -4px var(--accent-glow, var(--accent));
+}
+.studio-v2 .toggle input[type=checkbox]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.studio-v2 .toggle input[type=checkbox]:disabled { opacity: .45; cursor: not-allowed; }
+.studio-v2 .toggle { display: flex; align-items: center; gap: 0; cursor: pointer; }
+.studio-v2 .toggle > span { flex: 1; min-width: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .studio-v2 .toggle input[type=checkbox] { transition: none; }
+}
+
+/* QR code symbol section (added by maple-builder.js after Card layout): stack everything and centre it */
+.studio-v2 #qr-sym {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center;
+}
+.studio-v2 #qr-sym > legend,
+.studio-v2 #qr-sym > .hint {
+  align-self: stretch;
+  text-align: center;
+}
+.studio-v2 #qr-sym > div {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  gap: 12px !important;
+}
+.studio-v2 #qr-sym > div > div {
+  width: 100%;
+  max-width: 320px;
+  min-width: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.studio-v2 #qr-sym #qr-prev {
+  margin: 0 auto;
+}
+.studio-v2 #qr-sym .field,
+.studio-v2 #qr-sym label,
+.studio-v2 #qr-sym select {
+  width: 100%;
+  text-align: center;
+}
