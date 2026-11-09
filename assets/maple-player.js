@@ -585,8 +585,13 @@
   function setProfile(which, p) { if (which === 'card' || which === 'profile') { (window.__mxCtx = window.__mxCtx || {})[which] = p || null; try { window.dispatchEvent(new CustomEvent('maple:ctx')); } catch (e) {} } }
   window.addEventListener('maple:ctx', soon);
   /* leaving the app or the site (switching app/tab, locking the phone, going to another page) pauses the music; it does not start again by itself */
-  function quietNow() { pauseAll(); if (S.playing) { S.playing = false; paint(); } }
-  window.addEventListener('pagehide', quietNow);
+  function quietNow() {
+    pauseAll();
+    /* any audible media on the page (deck songs, feed videos with sound) stops too */
+    document.querySelectorAll('audio, video').forEach(function (m) { if (!m.paused && !m.muted) { try { m.pause(); } catch (e) {} } });
+    if (S.playing) { S.playing = false; paint(); }
+  }
+  window.addEventListener('pagehide', quietNow); document.addEventListener('freeze', quietNow);
   document.addEventListener('visibilitychange', function () { if (document.hidden) quietNow(); });
 
   /* ───── lyrics (LRCLIB) ───── */
