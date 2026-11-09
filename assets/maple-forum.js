@@ -550,11 +550,26 @@
     statEl = moreEl = listEl = null;
   }
   /* Feed videos have sound: stop them when the app goes to the background or loses focus (Android recents). */
-  function quietFeed() { if (!swipeEl) return; swipeEl.querySelectorAll('video').forEach(function (v) { try { v.pause(); } catch (e) {} }); }
+  var resumeVids = [];
+  function quietFeed() {
+    if (!swipeEl) return;
+    swipeEl.querySelectorAll('video').forEach(function (v) { if (!v.paused) { if (resumeVids.indexOf(v) < 0) resumeVids.push(v); try { v.pause(); } catch (e) {} } });
+  }
+  /* back in the app: play again the videos that were playing and are still on screen */
+  function resumeFeed() {
+    var list = resumeVids; resumeVids = [];
+    if (!swipeEl || swipeEl.style.display === 'none') return;
+    list.forEach(function (v) {
+      if (!swipeEl.contains(v)) return;
+      var r = v.getBoundingClientRect();
+      if (r.bottom > 0 && r.top < window.innerHeight) v.play().catch(function () {});
+    });
+  }
   window.addEventListener('pagehide', quietFeed);
   window.addEventListener('blur', quietFeed);
+  window.addEventListener('focus', resumeFeed);
   document.addEventListener('freeze', quietFeed);
-  document.addEventListener('visibilitychange', function () { if (document.hidden) quietFeed(); });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) quietFeed(); else resumeFeed(); });
   function closeSwipe() {
     if (swipeIO) swipeIO.disconnect(); if (vidIO) vidIO.disconnect();
     if (swipeEl) swipeEl.remove(); if (swipeTop) swipeTop.remove();
