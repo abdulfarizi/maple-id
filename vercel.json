@@ -4,6 +4,8 @@
     { "source": "/owner/", "destination": "/owner/index.html" },
     { "source": "/studio-new", "destination": "/studio-new/index.html" },
     { "source": "/studio-new/", "destination": "/studio-new/index.html" },
+    { "source": "/studio-test", "destination": "/studio-test/index.html" },
+    { "source": "/studio-test/", "destination": "/studio-test/index.html" },
     { "source": "/spotify-callback", "destination": "/spotify-callback/index.html" },
     { "source": "/((?!api/|assets/).*)", "destination": "/index.html" }
   ],
