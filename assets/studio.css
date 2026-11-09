@@ -87,3 +87,33 @@
   .editor fieldset{padding:16px 14px 6px;border-radius:18px}
 }
 @media (prefers-reduced-motion:reduce){.studio.studio-enter,.tab-panel:not([hidden]){animation:none}.save-state.dirty::before{animation:none}}
+
+/* text boxes: the text sits centred vertically, with the same font and size in every box */
+.studio .field input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),
+.studio .row input,
+.studio input[type=search],
+.studio input[type=text],
+.studio input[type=url],
+.studio input[type=email],
+.studio input[type=tel],
+.studio input[type=number],
+.studio input[type=time]{
+  box-sizing:border-box;
+  height:50px;
+  min-height:50px;
+  padding:0 16px;
+  line-height:50px;
+  font-family:inherit;
+  font-size:15px;
+  font-weight:500;
+  letter-spacing:-.005em;
+  text-align:left;
+  vertical-align:middle;
+  color:var(--text);
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.studio input::placeholder{color:var(--dim);opacity:.8;font-weight:400;line-height:50px}
+.studio textarea{box-sizing:border-box;padding:14px 16px;line-height:1.5;font-family:inherit;font-size:15px;font-weight:500;letter-spacing:-.005em;color:var(--text);vertical-align:top}
+.studio textarea::placeholder{color:var(--dim);opacity:.8;font-weight:400}
