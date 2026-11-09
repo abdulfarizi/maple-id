@@ -152,10 +152,10 @@ body { letter-spacing: -.012em; }
 .brand:focus, .brand:focus-visible { outline: none !important; box-shadow: none !important; }
 
 /* the emblem and the wordmark are separate transparent images */
-.topbar .brand { display: inline-flex; align-items: center; gap: 9px; }
-.topbar .brand .brand-emblem { display: block; height: 40px !important; width: auto !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
-.topbar .brand .brand-wordmark { display: block; height: 24px !important; width: auto !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+.brand { display: inline-flex; align-items: center; gap: 9px; }
+.brand .brand-emblem { display: block; height: 40px !important; width: auto !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
+.brand .brand-wordmark { display: block; height: 24px !important; width: auto !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
 @media (max-width: 520px) {
-  .topbar .brand .brand-emblem { height: 34px !important; }
-  .topbar .brand .brand-wordmark { height: 20px !important; }
+  .brand .brand-emblem { height: 34px !important; }
+  .brand .brand-wordmark { height: 20px !important; }
 }
