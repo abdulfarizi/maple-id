@@ -13,17 +13,17 @@
   // New groups. "take" lists the section names (lowercase, as shown in the legend) that go in each group.
   var GROUPS = [
     { key: 'profile', label: 'Profile', icon: 'fa-regular fa-user',
-      take: ['identity', 'photos', 'community', 'online hours'] },
-    { key: 'links', label: 'Links & Contact', icon: 'fa-solid fa-link',
-      take: ['socials & channels', 'game ids', 'contact'] },
+      take: ['identity', 'photos', 'contact', 'community', 'online hours', 'gear'] },
+    { key: 'links', label: 'Links & Donations', icon: 'fa-solid fa-link',
+      take: ['socials & channels', 'game ids', 'support & donations'] },
     { key: 'look', label: 'Look & Theme', icon: 'fa-solid fa-palette',
-      take: ['card layout', 'qr code symbol', 'card frame', 'theme', 'star look', 'glass slides background', 'gear', 'free canvas', 'card features'] },
+      take: ['card layout', 'qr code symbol', 'card frame', 'theme', 'star look', 'glass slides background', 'free canvas', 'card features'] },
     { key: 'media', label: 'Music & Sounds', icon: 'fa-solid fa-compact-disc',
-      take: ['sounds', 'bottom music player', 'music i like', 'anime', 'visitor controls'] },
+      take: ['sounds', 'bottom music player', 'music i like', 'anime'] },
+    { key: 'extras', label: 'Extras', icon: 'fa-solid fa-wand-magic-sparkles',
+      take: ['visitor controls'] },
     { key: 'shop', label: 'Shop & Payments', icon: 'fa-solid fa-bag-shopping',
-      take: ['seller shop'] },
-    { key: 'support', label: 'Support', icon: 'fa-solid fa-heart',
-      take: ['support & donations'] }
+      take: ['seller shop'] }
   ];
 
   document.documentElement.classList.add('studio-new');
@@ -55,7 +55,7 @@
     window.onbeforeunload = function () { return (window.dgStudioDirty && window.dgStudioDirty()) ? true : null; };
   }
 
-  // Move every section into its new group, rebuild the tab bar, and drop the old tabs (Extras, Shop & support, Music & anime, …).
+  // Move every section into its new group, rebuild the tab bar, and drop the old tabs.
   function regroup(form) {
     if (form.__regrouped) return;
     form.__regrouped = true;
