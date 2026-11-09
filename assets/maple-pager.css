@@ -73,3 +73,5 @@ body.pager-on:not([data-page=home]) #pg-home *,body.pager-on:not([data-page=home
 body.pager-on:not([data-page=explore]) #pg-explore *,
 body.pager-on:not([data-page=card]) #pg-card *,
 body.pager-on:not([data-page=profile]) #pg-profile *{animation-play-state:paused!important}
+/* Explore opened from the header search: a Back button above the page */
+.pg-ex-back{display:inline-flex;align-items:center;margin:calc(var(--tb-h,64px) + 12px) 16px 4px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--panel-solid,var(--panel));color:var(--text);font:600 14px var(--sans,system-ui);cursor:pointer}
