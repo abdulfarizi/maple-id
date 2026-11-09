@@ -60,10 +60,11 @@
   fetch('/index.html', { cache: 'no-cache' })
     .then(function (r) { if (!r.ok) throw new Error('index'); return r.text(); })
     .then(function (html) {
-      // v=7: new version numbers so browsers and the CDN load the latest files
-      var add = '<link rel="stylesheet" href="/assets/studio-new.css?v=7">' +
+      // v=8: new version numbers so browsers and the CDN load the latest files
+      var add = '<link rel="stylesheet" href="/assets/studio-new.css?v=8">' +
                 '<link rel="stylesheet" href="/assets/studio-new-fix.css?v=1">' +
-                '<script src="/assets/studio-new.js?v=7" defer><\/script>';
+                '<link rel="stylesheet" href="/assets/studio-new-controls.css?v=1">' +
+                '<script src="/assets/studio-new.js?v=8" defer><\/script>';
       html = html.replace('</head>', add + '</head>');
       document.open();
       document.write(html);
