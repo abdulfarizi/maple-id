@@ -5,7 +5,7 @@
 (function () {
   'use strict';
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var MAX_M = 24, MAX_A = 48;
+  var MAX_M = 24, MAX_A = 48, MAX_C = 12;
   var st = null, form = null, searchT = 0, searchN = 0;
 
   function dirty(node) { (node || form).dispatchEvent(new Event('input', { bubbles: true })); }
@@ -16,7 +16,7 @@
         : { url: x.url, title: x.title, artist: x.artist, art: x.art, note: x.note }; }),
       lyricsFix: st.lyricsFix || null,
       song: pin ? { audio: pin.audio, title: pin.title, artist: pin.artist, art: pin.art, durationMs: pin.durationMs || 0 } : null,
-      anime: st.anime.map(function (x) { return Object.assign({}, x); }), themes: st.themes.slice(),
+      anime: st.anime.map(function (x) { return Object.assign({}, x); }), animeCats: st.animeCats.map(function (c) { return { id: c.id, name: c.name }; }), themes: st.themes.slice(),
       musicTitle: val('musicTitle'), musicSub: val('musicSub'), animeTitle: val('animeTitle'), animeSub: val('animeSub') };
   }
 
@@ -237,10 +237,42 @@
   /* ───── anime ───── */
   function animeUI() {
     var box = form.querySelector('[data-mxs-anime]'); if (!box) return;
-    box.innerHTML = '<label class="mxs-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" data-mxs-q maxlength="80" placeholder="Search the AniList catalogue, e.g. Frieren" aria-label="Search anime" autocomplete="off"></label>'
+    box.innerHTML = '<div class="mxs-cats"><p class="mxs-sub">Anime categories <small>make as many as you like, e.g. Favorite, Anime romance, Really like. A title can sit in several.</small></p>'
+      + '<div class="mxs-catlist" data-mxs-catlist></div>'
+      + '<div class="mxs-add"><input type="text" maxlength="24" data-mxs-catname placeholder="New category name" aria-label="New anime category name" autocomplete="off"><button type="button" class="btn btn-sm btn-accent" data-mxs-catadd><i class="fa-solid fa-plus"></i> Add category</button></div>'
+      + '<p class="mxs-msg" data-mxs-catmsg role="status"></p></div>'
+      + '<label class="mxs-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" data-mxs-q maxlength="80" placeholder="Search the AniList catalogue, e.g. Frieren" aria-label="Search anime" autocomplete="off"></label>'
       + '<p class="mxs-msg" data-mxs-amsg role="status"></p><ul class="mxs-results" data-mxs-res></ul><ol class="mxs-list" data-mxs-alist></ol>'
       + '<p class="eyebrow mxs-pv-h">Preview</p><div class="mxs-pv" data-mxs-apv></div>';
-    paintAnime();
+    paintCats(); paintAnime();
+  }
+  function paintCats() {
+    var box = form.querySelector('[data-mxs-catlist]'); if (!box) return;
+    box.innerHTML = st.animeCats.length ? st.animeCats.map(function (c) {
+      return '<span class="mxs-cat"><b>' + esc(c.name) + '</b><button type="button" class="mxs-cat-x" data-mxs-catdel="' + esc(c.id) + '" aria-label="Delete category ' + esc(c.name) + '"><i class="fa-solid fa-xmark"></i></button></span>';
+    }).join('') : '<small class="mxs-sub">No categories yet. Add one below.</small>';
+  }
+  function addCat() {
+    var inp = form.querySelector('[data-mxs-catname]'), msg = form.querySelector('[data-mxs-catmsg]');
+    var name = String(inp.value || '').replace(/\s+/g, ' ').trim().slice(0, 24);
+    if (!name) { msg.textContent = 'Type a category name first.'; return; }
+    if (st.animeCats.length >= MAX_C) { msg.textContent = 'You can add up to ' + MAX_C + ' categories.'; return; }
+    if (st.animeCats.some(function (c) { return c.name.toLowerCase() === name.toLowerCase(); })) { msg.textContent = '"' + name + '" is already a category.'; return; }
+    st.animeCats.push({ id: 'c' + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4), name: name });
+    inp.value = ''; msg.textContent = name + ' added. Tap it under a title to file that title there, then Publish.';
+    paintCats(); paintAnime(); dirty();
+  }
+  function delCat(id) {
+    st.animeCats = st.animeCats.filter(function (c) { return c.id !== id; });
+    st.anime.forEach(function (x) { if (x.cats) x.cats = x.cats.filter(function (c) { return c !== id; }); });
+    paintCats(); paintAnime(); dirty();
+  }
+  function catPick(x) {
+    if (!st.animeCats.length) return '';
+    return '<div class="mxs-catpick">' + st.animeCats.map(function (c) {
+      var on = (x.cats || []).indexOf(c.id) !== -1;
+      return '<button type="button" class="mxs-catt" data-mxs-catt="' + esc(c.id) + '" aria-pressed="' + on + '">' + esc(c.name) + '</button>';
+    }).join('') + '</div>';
   }
   function paintAnime() {
     var ol = form.querySelector('[data-mxs-alist]'); if (!ol) return;
@@ -250,7 +282,7 @@
         + '<div class="mxs-fields"><b class="mxs-title">' + esc(x.title) + (x.year ? ' <small>' + x.year + '</small>' : '') + '</b>'
         + '<div class="mxs-two"><select data-k="status" aria-label="Watch status">' + Object.keys(S).map(function (k) { return '<option value="' + k + '"' + (x.status === k ? ' selected' : '') + '>' + S[k] + '</option>'; }).join('') + '</select>'
         + '<select data-k="rating" aria-label="My rating"><option value="0">No rating</option>' + [10, 9.5, 9, 8.5, 8, 7.5, 7, 6.5, 6, 5, 4, 3, 2, 1].map(function (r) { return '<option value="' + r + '"' + (Number(x.rating) === r ? ' selected' : '') + '>★ ' + r + '/10</option>'; }).join('') + '</select></div>'
-        + '<input data-k="note" maxlength="140" placeholder="Personal note (optional)" value="' + esc(x.note) + '" aria-label="Personal note"></div>'
+        + catPick(x) + '<input data-k="note" maxlength="140" placeholder="Personal note (optional)" value="' + esc(x.note) + '" aria-label="Personal note"></div>'
         + moveBtns(i, st.anime.length) + '</li>';
     }).join('');
     preview();
@@ -290,7 +322,7 @@
   function preview() {
     var m = form.querySelector('[data-mxs-mpv]'), a = form.querySelector('[data-mxs-apv]');
     if (m) { m.innerHTML = MX.musicHTML(st.music, { head: false, empty: 'Add a Spotify link above to start your collection.' }); MX.mount(m, { musicLikes: st.music, name: 'Preview' }); }
-    if (a) { a.innerHTML = MX.animeHTML(st.anime, { head: false, empty: 'Search the catalogue above and tap + to add a title.' }); MX.mount(a); }
+    if (a) { a.innerHTML = MX.animeHTML(st.anime, { cats: st.animeCats, head: false, empty: 'Search the catalogue above and tap + to add a title.' }); MX.mount(a); }
   }
   function feat() {
     var box = form.querySelector('[data-mxs-feat]'), inp = form.elements.namedItem('spotify'); if (!box || !inp) return;
@@ -401,6 +433,14 @@
       var spl = e.target.closest('[data-mxs-split]'); if (spl) { splitAt(Number(spl.closest('.mxs-row').dataset.i)); return; }
       var pinB = e.target.closest('[data-mxs-pin]');
       if (pinB) { var px = st.music[Number(pinB.closest('.mxs-row').dataset.i)]; if (px) { st.song = st.song === px.audio ? '' : px.audio; paintMusic(); dirty(); } return; }
+      var cadd = e.target.closest('[data-mxs-catadd]'); if (cadd) { addCat(); return; }
+      var cdel = e.target.closest('[data-mxs-catdel]'); if (cdel) { delCat(cdel.dataset.mxsCatdel); return; }
+      var ctt = e.target.closest('[data-mxs-catt]');
+      if (ctt) {
+        var crow = ctt.closest('.mxs-row'), cx = crow && st.anime[Number(crow.dataset.i)];
+        if (cx) { cx.cats = cx.cats || []; var ci = cx.cats.indexOf(ctt.dataset.mxsCatt); if (ci === -1) cx.cats.push(ctt.dataset.mxsCatt); else cx.cats.splice(ci, 1); paintAnime(); dirty(); }
+        return;
+      }
       var row = e.target.closest('.mxs-row'); if (!row) return;
       var list = row.parentNode.matches('[data-mxs-mlist]') ? st.music : st.anime, i = Number(row.dataset.i);
       var mv = e.target.closest('[data-mxs-mv]');
@@ -429,6 +469,7 @@
     });
     form.addEventListener('keydown', function (e) {
       if (e.key !== 'Enter') return;
+      if (e.target.matches('[data-mxs-catname]')) { e.preventDefault(); addCat(); return; }
       if (e.target.matches('[data-mxs-url]')) { e.preventDefault(); addSong(); }
       else if (e.target.closest('[data-mxs-lyr]')) { e.preventDefault(); if (e.target.matches('[data-lq-title],[data-lq-artist]')) lyrSearch(); }
       else if (e.target.closest('[data-mxs-music],[data-mxs-anime]')) e.preventDefault();      // never publish by accident
@@ -439,7 +480,7 @@
     form = f; window.__mx = null;
     var cur = window.__dgGet ? window.__dgGet() : {};
     st = { music: (cur.musicLikes || []).map(function (x) { return Object.assign({ title: '', artist: '', art: '', note: '' }, x); }),
-      anime: (cur.anime || []).map(function (x) { return Object.assign({}, x); }), song: (cur.song && cur.song.audio) || '', lyricsFix: cur.lyricsFix && cur.lyricsFix.url ? cur.lyricsFix : null, themes: Array.isArray(cur.themes) ? cur.themes.slice() : [], results: [] };
+      anime: (cur.anime || []).map(function (x) { return Object.assign({}, x); }), animeCats: (Array.isArray(cur.animeCats) ? cur.animeCats : []).map(function (c) { return { id: c.id, name: c.name }; }), song: (cur.song && cur.song.audio) || '', lyricsFix: cur.lyricsFix && cur.lyricsFix.url ? cur.lyricsFix : null, themes: Array.isArray(cur.themes) ? cur.themes.slice() : [], results: [] };
     window.__mx = snapshot;
     musicUI(); animeUI(); themesUI(); bind(); feat(); lyrUI();
   }

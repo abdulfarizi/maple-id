@@ -173,3 +173,15 @@ body.pager-on [data-sec]{scroll-margin-top:70px}
 .mxs-lyr-own textarea{display:block;width:100%;margin:8px 0;min-height:120px;font:inherit;resize:vertical;box-sizing:border-box}
 .mxs-lyr-own small{display:block;margin-top:6px;font-size:11.5px;color:var(--muted)}
 .mxs-lyr .mxs-featcard .btn{margin-left:auto}
+
+/* anime categories (v37): hidden filter cards, Studio category manager */
+.sk-anime[hidden], .mx-anime[hidden] { display: none !important; }
+.mxs-cats { display: grid; gap: 10px; margin-bottom: 14px; }
+.mxs-catlist { display: flex; flex-wrap: wrap; gap: 6px; }
+.mxs-cat { display: inline-flex; align-items: center; gap: 6px; padding: 5px 6px 5px 12px; border-radius: 999px; border: 1px solid var(--line); font-size: 12.5px; }
+.mxs-cat-x { all: unset; cursor: pointer; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 999px; color: var(--muted); }
+.mxs-cat-x:hover { background: var(--line); color: var(--text); }
+.mxs-catpick { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 6px; }
+.mxs-catt { all: unset; cursor: pointer; padding: 5px 10px; border-radius: 999px; font-size: 11.5px; border: 1px solid var(--line); color: var(--muted); }
+.mxs-catt[aria-pressed=true] { background: var(--accent); color: var(--on-accent, #fff); border-color: transparent; }
+.mxs-catt:focus-visible, .mxs-cat-x:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

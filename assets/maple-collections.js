@@ -133,11 +133,35 @@
     if (!(r > 0)) return '';
     return '<span class="mx-rate" aria-label="Rated ' + r + ' out of 10"><i class="fa-solid fa-star"></i>' + (Math.round(r * 2) / 2) + '<small>/10</small></span>';
   }
+  function catsOf(x) { return Array.isArray(x && x.cats) ? x.cats : []; }
+  // filter chips: the owner's own categories when they have any (a category shows only if a title is in it);
+  // otherwise the old watch-status chips, so existing cards look the same
+  function animeChips(list, o) {
+    o = o || {}; list = Array.isArray(list) ? list : [];
+    var cats = Array.isArray(o.cats) ? o.cats : [];
+    var used = cats.filter(function (c) { return list.some(function (x) { return catsOf(x).indexOf(c.id) !== -1; }); });
+    if (used.length) {
+      return '<div class="mx-filter" role="group" aria-label="Filter by category"><button type="button" data-mx-f="" aria-pressed="true">All <b>' + list.length + '</b></button>'
+        + used.map(function (c) {
+          var n = list.filter(function (x) { return catsOf(x).indexOf(c.id) !== -1; }).length;
+          return '<button type="button" data-mx-f="c:' + esc(c.id) + '" aria-pressed="false">' + esc(c.name) + ' <b>' + n + '</b></button>';
+        }).join('') + '</div>';
+    }
+    var present = Object.keys(STATUS).filter(function (k) { return list.some(function (x) { return (STATUS[x.status] ? x.status : 'completed') === k; }); });
+    return present.length > 1 ? '<div class="mx-filter" role="group" aria-label="Filter by watch status"><button type="button" data-mx-f="" aria-pressed="true">All <b>' + list.length + '</b></button>'
+      + present.map(function (k) { return '<button type="button" data-mx-f="' + k + '" aria-pressed="false">' + STATUS[k] + '</button>'; }).join('') + '</div>' : '';
+  }
+  // does a card (its data-st / data-cats attributes) pass the chip key k? '' = all, 'c:<id>' = a category, else a status
+  function matchAnime(li, k) {
+    if (!k) return true;
+    if (k.indexOf('c:') === 0) return (' ' + (li.dataset.cats || '') + ' ').indexOf(' ' + k.slice(2) + ' ') !== -1;
+    return li.dataset.st === k;
+  }
   function animeCard(x, i) {
     var cover = x.cover && ART_OK.test(x.cover) ? '<img src="' + esc(x.cover) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '';
     var st = STATUS[x.status] ? x.status : 'completed';
     var facts = [x.year || '', x.format ? String(x.format).replace(/_/g, ' ').replace('TV SHORT', 'Short') : '', x.eps ? x.eps + ' ep' : ''].filter(Boolean).join(' · ');
-    return '<li class="mx-anime" data-st="' + st + '" style="--i:' + i + '">'
+    return '<li class="mx-anime" data-st="' + st + '" data-cats="' + esc(catsOf(x).join(' ')) + '" style="--i:' + i + '">'
       + '<article tabindex="0" aria-label="' + esc(x.title) + ', ' + STATUS[st] + '">'
       + '<div class="mx-cover"><span class="mx-art-ph">' + initials(x.title) + '</span>' + cover
       + '<span class="mx-st st-' + st + '"><i class="fa-solid ' + STATUS_ICON[st] + '"></i>' + STATUS[st] + '</span>'
@@ -151,9 +175,7 @@
   function animeHTML(list, o) {
     o = o || {}; list = Array.isArray(list) ? list : [];
     if (!list.length) return o.empty ? '<div class="mx-empty"><i class="fa-solid fa-tv"></i><b>No anime yet</b><span>' + esc(o.empty) + '</span></div>' : '';
-    var present = Object.keys(STATUS).filter(function (k) { return list.some(function (x) { return (STATUS[x.status] ? x.status : 'completed') === k; }); });
-    var chips = present.length > 1 ? '<div class="mx-filter" role="group" aria-label="Filter by watch status"><button type="button" data-mx-f="" aria-pressed="true">All <b>' + list.length + '</b></button>'
-      + present.map(function (k) { return '<button type="button" data-mx-f="' + k + '" aria-pressed="false">' + STATUS[k] + '</button>'; }).join('') + '</div>' : '';
+    var chips = animeChips(list, o);
     return '<section class="mx-sec mx-animes" data-sec="anime" aria-label="Anime">'
       + (o.head === false ? '' : '<header class="mx-head"><h2><i class="fa-solid fa-tv"></i> Anime</h2><span>' + list.length + ' titles</span></header>')
       + chips + rail('Anime', list.map(animeCard).join(''), 'anime')
@@ -186,7 +208,7 @@
       if (f) {
         var sec = f.closest('.mx-animes'), k = f.dataset.mxF;
         sec.querySelectorAll('[data-mx-f]').forEach(function (b) { b.setAttribute('aria-pressed', String(b === f)); });
-        sec.querySelectorAll('.mx-anime').forEach(function (li) { li.hidden = !!k && li.dataset.st !== k; });
+        sec.querySelectorAll('.mx-anime').forEach(function (li) { li.hidden = !matchAnime(li, k); });
         var rl = sec.querySelector('.mx-rail'); rl.querySelector('.mx-track').scrollLeft = 0; arrows(rl); return;
       }
       var pl = e.target.closest('[data-mx-play]');
@@ -214,7 +236,7 @@
       });
     });
   }
-  window.MX = { fill: fill, esc: esc, spotify: spotify, youtube: youtube, meta: meta, anilist: anilist, musicHTML: musicHTML, animeHTML: animeHTML, mount: mount, play: play,
+  window.MX = { fill: fill, esc: esc, spotify: spotify, youtube: youtube, meta: meta, anilist: anilist, musicHTML: musicHTML, animeHTML: animeHTML, animeChips: animeChips, matchAnime: matchAnime, mount: mount, play: play,
     STATUS: STATUS, artOk: function (u) { return ART_OK.test(u || ''); },
     musicOn: function (p) { return !!p && p.musicOn !== false && Array.isArray(p.musicLikes) && p.musicLikes.length > 0; },
     animeOn: function (p) { return !!p && p.animeOn !== false && Array.isArray(p.anime) && p.anime.length > 0; } };

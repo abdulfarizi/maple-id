@@ -39,7 +39,8 @@
     var cover = x.cover && artOk(x.cover) ? '<img src="' + esc(x.cover) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">' : '';
     var score = x.rating > 0 ? x.rating : (x.score ? Math.round(x.score) / 10 : 0);
     var fmtd = x.format ? String(x.format).replace(/_/g, ' ').replace('TV SHORT', 'Short') : '';
-    return '<li class="sk-anime"><article tabindex="0" aria-label="' + esc(x.title) + '">'
+    var cats = Array.isArray(x.cats) ? x.cats.join(' ') : '';
+    return '<li class="sk-anime" data-st="' + esc(x.status || '') + '" data-cats="' + esc(cats) + '"><article tabindex="0" aria-label="' + esc(x.title) + '">'
       + '<div class="sk-cover"><span class="sk-ph">' + esc((x.title || '?')[0]) + '</span>' + cover + '</div>'
       + '<div class="sk-ab"><h3>' + esc(x.title) + '</h3><p>'
       + (score ? '<span class="sk-star"><i class="fa-solid fa-star" aria-hidden="true"></i>' + score.toFixed(1) + '</span>' : '')
@@ -171,7 +172,7 @@
     var animeOn = !!(mx && mx.animeOn(P)), musicOn = !!(mx && mx.musicOn(P));
     lib = IN_APP && musicOn ? likes : [];
     /* one player only: the big Audio Player section below replaces the separate "now playing" strip */
-    if (animeOn) html += '<section class="sk-sec" data-sk-sec="anime" aria-label="Anime">' + head(P.animeTitle || 'Anime', P.animeSub || '') + pager('anime', 'Anime', P.anime.map(animeCard).join('')) + '</section>';
+    if (animeOn) html += '<section class="sk-sec" data-sk-sec="anime" aria-label="Anime">' + head(P.animeTitle || 'Anime', P.animeSub || '') + (window.MX && MX.animeChips ? MX.animeChips(P.anime, { cats: P.animeCats }) : '') + pager('anime', 'Anime', P.anime.map(animeCard).join('')) + '</section>';
     if (hasPlayer) html += playerHTML();
     if (musicOn && lib.length) html += libHTML();
     else if (musicOn) html += '<section class="sk-sec" data-sk-sec="music" aria-label="Music I like">' + head(P.musicTitle || 'Music I like', P.musicSub || '') + pager('music', 'Music I like', P.musicLikes.map(songCard).join('')) + '</section>';
@@ -183,6 +184,14 @@
     if (!root.__bound) {
       root.__bound = 1;
       root.addEventListener('click', function (e) {
+        var fb = e.target.closest('[data-mx-f]');
+        if (fb) {
+          var fsec = fb.closest('.sk-sec'), fk = fb.dataset.mxF;
+          fsec.querySelectorAll('[data-mx-f]').forEach(function (b) { b.setAttribute('aria-pressed', String(b === fb)); });
+          fsec.querySelectorAll('.sk-anime').forEach(function (li) { li.hidden = !(window.MX && MX.matchAnime ? MX.matchAnime(li, fk) : true); });
+          var fpg = fsec.querySelector('.sk-pager'); fpg.querySelector('.sk-track').scrollLeft = 0; paintDots(fpg);
+          return;
+        }
         var g = e.target.closest('[data-sk-go]');
         if (g) { var tr = g.closest('.sk-pager').querySelector('.sk-track'); tr.scrollBy({ left: Number(g.dataset.skGo) * tr.clientWidth, behavior: REDUCE.matches ? 'auto' : 'smooth' }); return; }
         var c = e.target.closest('[data-sk-ctl]'); if (c) { ctl(c.dataset.skCtl); return; }
