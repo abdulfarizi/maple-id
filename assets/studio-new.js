@@ -1,25 +1,27 @@
 /* M-ID · Studio (new layout) — organizing layer, loaded only by /studio-new.
  * The Studio itself (fields, saving, music, frames, builder) is the existing one and is not touched.
- * This reshapes what it rendered: the sections are moved into the new groups, collapsible sections, tips behind an info button, expand/collapse all.
+ * This reshapes what it rendered: the sections are moved into the new groups in a fixed order,
+ * collapsible sections, tips behind an info button, expand/collapse all.
  * The address bar is left alone: the app routes on /studio, so rewriting the URL here sent people back to the home page. */
 (function () {
   'use strict';
   var KEY = 'st2:open';
   // sections that start open; everything else starts collapsed (a click opens it)
-  var DEFAULT_OPEN = ['identity', 'photos', 'socials', 'game ids', 'card layout', 'theme', 'sounds', 'card features', 'seller shop', 'support', 'bottom music player'];
+  var DEFAULT_OPEN = ['identity', 'photos', 'card details', 'socials', 'game ids', 'card layout', 'theme', 'sounds', 'card features', 'seller shop', 'support', 'bottom music player'];
   var saved = {};
   try { var s0 = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (s0 && typeof s0 === 'object') saved = s0; } catch (e) {}
 
-  // New groups. "take" lists the section names (lowercase, as shown in the legend) that go in each group.
+  // New groups, in the order they appear on the page. "take" lists the sections in the order they show inside each group.
+  // Section names are lowercase, as shown in the legend.
   var GROUPS = [
     { key: 'profile', label: 'Profile', icon: 'fa-regular fa-user',
-      take: ['identity', 'photos', 'contact', 'community', 'online hours', 'gear'] },
+      take: ['identity', 'photos', 'card details', 'gear', 'online hours', 'contact', 'community'] },
     { key: 'links', label: 'Links & Donations', icon: 'fa-solid fa-link',
       take: ['socials & channels', 'game ids', 'support & donations'] },
     { key: 'look', label: 'Look & Theme', icon: 'fa-solid fa-palette',
-      take: ['card layout', 'qr code symbol', 'card frame', 'theme', 'star look', 'glass slides background', 'free canvas', 'card features'] },
+      take: ['card layout', 'qr code symbol', 'theme', 'card frame', 'glass slides background', 'free canvas', 'star look', 'card features'] },
     { key: 'media', label: 'Music & Sounds', icon: 'fa-solid fa-compact-disc',
-      take: ['sounds', 'bottom music player', 'music i like', 'anime'] },
+      take: ['bottom music player', 'music i like', 'anime', 'sounds'] },
     { key: 'extras', label: 'Extras', icon: 'fa-solid fa-wand-magic-sparkles',
       take: ['visitor controls'] },
     { key: 'shop', label: 'Shop & Payments', icon: 'fa-solid fa-bag-shopping',
@@ -57,7 +59,7 @@
     window.onbeforeunload = function () { return (window.dgStudioDirty && window.dgStudioDirty()) ? true : null; };
   }
 
-  // Move every section into its new group, rebuild the tab bar, and drop the old tabs.
+  // Move every section into its new group in the order set above, rebuild the tab bar, and drop the old tabs.
   function regroup(form) {
     if (form.__regrouped) return;
     form.__regrouped = true;
@@ -79,18 +81,13 @@
       Array.prototype.forEach.call(p.children, function (c) { if (c.classList && c.classList.contains('note-card')) notes.push(c); });
     });
 
-    var byKey = {};
-    GROUPS.forEach(function (g) { byKey[g.key] = []; });
+    // Card details: the Star look fields that describe the card itself become their own section (Profile)
+    var named = {};
     fieldsets.forEach(function (f) {
       var name = label(f.querySelector(':scope > legend'));
-      var g = GROUPS.filter(function (x) { return x.take.indexOf(name) !== -1; })[0];
-      if (!g) { console.warn('[studio-new] section not in any group, kept in Profile:', name); g = GROUPS[0]; }
-      byKey[g.key].push(f);
+      (named[name] = named[name] || []).push(f);
     });
-
-    // Card details: the Star look fields that describe the card itself move into a Profile section.
-    // The new section keeps the same Star-only visibility, so it still appears only on the Star layout.
-    var starLook = byKey.look.filter(function (f) { return label(f.querySelector(':scope > legend')) === 'star look'; })[0];
+    var starLook = (named['star look'] || [])[0];
     if (starLook) {
       var details = document.createElement('fieldset');
       details.setAttribute('data-star-only', '');
@@ -101,8 +98,28 @@
         var field = input && input.closest('.field');
         if (field) details.appendChild(field);
       });
-      if (details.querySelector('.field')) byKey.profile.push(details);
+      if (details.querySelector('.field')) named['card details'] = [details];
     }
+
+    // Place every section in its group, in the order listed in GROUPS
+    var byKey = {};
+    GROUPS.forEach(function (g) {
+      byKey[g.key] = [];
+      g.take.forEach(function (name) {
+        (named[name] || []).forEach(function (f) {
+          if (f.__placed) return;
+          f.__placed = true;
+          byKey[g.key].push(f);
+        });
+      });
+    });
+    // anything not listed keeps its place in Profile
+    fieldsets.forEach(function (f) {
+      if (f.__placed) return;
+      console.warn('[studio-new] section not in any group, kept in Profile:', label(f.querySelector(':scope > legend')));
+      f.__placed = true;
+      byKey.profile.push(f);
+    });
 
     var anchor = form.querySelector('.savebar');
     GROUPS.forEach(function (g) {
