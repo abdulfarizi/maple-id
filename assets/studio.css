@@ -117,3 +117,17 @@
 .studio input::placeholder{color:var(--dim);opacity:.8;font-weight:400;line-height:50px}
 .studio textarea{box-sizing:border-box;padding:14px 16px;line-height:1.5;font-family:inherit;font-size:15px;font-weight:500;letter-spacing:-.005em;color:var(--text);vertical-align:top}
 .studio textarea::placeholder{color:var(--dim);opacity:.8;font-weight:400}
+
+/* anime in the Studio: every title is the same size, in the editor list and in the preview */
+.studio .mxs-thumb,
+.studio .mxs-thumb.tall{width:56px;height:78px;flex:none;border-radius:10px}
+.studio .mxs-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.studio .mxs-row{align-items:stretch}
+.studio .mxs-results .mxs-thumb{width:42px;height:58px}
+.studio .mxs-fields{justify-content:space-between}
+.studio .mxs-pv .mx-track{align-items:stretch}
+.studio .mxs-pv .mx-anime{display:flex;height:auto}
+.studio .mxs-pv .mx-anime article{flex:1 1 auto;display:flex;flex-direction:column;height:100%}
+.studio .mxs-pv .mx-body{flex:1 1 auto}
+.studio .mxs-pv .mx-cover{aspect-ratio:3/4}
+.studio .mxs-pv .mx-desc{min-height:calc(3 * 1.45em)}
