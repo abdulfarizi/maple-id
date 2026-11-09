@@ -59,7 +59,7 @@
   fetch('/index.html', { cache: 'no-cache' })
     .then(function (r) { if (!r.ok) throw new Error('index'); return r.text(); })
     .then(function (html) {
-      var add = '<link rel="stylesheet" href="/assets/studio-new.css?v=1">' +
+      var add = '<link rel="stylesheet" href="/assets/studio-test.css?v=1">' +
                 '<script src="/assets/studio-test.js?v=1" defer><\/script>';
       html = html.replace('</head>', add + '</head>');
       document.open();
