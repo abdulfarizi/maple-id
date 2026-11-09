@@ -1,0 +1,74 @@
+/* M-ID · Studio (new layout): 2026 controls: dropdowns, layout cards, swatches and check marks.
+ * Loaded only by /studio-new. Scoped to .studio-v2 so the rest of the site is unchanged. */
+
+/* ===== Dropdowns (country, city, platform, currency, status, avatar shape…) ===== */
+.studio-v2 select{
+  -webkit-appearance:none;appearance:none;
+  width:100%;min-height:46px;padding:0 42px 0 16px;
+  border-radius:14px;border:1px solid var(--st-edge);
+  background-color:color-mix(in srgb,var(--ink) 3%,transparent);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center;background-size:14px;
+  color:var(--text);font-size:14px;font-weight:500;letter-spacing:-.005em;
+  cursor:pointer;
+  transition:border-color .2s,box-shadow .25s,background-color .2s;
+}
+.studio-v2 select:hover{border-color:color-mix(in srgb,var(--accent) 35%,transparent);background-color:color-mix(in srgb,var(--ink) 5%,transparent)}
+.studio-v2 select:focus{outline:none;border-color:color-mix(in srgb,var(--accent) 60%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}
+.studio-v2 select:disabled{opacity:.5;cursor:not-allowed}
+.studio-v2 select option{background:var(--bg);color:var(--text);padding:10px}
+.studio-v2 select option:checked{color:var(--accent)}
+
+/* the Pay and Seller shop selects keep the same look */
+.studio-v2 .field select{font-variant-numeric:tabular-nums}
+
+/* ===== Layout cards (Basic / Glass slides / Star / Free canvas): a check badge when chosen ===== */
+.studio-v2 .layout-opt span{position:relative;display:block;padding-right:44px;transition:border-color .25s,background .25s,transform .2s var(--st-ease),box-shadow .3s}
+.studio-v2 .layout-opt span:hover{transform:translateY(-1px)}
+.studio-v2 .layout-opt span::after{
+  content:"";position:absolute;top:14px;right:14px;width:22px;height:22px;border-radius:999px;
+  border:1.5px solid color-mix(in srgb,var(--ink) 24%,transparent);background:transparent;
+  transition:background .3s var(--st-ease),border-color .3s,transform .3s var(--st-ease);
+}
+.studio-v2 .layout-opt:has(input:checked) span{border-color:color-mix(in srgb,var(--accent) 45%,transparent);
+  box-shadow:0 14px 30px -20px var(--st-glow),inset 0 1px 0 var(--st-spec)}
+.studio-v2 .layout-opt:has(input:checked) span::after{
+  border-color:transparent;background-color:var(--accent);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 12.5l3.2 3.2L17 9' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size:70% 70%;background-position:center;background-repeat:no-repeat;
+  transform:scale(1.02);
+}
+
+/* ===== Swatches (theme colours, card styles): a check on the chosen one ===== */
+.studio-v2 .swatch{position:relative;border-radius:999px;padding:9px 14px 9px 10px;border:1px solid var(--st-edge);background:var(--st-surface);
+  transition:border-color .25s,background .25s,transform .2s var(--st-ease),box-shadow .3s}
+.studio-v2 .swatch:hover{border-color:color-mix(in srgb,var(--ink) 18%,transparent);transform:translateY(-1px)}
+.studio-v2 .swatch:active{transform:scale(.96)}
+.studio-v2 .swatch:has(input:checked){border-color:color-mix(in srgb,var(--accent) 50%,transparent);
+  background:color-mix(in srgb,var(--accent) 12%,transparent);box-shadow:0 10px 24px -16px var(--st-glow)}
+.studio-v2 .swatch span{position:relative;transition:transform .3s var(--st-ease),box-shadow .3s}
+.studio-v2 .swatch:has(input:checked) span{transform:scale(1.08)}
+.studio-v2 .swatch span::after{
+  content:"";position:absolute;inset:0;margin:auto;width:58%;height:58%;border-radius:999px;
+  background:var(--accent);opacity:0;transform:scale(.4);transition:opacity .25s,transform .35s var(--st-ease);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 12.5l3.2 3.2L17 9' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size:80%;background-position:center;background-repeat:no-repeat;
+}
+.studio-v2 .swatch:has(input:checked) span::after{opacity:1;transform:scale(1)}
+
+/* ===== Radio buttons anywhere else: a round check that fills in ===== */
+.studio-v2 input[type=radio]{
+  -webkit-appearance:none;appearance:none;width:18px;height:18px;margin:0 8px 0 0;border-radius:999px;vertical-align:middle;flex:none;
+  border:1.5px solid color-mix(in srgb,var(--ink) 26%,transparent);background:color-mix(in srgb,var(--ink) 4%,transparent);
+  cursor:pointer;transition:background .25s var(--st-ease),border-color .25s,box-shadow .25s;
+  background-repeat:no-repeat;background-position:center;background-size:0 0;
+}
+.studio-v2 input[type=radio]:hover{border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.studio-v2 input[type=radio]:checked{border-color:transparent;background-color:var(--accent);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 12.5l3.2 3.2L17 9' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size:72%;box-shadow:0 4px 12px -4px var(--accent-glow,var(--accent))}
+.studio-v2 input[type=radio]:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+
+@media (prefers-reduced-motion:reduce){
+  .studio-v2 select,.studio-v2 .layout-opt span,.studio-v2 .layout-opt span::after,.studio-v2 .swatch,.studio-v2 .swatch span,.studio-v2 .swatch span::after,.studio-v2 input[type=radio]{transition:none !important;transform:none !important}
+}
