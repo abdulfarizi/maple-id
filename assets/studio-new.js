@@ -26,6 +26,9 @@
       take: ['seller shop'] }
   ];
 
+  // Card-details fields that live inside Star look but belong to the Profile section
+  var PROFILE_FIELDS = ['cardTag', 'statusText', 'statusMode', 'footerText', 'avatarShape', 'bannerGray', 'bannerDim'];
+
   document.documentElement.classList.add('studio-new');
 
   function label(legend) {
@@ -84,6 +87,22 @@
       if (!g) { console.warn('[studio-new] section not in any group, kept in Profile:', name); g = GROUPS[0]; }
       byKey[g.key].push(f);
     });
+
+    // Card details: the Star look fields that describe the card itself move into a Profile section.
+    // The new section keeps the same Star-only visibility, so it still appears only on the Star layout.
+    var starLook = byKey.look.filter(function (f) { return label(f.querySelector(':scope > legend')) === 'star look'; })[0];
+    if (starLook) {
+      var details = document.createElement('fieldset');
+      details.setAttribute('data-star-only', '');
+      details.hidden = starLook.hidden;
+      details.innerHTML = '<legend>Card details</legend>';
+      PROFILE_FIELDS.forEach(function (n) {
+        var input = starLook.querySelector('[name="' + n + '"]');
+        var field = input && input.closest('.field');
+        if (field) details.appendChild(field);
+      });
+      if (details.querySelector('.field')) byKey.profile.push(details);
+    }
 
     var anchor = form.querySelector('.savebar');
     GROUPS.forEach(function (g) {
