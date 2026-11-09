@@ -1,6 +1,6 @@
 /* M-ID · Studio (new layout) — organizing layer, loaded only by /studio-new.
  * The Studio itself (fields, saving, music, frames, builder) is the existing one and is not touched.
- * This only reshapes what it rendered: collapsible sections, tips behind an info button, expand/collapse all.
+ * This reshapes what it rendered: the sections are moved into the new groups, collapsible sections, tips behind an info button, expand/collapse all.
  * The address bar is left alone: the app routes on /studio, so rewriting the URL here sent people back to the home page. */
 (function () {
   'use strict';
@@ -10,9 +10,26 @@
   var saved = {};
   try { var s0 = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (s0 && typeof s0 === 'object') saved = s0; } catch (e) {}
 
+  // New groups. "take" lists the section names (lowercase, as shown in the legend) that go in each group.
+  var GROUPS = [
+    { key: 'profile', label: 'Profile', icon: 'fa-regular fa-user',
+      take: ['identity', 'photos', 'contact', 'community', 'online hours', 'gear'] },
+    { key: 'links', label: 'Links & Donations', icon: 'fa-solid fa-link',
+      take: ['socials & channels', 'game ids', 'support & donations'] },
+    { key: 'look', label: 'Look & Theme', icon: 'fa-solid fa-palette',
+      take: ['card layout', 'qr code symbol', 'card frame', 'theme', 'star look', 'glass slides background', 'free canvas', 'card features'] },
+    { key: 'media', label: 'Music & Sounds', icon: 'fa-solid fa-compact-disc',
+      take: ['sounds', 'bottom music player', 'music i like', 'anime'] },
+    { key: 'extras', label: 'Extras', icon: 'fa-solid fa-wand-magic-sparkles',
+      take: ['visitor controls'] },
+    { key: 'shop', label: 'Shop & Payments', icon: 'fa-solid fa-bag-shopping',
+      take: ['seller shop'] }
+  ];
+
   document.documentElement.classList.add('studio-new');
 
   function label(legend) {
+    if (!legend) return '';
     var n = legend.firstChild;
     var t = (n && n.nodeType === 3 ? n.textContent : legend.textContent) || '';
     return t.replace(/\s+/g, ' ').trim().toLowerCase();
@@ -37,12 +54,71 @@
     window.onbeforeunload = function () { return (window.dgStudioDirty && window.dgStudioDirty()) ? true : null; };
   }
 
+  // Move every section into its new group, rebuild the tab bar, and drop the old tabs.
+  function regroup(form) {
+    if (form.__regrouped) return;
+    form.__regrouped = true;
+
+    var oldPanels = Array.prototype.slice.call(form.querySelectorAll(':scope > .tab-panel'));
+    if (!oldPanels.length) return;
+    var fieldsets = [];
+    oldPanels.forEach(function (p) {
+      Array.prototype.forEach.call(p.children, function (c) { if (c.tagName === 'FIELDSET') fieldsets.push(c); });
+    });
+    var hints = {};
+    oldPanels.forEach(function (p) {
+      Array.prototype.forEach.call(p.children, function (c) {
+        if (c.tagName === 'P' && c.classList.contains('panel-hint')) hints[p.dataset.panel] = c;
+      });
+    });
+    var notes = [];
+    oldPanels.forEach(function (p) {
+      Array.prototype.forEach.call(p.children, function (c) { if (c.classList && c.classList.contains('note-card')) notes.push(c); });
+    });
+
+    var byKey = {};
+    GROUPS.forEach(function (g) { byKey[g.key] = []; });
+    fieldsets.forEach(function (f) {
+      var name = label(f.querySelector(':scope > legend'));
+      var g = GROUPS.filter(function (x) { return x.take.indexOf(name) !== -1; })[0];
+      if (!g) { console.warn('[studio-new] section not in any group, kept in Profile:', name); g = GROUPS[0]; }
+      byKey[g.key].push(f);
+    });
+
+    var anchor = form.querySelector('.savebar');
+    GROUPS.forEach(function (g) {
+      var panel = document.createElement('div');
+      panel.className = 'tab-panel';
+      panel.setAttribute('data-panel', g.key);
+      panel.hidden = true;
+      if (hints[g.key]) panel.appendChild(hints[g.key]);
+      if (g.key === 'look') notes.forEach(function (n) { panel.appendChild(n); });
+      byKey[g.key].forEach(function (f) { panel.appendChild(f); });
+      form.insertBefore(panel, anchor);
+    });
+    oldPanels.forEach(function (p) { p.remove(); });
+
+    var nav = form.querySelector('nav.tabs');
+    if (nav) {
+      nav.innerHTML = GROUPS.map(function (g) {
+        return '<button type="button" role="tab" class="tab" data-tab="' + g.key + '"><i class="' + g.icon + '"></i> ' + g.label + '</button>';
+      }).join('');
+    }
+
+    // show the last tab the person used if it still exists, otherwise Profile
+    var start = 'profile';
+    try { var t = sessionStorage.getItem('dg-tab'); if (t && GROUPS.some(function (g) { return g.key === t; })) start = t; } catch (e) {}
+    if (typeof form.__tab === 'function') form.__tab(start);
+  }
+
   function enhance(st) {
     if (st.__st2) return;
     var form = st.querySelector('#editor');
     if (!form) return;
     st.__st2 = true;
     st.classList.add('studio-v2');
+
+    regroup(form);
 
     Array.prototype.forEach.call(form.querySelectorAll('.tab-panel'), function (panel) {
       var sections = Array.prototype.filter.call(panel.children, function (c) { return c.tagName === 'FIELDSET'; });
