@@ -549,6 +549,12 @@
     }, { threshold: [0, 0.6] });
     statEl = moreEl = listEl = null;
   }
+  /* Feed videos have sound: stop them when the app goes to the background or loses focus (Android recents). */
+  function quietFeed() { if (!swipeEl) return; swipeEl.querySelectorAll('video').forEach(function (v) { try { v.pause(); } catch (e) {} }); }
+  window.addEventListener('pagehide', quietFeed);
+  window.addEventListener('blur', quietFeed);
+  document.addEventListener('freeze', quietFeed);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) quietFeed(); });
   function closeSwipe() {
     if (swipeIO) swipeIO.disconnect(); if (vidIO) vidIO.disconnect();
     if (swipeEl) swipeEl.remove(); if (swipeTop) swipeTop.remove();
