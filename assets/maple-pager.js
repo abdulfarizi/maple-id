@@ -98,7 +98,6 @@
   var M = { x: [], w: [], key: '' };                   // cached tab geometry: no layout reads while scrolling
   function measure(it) {
     var key = it.length + ':' + (it[0] ? it[0].offsetWidth : 0) + ':' + (dockEl() ? dockEl().offsetWidth : 0);
-    if (M.key === key && M.x.length === it.length) return;
     M.key = key; M.x = []; M.w = [];
     for (var i = 0; i < it.length; i++) { M.x.push(it[i].offsetLeft); M.w.push(it[i].offsetWidth); }
     var ind = dockEl() && dockEl().querySelector('.dock-ind'); if (ind) ind.dataset.base = M.w[0] || 84;

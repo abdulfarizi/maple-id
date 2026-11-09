@@ -156,6 +156,7 @@ body { letter-spacing: -.012em; }
 .brand .brand-emblem { display: block; height: 40px !important; width: auto !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
 .brand .brand-wordmark { display: block; height: 24px !important; width: auto !important; border: 0 !important; box-shadow: none !important; background: transparent !important; }
 @media (max-width: 520px) {
-  .brand .brand-emblem { height: 34px !important; }
-  .brand .brand-wordmark { height: 20px !important; }
+  .brand { gap: 6px !important; }
+  .brand .brand-emblem { height: 30px !important; }
+  .brand .brand-wordmark { height: 18px !important; }
 }
