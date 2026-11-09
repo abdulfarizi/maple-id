@@ -30,6 +30,8 @@
   /* a star card on screen shows its own Audio Player section: the bottom mini-player steps aside for it */
   // known from the profile itself (no waiting for the card to load), so the mini-player never pops in and out
   function inlineNow() { var p = profileNow(); return !!(p && p.layout === 'star' && p.music !== false && S.track && S.track.slug === p.slug && starFrame()); }
+  /* the free canvas (builder layout) has no room for the bar: it stays hidden there; star cards show it */
+  function hiddenNow() { var p = profileNow(); return !!(p && p.layout === 'builder'); }
   function fmt(ms) { ms = Math.max(0, ms | 0); var s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
   function starFrame() {
     var p = pane(); var f = p && document.querySelector('#pg-' + p + ' iframe.star-frame');
@@ -109,8 +111,8 @@
 
   /* ───── layout space: nothing sits hidden behind the mini-player ───── */
   function space() {
-    var inl = inlineNow(); document.body.classList.toggle('mp-inline', inl);
-    var on = S.shown && !S.open && !inl;
+    var hid = hiddenNow(); document.body.classList.toggle('mp-inline', hid);
+    var on = S.shown && !S.open && !hid;
     document.documentElement.style.setProperty('--mp-space', on ? (S.compact ? '64px' : '78px') : '0px');
     document.body.classList.toggle('has-mp', S.shown);
     toFrames({ maple: 'mp-space', px: on ? (S.compact ? 64 : 78) : 0 });
@@ -118,7 +120,7 @@
   function show(on) {
     build();
     S.shown = !!on; el.mini.hidden = !on;
-    document.body.classList.toggle('mp-inline', inlineNow());
+    document.body.classList.toggle('mp-inline', hiddenNow());
     requestAnimationFrame(function () { el.mini.classList.toggle('in', !!on); });
     if (!on && S.open) setOpen(false);
     space();

@@ -253,3 +253,7 @@ html.mode-swap .mpx-mini,html.mode-swap .mpx-sheet{transition:none!important}
 .mpx-ex:hover{color:var(--text);background:color-mix(in srgb,var(--text) 14%,transparent)}
 .mpx-mini.compact .mpx-art{width:40px;height:40px}
 @media (prefers-reduced-motion:reduce){.mpx-mini.playing .mpx-art{animation:none}}
+
+/* v15 · the full-screen player: no empty box or gap where the embed is not loaded, and the artwork and controls sit centred in the space under the header */
+.mpx-embed-wrap:not(.mpx-ghost):not(:has(iframe)){display:none}
+.mpx-body{align-content:safe center}
