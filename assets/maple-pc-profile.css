@@ -4,17 +4,21 @@
    Phones and tablets keep the single column. */
 .card-page .pc-left { display: contents; }
 .pc-cta { display: none; }
-@media (min-width: 900px) and (min-height: 640px) {
+@media (min-width: 900px) and (min-height: 640px), (min-width: 640px) and (orientation: landscape) {
   .card-page:not(.dk-page) {
-    display: grid !important; grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
-    column-gap: 56px; row-gap: 24px; align-items: start;
+    display: grid !important; grid-template-columns: minmax(230px, 340px) minmax(0, 1fr);
+    column-gap: 28px; row-gap: 20px; align-items: start;
     max-width: 1440px !important; width: 100%; box-sizing: border-box; margin: 0 auto;
-    padding: 32px 48px 96px;
+    padding: 20px 24px 96px;
   }
+  .card-page:not(.dk-page) > * { min-width: 0; }
+  /* the left column stays pinned while the right column scrolls */
   .card-page:not(.dk-page) > .pc-left {
-    display: flex; flex-direction: column; gap: 16px; min-width: 0;
-    grid-column: 1; grid-row: 1; position: sticky; top: calc(var(--tb-h, 64px) + 24px);
+    display: flex; flex-direction: column; gap: 14px; min-width: 0;
+    grid-column: 1; grid-row: 1; position: sticky; top: calc(var(--tb-h, 64px) + 12px); align-self: start;
   }
+  /* short landscape screens: scale the card down so it fits without being cut off */
+  @media (max-height: 560px) { .card-page:not(.dk-page) > .pc-left { zoom: .78; } }
   .card-page:not(.dk-page) > .pc-left > .idcard { position: relative; }
   .card-page:not(.dk-page) > .pc-cta {
     display: flex; align-items: center; justify-content: space-between; gap: 14px;
