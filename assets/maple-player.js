@@ -286,7 +286,7 @@
             yt.ready = true; yt.busy = false;
             try { var v = yt.p.getVideoData && yt.p.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || String(v.author || '').replace(/\s*-\s*Topic$/i, ''); paint(); loadLyrics(); } } catch (e) {}
             try { var d = yt.p.getDuration(); if (d > 0) S.dur = d * 1000; } catch (e) {}
-            if (yt.want) { yt.want = false; try { yt.p.playVideo(); } catch (e) {} setTimeout(function () { if (S.engine === 'yt' && !S.playing && !S.buffering && !S.quiet) { S.reveal = true; setOpen(true); paint(); } }, 3500); }
+            if (yt.want) { yt.want = false; try { yt.p.playVideo(); } catch (e) {} }
             ytStartTick();
           },
           onStateChange: function (e) {
@@ -462,8 +462,6 @@
     }
     if (ctrl && ctrlReady) { try { ctrl.togglePlay(); } catch (e) {} return; }
     embedPlay();
-    // some browsers only start Spotify from a tap inside its own player: show it if nothing started
-    setTimeout(function () { if (!S.playing && !S.buffering && S.engine === 'embed') { S.reveal = true; setOpen(true); paint(); } }, 3500);
   }
   function seekMs(ms) {
     ms = Math.max(0, Math.min(S.dur || ms, ms));
@@ -541,7 +539,6 @@
     if (S.buffering) return;                                           // the automatic attempt is still in flight
     if (e && e.target && (el.mini.contains(e.target) || el.sheet.contains(e.target))) return;   // the player's own buttons handle themselves
     apDisarm(); toggle();
-    if (S.engine === 'yt') setTimeout(function () { if (S.engine === 'yt' && !S.playing && !S.buffering) { S.reveal = true; setOpen(true); paint(); } }, 3500);
   }
   function autoLoad(track, src) {
     apUnmute(); AP.url = track.url; AP.off = false; S.quiet = true;   // quiet: no pop-up player if the browser says no
