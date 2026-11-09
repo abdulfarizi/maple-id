@@ -124,7 +124,33 @@
       + '.fm-n{display:flex;gap:10px;padding:11px 12px;border:1px solid var(--line,#ffffff1f);border-radius:14px;margin-bottom:8px;background:var(--panel,#ffffff0a)}.fm-n.new{border-color:var(--accent,#ff7a1a)}'
       + '.fm-more{display:block;margin:6px auto}.fm-more[hidden]{display:none}.fm-err{color:#ff8a80;margin:8px 0 0;font-size:13px}.fm-empty{text-align:center;color:var(--muted,#9a9aa6);padding:36px 10px}'
       + '.dock-post{flex:none;width:48px;height:48px;margin:0 4px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:var(--accent,#ff7a1a);color:var(--on-accent,#fff);font-size:18px;cursor:pointer;box-shadow:0 6px 18px color-mix(in srgb,var(--accent,#ff7a1a) 40%,transparent);touch-action:manipulation}'
-      + '.dock-post:active{transform:scale(.92)}.dock-post:focus-visible{outline:2px solid var(--accent,#ff7a1a);outline-offset:3px}';
+      + '.dock-post:active{transform:scale(.92)}.dock-post:focus-visible{outline:2px solid var(--accent,#ff7a1a);outline-offset:3px}'
+      + '.fm-new{position:fixed;inset:0;z-index:3550;max-width:none;padding:0;overflow:auto;background:var(--bg,#0b0b0d);-webkit-overflow-scrolling:touch}'
+      + '.fm-new-in{max-width:620px;margin:0 auto;padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 40px}'
+      + '.fm-new-head{display:flex;align-items:center;gap:10px;margin:0 0 12px}.fm-new-head h2{flex:1;margin:0;font-size:17px;font-weight:600;text-align:center}'
+      + '.fm-new-x{flex:none;width:40px;height:40px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:var(--panel,#ffffff12);color:inherit;cursor:pointer}'
+      + '.fm-new-x svg{width:20px;height:20px}.fm-new .fm-card{margin:0}.fm-new-head .fm-btn{min-width:72px}'
+      + '.fm-prev{position:relative;margin:10px 0 0;border-radius:16px;overflow:hidden;background:#000}'
+      + '.fm-prev img,.fm-prev video{display:block;width:100%;max-height:52vh;object-fit:contain}'
+      + '.fm-prev .fm-new-x{position:absolute;top:8px;right:8px;background:#000a}'
+      + '.fm-note{color:var(--muted,#9a9aa6);font-size:13px;margin:8px 0 0}'
+      + '.fm-swipe{position:fixed;inset:0;z-index:80;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;background:#000;scrollbar-width:none;-webkit-overflow-scrolling:touch}'
+      + '.fm-swipe::-webkit-scrollbar{display:none}'
+      + '.fm-slide{position:relative;height:100%;scroll-snap-align:start;scroll-snap-stop:always;overflow:hidden;background:#000;color:#fff}'
+      + '.fm-slide-media{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}'
+      + '.fm-slide-shade{position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(#0000,#000e);pointer-events:none}'
+      + '.fm-slide-info{position:absolute;left:14px;right:84px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);text-shadow:0 1px 8px #000a}'
+      + '.fm-slide-info h3{margin:8px 0 4px;font-size:17px;line-height:1.25;color:#fff}'
+      + '.fm-slide-info p{margin:0 0 6px;font-size:14px;line-height:1.4;color:#fffe;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}'
+      + '.fm-slide-info .fm-meta{color:#fffc;font-size:12px}'
+      + '.fm-slide-who{display:flex;align-items:center;gap:8px}.fm-slide-who>*:first-child{flex:none;width:36px;height:36px;border-radius:50%}'
+      + '.fm-slide-rail{position:absolute;right:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);display:flex;flex-direction:column;align-items:center;gap:12px}'
+      + '.fm-rail-btn{min-width:52px;min-height:52px;padding:0 10px;border:0;border-radius:26px;background:#0008;color:#fff;font:600 13px var(--sans,system-ui,sans-serif);display:grid;place-items:center;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}'
+      + '.fm-rail-btn svg{width:22px;height:22px}.fm-rail-btn.on{color:var(--accent,#ff7a1a)}'
+      + '.fm-swipe-top{position:fixed;left:0;right:0;top:0;z-index:85;padding:calc(env(safe-area-inset-top,0px) + 10px) 12px 26px;background:linear-gradient(#000d,#0000);pointer-events:none}'
+      + '.fm-swipe-top .fm-chips{pointer-events:auto;padding:0}'
+      + '.fm-slide-pin{position:absolute;left:14px;top:calc(env(safe-area-inset-top,0px) + 70px)}'
+      + '.fm-slide-msg{height:100%;display:grid;place-items:center;padding:24px;text-align:center;color:#ddd;scroll-snap-align:start}';
     document.head.appendChild(st);
   }
 
@@ -132,6 +158,7 @@
   /* ---------- feed ---------- */
   function load(reset) {
     if (S.busy) return; S.busy = true; S.err = '';
+    if (reset) resetSwipe();
     var before = !reset && S.posts.length ? S.posts[S.posts.length - 1].at : '';
     if (reset) { S.posts = []; S.pinned = []; if (statEl) statEl.textContent = 'Loading\u2026'; }
     var p = 'posts?cat=' + encodeURIComponent(S.cat) + (S.q ? '&q=' + encodeURIComponent(S.q) : '') + (before ? '&before=' + encodeURIComponent(before) : '');
@@ -142,6 +169,7 @@
     });
   }
   function draw() {
+    if (swipeEl) return drawSwipe();
     if (!listEl) return; listEl.textContent = ''; statEl.textContent = '';
     if (S.err) statEl.appendChild(h('p', { class: 'fm-err', role: 'alert', text: S.err }));
     var posts = S.posts.slice(); if (S.sort === 'top') posts.sort(function (a, b) { return (b.likes + b.comments) - (a.likes + a.comments); });
@@ -260,15 +288,8 @@
   }
 
   /* ---------- a post ---------- */
-  function card(p) {
-    var el = h('article', { class: 'fm-card fm-post' + (p.pinned ? ' pin' : '') }), likeBtn, cmBtn, pop = null, dots = null, items = [];
-    var parts = who(p), headAct = h('div', { class: 'fm-head-act' });
-    var meta = h('span', { class: 'fm-meta' }, [ago(p.at), h('span', { class: 'fm-cat', text: CAT_NAME[p.cat] || 'General' })]);
-    if (p.pinned) meta.appendChild(h('span', { class: 'fm-pinned', text: 'Pinned' }));
-    if (!p.mine && okSlug(p.slug)) headAct.appendChild(ico(ICO.msg, 'fm-ico', 'Message ' + (p.name || 'this member'), function () { go('thread', p.slug); }));
-    if (!p.mine) items.push(['Report', function () { report('post', p.id); }]);
-    if (S.mod) items.push([p.pinned ? 'Unpin' : 'Pin', function () { api('posts/' + p.id + '/pin', { method: 'POST', body: { pinned: !p.pinned } }).then(function (r) { if (r.ok) load(true); else alert((r.j && r.j.error) || 'Could not pin. Has the part-2 SQL been run?'); }); }]);
-    if (p.mine || S.mod) items.push(['Delete', function () { if (!confirm('Delete this post?')) return; api('posts/' + p.id, { method: 'DELETE' }).then(function (r) { if (r.ok) { S.posts = S.posts.filter(function (x) { return x.id !== p.id; }); S.pinned = S.pinned.filter(function (x) { return x.id !== p.id; }); draw(); } else alert('Could not delete it.'); }); }, true]);
+  function menuButton(items, cls) {
+    var pop = null, dots = null;
     function closePop() { if (!pop) return; pop.remove(); pop = null; dots.setAttribute('aria-expanded', 'false'); document.removeEventListener('pointerdown', outside, true); document.removeEventListener('click', outside, true); document.removeEventListener('keydown', esc); window.removeEventListener('scroll', closePop, true); window.removeEventListener('resize', closePop); }
     // The menu is a fixed layer on <body>, anchored to its button: it is never clipped by the card or covered by the dock/player.
     // Opens below the button, flips above it when there is no room, and stays inside the screen edges.
@@ -282,21 +303,39 @@
     }
     function outside(e) { if (pop && !pop.contains(e.target) && !dots.contains(e.target)) closePop(); }
     function esc(e) { if (e.key === 'Escape' && pop) { closePop(); dots.focus(); } }
-    if (items.length) {
-      dots = ico(ICO.dots, 'fm-ico', 'More actions', function () {
-        if (pop) { closePop(); return; }
-        pop = h('div', { class: 'fm-pop', role: 'menu' }, items.map(function (it) { return h('button', { type: 'button', role: 'menuitem', class: 'fm-pop-i' + (it[2] ? ' bad' : ''), text: it[0], onclick: function () { closePop(); it[1](); } }); }));
-        pop.addEventListener('click', function (e) { e.stopPropagation(); });
-        document.body.appendChild(pop); placePop(); dots.setAttribute('aria-expanded', 'true');
-        document.addEventListener('pointerdown', outside, true); document.addEventListener('click', outside, true); document.addEventListener('keydown', esc);
-        window.addEventListener('scroll', closePop, true); window.addEventListener('resize', closePop);
-        var f = pop.querySelector('button'); if (f) f.focus({ preventScroll: true });
-      });
-      dots.setAttribute('aria-haspopup', 'menu'); dots.setAttribute('aria-expanded', 'false'); headAct.appendChild(dots);
-    }
+    if (!items.length) return null;
+    dots = ico(ICO.dots, cls || 'fm-ico', 'More actions', function () {
+      if (pop) { closePop(); return; }
+      pop = h('div', { class: 'fm-pop', role: 'menu' }, items.map(function (it) { return h('button', { type: 'button', role: 'menuitem', class: 'fm-pop-i' + (it[2] ? ' bad' : ''), text: it[0], onclick: function () { closePop(); it[1](); } }); }));
+      pop.addEventListener('click', function (e) { e.stopPropagation(); });
+      document.body.appendChild(pop); placePop(); dots.setAttribute('aria-expanded', 'true');
+      document.addEventListener('pointerdown', outside, true); document.addEventListener('click', outside, true); document.addEventListener('keydown', esc);
+      window.addEventListener('scroll', closePop, true); window.addEventListener('resize', closePop);
+      var f = pop.querySelector('button'); if (f) f.focus({ preventScroll: true });
+    });
+    dots.setAttribute('aria-haspopup', 'menu'); dots.setAttribute('aria-expanded', 'false');
+    return dots;
+  }
+  function postItems(p) {
+    var items = [];
+    if (!p.mine) items.push(['Report', function () { report('post', p.id); }]);
+    if (S.mod) items.push([p.pinned ? 'Unpin' : 'Pin', function () { api('posts/' + p.id + '/pin', { method: 'POST', body: { pinned: !p.pinned } }).then(function (r) { if (r.ok) load(true); else alert((r.j && r.j.error) || 'Could not pin. Has the part-2 SQL been run?'); }); }]);
+    if (p.mine || S.mod) items.push(['Delete', function () { if (!confirm('Delete this post?')) return; api('posts/' + p.id, { method: 'DELETE' }).then(function (r) { if (r.ok) { S.posts = S.posts.filter(function (x) { return x.id !== p.id; }); S.pinned = S.pinned.filter(function (x) { return x.id !== p.id; }); draw(); } else alert('Could not delete it.'); }); }, true]);
+    return items;
+  }
+  function card(p) {
+    var el = h('article', { class: 'fm-card fm-post' + (p.pinned ? ' pin' : '') }), likeBtn, cmBtn, items = [];
+    var parts = who(p), headAct = h('div', { class: 'fm-head-act' });
+    var meta = h('span', { class: 'fm-meta' }, [ago(p.at), h('span', { class: 'fm-cat', text: CAT_NAME[p.cat] || 'General' })]);
+    if (p.pinned) meta.appendChild(h('span', { class: 'fm-pinned', text: 'Pinned' }));
+    if (!p.mine && okSlug(p.slug)) headAct.appendChild(ico(ICO.msg, 'fm-ico', 'Message ' + (p.name || 'this member'), function () { go('thread', p.slug); }));
+    items = postItems(p);
+    if (items.length) headAct.appendChild(menuButton(items));
     el.appendChild(h('div', { class: 'fm-head' }, [parts[0], h('div', { class: 'fm-who' }, [h('div', { class: 'tx' }, [parts[1], meta])]), headAct]));
     el.appendChild(h('h3', { text: p.title }));
-    if (p.body) el.appendChild(h('p', { class: 'fm-body', text: p.body }));
+    var pb = splitMedia(p.body);
+    if (pb.text) el.appendChild(h('p', { class: 'fm-body', text: pb.text }));
+    if (pb.kind && pb.url) el.appendChild(mediaEl(pb.kind, pb.url));
     if (p.image && /^https:\/\//i.test(p.image)) el.appendChild(h('img', { class: 'fm-img', src: p.image, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }));
     var heart = function () { return (p.liked ? '\u2665 ' : '\u2661 ') + p.likes; };
     likeBtn = btn(heart(), p.liked ? 'on' : '', null, { 'aria-pressed': String(!!p.liked), 'aria-label': 'Like' });
@@ -357,48 +396,191 @@
     row.appendChild(parts[0]); row.appendChild(body); return row;
   }
 
-  var openComposer = null, pendingCompose = false;
-  function composer() {
-    var wrap = h('div');
-    var start = h('button', { type: 'button', class: 'fm-start' }, [h('span', { text: 'What\u2019s on your mind?' }), h('b', { text: 'Post' })]);
-    var form = h('div', { class: 'fm-card', hidden: true });
+  /* ---------- new post: a full-screen page opened from the centre "+" ----------
+     Photos and videos are compressed here to 576p (short side 576, like TikTok) before upload. */
+  var MAX_SIDE = 576, MAX_VIDEO_SEC = 180, newPage = null;
+  function fit(w, h) {
+    var s = Math.min(w, h) > MAX_SIDE ? MAX_SIDE / Math.min(w, h) : 1;
+    return { w: Math.max(2, 2 * Math.round(w * s / 2)), h: Math.max(2, 2 * Math.round(h * s / 2)) };
+  }
+  function compressImage(file) {
+    if (/gif/i.test(file.type)) return Promise.resolve(file);   // keep GIFs animated
+    return new Promise(function (ok, bad) {
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function () {
+        var d = fit(im.naturalWidth, im.naturalHeight), c = document.createElement('canvas');
+        c.width = d.w; c.height = d.h; c.getContext('2d').drawImage(im, 0, 0, d.w, d.h); URL.revokeObjectURL(url);
+        c.toBlob(function (b) { if (b) ok(b); else bad(new Error('Could not compress the picture.')); }, 'image/jpeg', 0.86);
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); bad(new Error('Could not read that picture.')); };
+      im.src = url;
+    });
+  }
+  function compressVideo(file, onp) {
+    return new Promise(function (ok, bad) {
+      var v = document.createElement('video'), url = URL.createObjectURL(file), failed = false;
+      v.playsInline = true; v.preload = 'auto'; v.volume = 0; v.src = url;   // the sound is captured, not played out loud
+      v.onerror = function () { bad(new Error('Could not read that video.')); };
+      var setup = function () {
+        if (v.duration > MAX_VIDEO_SEC) return bad(new Error('Videos must be 3 minutes or shorter.'));
+        var type = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].filter(function (t) { return window.MediaRecorder && MediaRecorder.isTypeSupported(t); })[0];
+        if (!type) return bad(new Error('This browser cannot compress video. Try a photo instead.'));
+        var d = fit(v.videoWidth, v.videoHeight), c = document.createElement('canvas'), x = c.getContext('2d');
+        c.width = d.w; c.height = d.h;
+        var stream = c.captureStream(30);
+        try { var vs = v.captureStream ? v.captureStream() : null; if (vs && vs.getAudioTracks()[0]) stream.addTrack(vs.getAudioTracks()[0]); } catch (e) {}
+        var rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 1000000, audioBitsPerSecond: 96000 }), parts = [];
+        rec.ondataavailable = function (e) { if (e.data && e.data.size) parts.push(e.data); };
+        rec.onstop = function () { URL.revokeObjectURL(url); if (!failed) ok(new Blob(parts, { type: type.split(';')[0] })); };
+        var draw = function () { if (v.paused || v.ended) return; x.drawImage(v, 0, 0, d.w, d.h); if (onp) onp(v.currentTime / v.duration); requestAnimationFrame(draw); };
+        v.onplaying = draw;
+        v.onended = function () { x.drawImage(v, 0, 0, d.w, d.h); setTimeout(function () { rec.stop(); }, 150); };
+        rec.start(500);
+        v.play().catch(function () { failed = true; try { rec.stop(); } catch (e) {} bad(new Error('Could not start compressing the video.')); });
+      };
+      v.onloadedmetadata = function () {
+        if (isFinite(v.duration)) return setup();
+        // some recordings (WebM from a camera or screen recorder) report no length until read to the end: seek there to find it
+        v.ondurationchange = function () { if (!isFinite(v.duration)) return; v.ondurationchange = null; v.currentTime = 0; setup(); };
+        v.currentTime = 1e101;
+      };
+      v.src = url;
+    });
+  }
+  function openCreate() {
+    if (newPage) return;
+    var media = null, busy = false, pickFile = h('input', { type: 'file', accept: 'image/*,video/*', hidden: '' });
     var cat = h('select', { 'aria-label': 'Category' }, CATS.slice(1).map(function (c) { return h('option', { value: c[0], text: c[1] }); }));
     var title = h('input', { type: 'text', maxlength: '120', placeholder: 'Title', 'aria-label': 'Title' });
-    var body = h('textarea', { maxlength: '2000', placeholder: 'What\u2019s on your mind?', 'aria-label': 'Post text' });
-    var img = h('input', { type: 'text', maxlength: '500', placeholder: 'Image or GIF link (https://\u2026), optional', 'aria-label': 'Image link' });
-    var err = h('p', { class: 'fm-err', role: 'alert', hidden: true }), post = btn('Post', 'pri'), cancel = btn('Cancel');
-    [cat, title, body, img, err].forEach(function (x) { form.appendChild(x); });
-    form.appendChild(h('div', { class: 'fm-row', style: 'margin-top:10px' }, [post, cancel]));
-    var toggle = function (v) { form.hidden = !v; start.hidden = v; if (v) title.focus(); };
-    start.addEventListener('click', function () { toggle(true); }); cancel.addEventListener('click', function () { toggle(false); });
-    post.addEventListener('click', function () {
-      err.hidden = true; if (!title.value.trim()) { err.hidden = false; err.textContent = 'Give your post a title.'; return; }
-      post.disabled = true;
-      api('posts', { method: 'POST', body: { category: cat.value, title: title.value.trim(), body: body.value.trim(), image: img.value.trim() } }).then(function (r) {
-        post.disabled = false;
-        if (!r.ok) { err.hidden = false; err.textContent = (r.j && r.j.error) || 'Could not post.'; return; }
-        title.value = body.value = img.value = ''; toggle(false); load(true);
-      });
+    var body = h('textarea', { maxlength: '2000', placeholder: 'What’s on your mind?', 'aria-label': 'Post text' });
+    var prev = h('div', { class: 'fm-prev', hidden: '' }), note = h('p', { class: 'fm-note', role: 'status', hidden: '' });
+    var err = h('p', { class: 'fm-err', role: 'alert', hidden: '' });
+    var post = btn('Post', 'pri'), addMedia = btn('Add photo or video', '');
+    var x = ico(ICO.x, 'fm-new-x', 'Close', function () { if (!busy) closeCreate(); });
+    var page = h('div', { class: 'fm fm-new', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'New post' }, [
+      h('div', { class: 'fm-new-in' }, [
+        h('div', { class: 'fm-new-head' }, [x, h('h2', { text: 'New post' }), post]),
+        h('div', { class: 'fm-card' }, [cat, title, body, prev, h('div', { class: 'fm-row', style: 'margin-top:10px' }, [addMedia]), note, err, pickFile])
+      ])
+    ]);
+    function say(msg, bad) { note.hidden = !!bad; err.hidden = !bad; (bad ? err : note).textContent = msg; note.hidden = !!bad || !msg; }
+    function clearMedia() { if (media && media.url) URL.revokeObjectURL(media.url); media = null; prev.hidden = true; prev.innerHTML = ''; }
+    addMedia.addEventListener('click', function () { if (!busy) pickFile.click(); });
+    pickFile.addEventListener('change', function () {
+      var f = pickFile.files && pickFile.files[0]; pickFile.value = ''; if (!f) return;
+      var k = kindOf(f); err.hidden = true;
+      if (!k || k === 'aud') return say('Choose a photo or a video.', true);
+      if (k === 'img' && f.size > 30 * 1048576) return say('That picture is too big (30 MB max).', true);
+      if (k === 'vid' && f.size > 500 * 1048576) return say('That video is too big (500 MB max).', true);
+      clearMedia(); var url = URL.createObjectURL(f); media = { file: f, kind: k, url: url };
+      var el = k === 'img' ? h('img', { src: url, alt: '' }) : h('video', { src: url, controls: '', muted: '', playsinline: '', preload: 'metadata' });
+      var rm = ico(ICO.x, 'fm-new-x', 'Remove', function () { clearMedia(); });
+      prev.appendChild(el); prev.appendChild(rm); prev.hidden = false;
+      say('');
     });
-    // the post form is opened from the centre "+" in the dock (no bar at the top of the feed)
-    openComposer = function () { toggle(true); };
-    wrap.appendChild(form);
-    if (pendingCompose) { pendingCompose = false; toggle(true); }
-    return wrap;
+    post.addEventListener('click', function () {
+      if (busy) return; err.hidden = true;
+      if (!title.value.trim()) return say('Give your post a title.', true);
+      busy = true; post.disabled = true;
+      var imgUrl = '', text = body.value.trim();
+      var prep = !media ? Promise.resolve()
+        : media.kind === 'img'
+          ? (say('Compressing picture…'), compressImage(media.file).then(function (b) { say('Uploading…'); return upload(b, 'img'); }).then(function (u) { imgUrl = u; }))
+          : (say('Compressing video… 0%'), compressVideo(media.file, function (p) { say('Compressing video… ' + Math.round(p * 100) + '%'); })
+              .then(function (b) { say('Uploading…'); return upload(b, 'vid'); })
+              .then(function (u) { text = (text ? text + '\n' : '') + '[[vid:' + u + ']]'; }));
+      prep.then(function () {
+        say('Publishing…');
+        return api('posts', { method: 'POST', body: { category: cat.value, title: title.value.trim(), body: text, image: imgUrl } });
+      }).then(function (r) {
+        if (!r.ok) throw new Error((r.j && r.j.error) || 'Could not post.');
+        clearMedia(); closeCreate(); load(true);
+      }).catch(function (e) { busy = false; post.disabled = false; say((e && e.message) || 'Could not post.', true); });
+    });
+    newPage = page; document.body.appendChild(page); title.focus();
+    document.addEventListener('keydown', escNew);
   }
-  function feedView() {
-    viewEl.appendChild(composer());
-    var chips = h('div', { class: 'fm-chips', role: 'tablist', 'aria-label': 'Categories' });
-    CATS.forEach(function (c) { var b = btn(c[0] === 'all' ? 'All' : c[1], c[0] === S.cat ? 'on' : '', null, { role: 'tab', 'aria-selected': String(c[0] === S.cat) });
-      b.addEventListener('click', function () { S.cat = c[0]; Array.prototype.forEach.call(chips.children, function (x) { x.classList.remove('on'); x.setAttribute('aria-selected', 'false'); }); b.classList.add('on'); b.setAttribute('aria-selected', 'true'); load(true); }); chips.appendChild(b); });
-    viewEl.appendChild(chips);
-    var q = h('input', { type: 'search', placeholder: 'Search posts\u2026', 'aria-label': 'Search posts', maxlength: '40', value: S.q, style: 'flex:1;min-width:150px;margin:0' }), t;
-    q.addEventListener('input', function () { clearTimeout(t); t = setTimeout(function () { S.q = q.value.trim(); load(true); }, 350); });
-    var sort = btn(S.sort === 'new' ? 'Latest' : 'Top', '', function () { S.sort = S.sort === 'new' ? 'top' : 'new'; sort.textContent = S.sort === 'new' ? 'Latest' : 'Top'; draw(); });
-    viewEl.appendChild(h('div', { class: 'fm-row', style: 'margin:4px 0 14px' }, [q, sort]));
-    statEl = h('div', { 'aria-live': 'polite' }); listEl = h('div'); moreEl = btn('Show more', 'fm-more', function () { load(false); }, { hidden: true });
-    viewEl.appendChild(statEl); viewEl.appendChild(listEl); viewEl.appendChild(moreEl); load(true);
+  function escNew(e) { if (e.key === 'Escape') closeCreate(); }
+  function closeCreate() {
+    if (!newPage) return;
+    newPage.remove(); newPage = null; document.removeEventListener('keydown', escNew);
   }
+  /* ---------- the feed: full-screen posts you swipe up and down (TikTok-style) ---------- */
+  var swipeEl = null, swipeTop = null, swipeIO = null, vidIO = null, swipeMsg = null, rendered = {};
+  function openSwipe() {
+    if (swipeEl) return;
+    swipeTop = h('div', { class: 'fm-swipe-top' }, [h('div', { class: 'fm-chips', role: 'tablist', 'aria-label': 'Categories' }, CATS.map(function (c) {
+      var b = btn(c[0] === 'all' ? 'All' : c[1], c[0] === S.cat ? 'on' : '', null, { role: 'tab', 'aria-selected': String(c[0] === S.cat) });
+      b.addEventListener('click', function () {
+        S.cat = c[0];
+        Array.prototype.forEach.call(swipeTop.querySelectorAll('.fm-chips button'), function (x) { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', String(x === b)); });
+        load(true);
+      });
+      return b;
+    }))]);
+    swipeEl = h('div', { class: 'fm-swipe', role: 'feed', 'aria-label': 'Posts' });
+    swipeEl.addEventListener('scroll', function () { if (S.more && !S.busy && swipeEl.scrollTop + swipeEl.clientHeight > swipeEl.scrollHeight - swipeEl.clientHeight * 1.5) load(false); }, { passive: true });
+    document.body.appendChild(swipeTop); document.body.appendChild(swipeEl);
+    // the pager slides the panes sideways: only show the full-screen feed while its pane is on screen
+    swipeIO = new IntersectionObserver(function (es) { var on = !!es[0] && es[0].isIntersecting; if (swipeEl) swipeEl.style.display = swipeTop.style.display = on ? '' : 'none'; });
+    swipeIO.observe(sec);
+    // videos play while their slide is mostly on screen, and pause when it scrolls away
+    vidIO = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        var v = e.target;
+        if (e.isIntersecting && e.intersectionRatio >= 0.6) v.play().catch(function () { v.muted = true; v.play().catch(function () {}); });
+        else v.pause();
+      });
+    }, { threshold: [0, 0.6] });
+    statEl = moreEl = listEl = null;
+  }
+  function closeSwipe() {
+    if (swipeIO) swipeIO.disconnect(); if (vidIO) vidIO.disconnect();
+    if (swipeEl) swipeEl.remove(); if (swipeTop) swipeTop.remove();
+    swipeEl = swipeTop = swipeIO = vidIO = swipeMsg = null; rendered = {};
+  }
+  function resetSwipe() { rendered = {}; if (swipeEl) { swipeEl.textContent = ''; swipeEl.scrollTop = 0; } }
+  function drawSwipe() {
+    if (!swipeEl) return;
+    if (swipeMsg) { swipeMsg.remove(); swipeMsg = null; }
+    var list = S.pinned.concat(S.posts);
+    list.forEach(function (p) { if (rendered[p.id]) return; rendered[p.id] = true; swipeEl.appendChild(slide(p)); });
+    swipeEl.querySelectorAll('video').forEach(function (v) { if (!v.dataset.io) { v.dataset.io = '1'; vidIO.observe(v); } });
+    if (S.err) { swipeMsg = h('div', { class: 'fm-slide-msg', role: 'alert', text: S.err }); swipeEl.appendChild(swipeMsg); }
+    else if (!list.length && !S.busy) { swipeMsg = h('div', { class: 'fm-slide-msg', text: S.cat !== 'all' ? 'No posts in this category yet.' : 'No posts yet. Tap + to start the conversation!' }); swipeEl.appendChild(swipeMsg); }
+  }
+  function slide(p) {
+    var el = h('section', { class: 'fm-slide', 'data-id': p.id, 'aria-label': p.title || 'Post' });
+    var pb = splitMedia(p.body);
+    if (pb.kind === 'vid' && pb.url) {
+      var v = h('video', { class: 'fm-slide-media', src: pb.url, playsinline: '', loop: '', preload: 'metadata' });
+      v.addEventListener('click', function () { if (v.paused) v.play().catch(function () {}); else v.pause(); });
+      el.appendChild(v);
+    } else if (pb.kind === 'img' && pb.url) el.appendChild(h('img', { class: 'fm-slide-media', src: pb.url, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }));
+    else if (p.image && /^https:\/\//i.test(p.image)) el.appendChild(h('img', { class: 'fm-slide-media', src: p.image, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }));
+    el.appendChild(h('div', { class: 'fm-slide-shade' }));
+    if (p.pinned) el.appendChild(h('span', { class: 'fm-pinned fm-slide-pin', text: 'Pinned' }));
+    el.appendChild(h('div', { class: 'fm-slide-info' }, [
+      h('div', { class: 'fm-slide-who' }, [avatar(p.name, p.slug), h('strong', { text: '@' + (p.slug || p.name || 'member') })]),
+      h('h3', { text: p.title }),
+      pb.text ? h('p', { text: pb.text }) : null,
+      h('div', { class: 'fm-meta', text: ago(p.at) + ' · ' + (CAT_NAME[p.cat] || 'General') })
+    ]));
+    var likeBtn = h('button', { type: 'button', class: 'fm-rail-btn' + (p.liked ? ' on' : ''), 'aria-label': 'Like', 'aria-pressed': String(!!p.liked), text: (p.liked ? '♥ ' : '♡ ') + p.likes });
+    var heart = function () { return (p.liked ? '♥ ' : '♡ ') + p.likes; };
+    likeBtn.addEventListener('click', function () {
+      var on = !p.liked; p.liked = on; p.likes += on ? 1 : -1; likeBtn.textContent = heart(); likeBtn.classList.toggle('on', on); likeBtn.setAttribute('aria-pressed', String(on));
+      api('posts/' + p.id + '/like', { method: on ? 'POST' : 'DELETE' }).then(function (r) { if (!r.ok) { p.liked = !on; p.likes += on ? -1 : 1; likeBtn.textContent = heart(); likeBtn.classList.toggle('on', p.liked); } });
+    });
+    var cmBtn = h('button', { type: 'button', class: 'fm-rail-btn', 'aria-label': 'Comments', 'aria-haspopup': 'dialog', text: '💬 ' + p.comments });
+    cmBtn.addEventListener('click', function () { openSheet(p, cmBtn); });
+    var rail = h('div', { class: 'fm-slide-rail' }, [likeBtn, cmBtn]);
+    if (!p.mine && okSlug(p.slug)) rail.appendChild(ico(ICO.msg, 'fm-rail-btn', 'Message ' + (p.name || 'this member'), function () { go('thread', p.slug); }));
+    var mb = menuButton(postItems(p), 'fm-rail-btn'); if (mb) rail.appendChild(mb);
+    el.appendChild(rail);
+    return el;
+  }
+  function feedView() { openSwipe(); load(true); }
 
   /* ---------- alerts ---------- */
   function alertsView() {
@@ -506,7 +688,7 @@
   }
   function go(view, arg) {
     var was = S.view;
-    clearInterval(threadTimer); threadTimer = null; closeTh(); closeSheet(); S.view = view; viewEl.textContent = ''; listEl = moreEl = statEl = null;
+    clearInterval(threadTimer); threadTimer = null; closeTh(); closeSheet(); if (view !== 'feed') closeSwipe(); S.view = view; viewEl.textContent = ''; listEl = moreEl = statEl = null;
     if (view === 'feed') feedView(); else if (view === 'alerts') alertsView(); else if (view === 'inbox') inboxView(); else if (view === 'thread') threadView(arg); else if (view === 'reports') reportsView();
     drawNav(); if ((view !== 'feed' || was !== 'feed') && sec && sec.scrollIntoView) sec.scrollIntoView({ block: 'start' });
   }
@@ -527,10 +709,7 @@
     else location.href = '/?pm=1';
   }
   /* the centre "+" in the bottom dock: opens the post form on the feed */
-  function compose() {
-    if (sec && document.body.contains(sec) && sec.offsetParent && S.view === 'feed' && openComposer) { openComposer(); return; }
-    pendingCompose = true; open('feed');   // not on the feed yet: go there, and the form opens when the feed is built
-  }
+  function compose() { openCreate(); }
   function dockPost() {
     var nav = document.querySelector('nav.dock'); if (!nav || nav.querySelector('.dock-post')) return;
     var b = h('button', { type: 'button', class: 'dock-post', 'aria-label': 'Create a post', title: 'Create a post' }, [h('i', { class: 'fa-solid fa-plus', 'aria-hidden': 'true' })]);
