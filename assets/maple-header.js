@@ -60,7 +60,8 @@
     var html = L.map(function (x) { var on = pg === x[0]; return '<a href="' + x[1] + '" data-link class="tb-nl' + (on ? ' on' : '') + '"' + (on ? ' aria-current="page"' : '') + '>' + x[2] + '</a>'; }).join('');
     if (nav.__h !== html) { nav.__h = html; nav.innerHTML = html; }
     var alerts = document.querySelector('#sh-drawer [data-act="alerts"]');
-    bell.hidden = !alerts;
+    var home = !document.body.dataset.page || document.body.dataset.page === 'home';
+    bell.hidden = !alerts || home;   /* homepage: one combined Messages icon instead */
     if (alerts) { var b = alerts.querySelector('[data-badge]'), out = bell.querySelector('b'); out.hidden = !b || b.hidden; out.textContent = b ? b.textContent : ''; }
   }
   function paint() {

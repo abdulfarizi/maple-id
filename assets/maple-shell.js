@@ -54,9 +54,11 @@
     } else if (pm) { pm.remove(); pm = null; }
     paintBadges();
   }
+  /* On the homepage there is one header icon: Messages carries the alerts count too, and the bell is hidden. */
+  function onHome() { var p = document.body.dataset.page; return !p || p === 'home'; }
   function paintBadges() {
     if (pm) {
-      var b = pm.querySelector('.pm-badge'), n = S.dm;
+      var b = pm.querySelector('.pm-badge'), n = S.dm + (onHome() ? S.unread : 0);
       b.hidden = !(n > 0); b.textContent = n > 9 ? '9+' : String(n);
       pm.setAttribute('aria-label', n > 0 ? 'Private messages, ' + n + ' unread' : 'Private messages');
     }
