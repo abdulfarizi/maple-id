@@ -5,11 +5,12 @@
 .card-page .pc-left { display: contents; }
 .pc-cta { display: none; }
 @media (min-width: 900px) and (min-height: 640px), (min-width: 640px) and (orientation: landscape) {
+  :root { --pc-gut: clamp(24px, 3vw, 72px); }
   .card-page:not(.dk-page) {
     display: grid !important; grid-template-columns: 340px minmax(0, 1fr);
     column-gap: 28px; row-gap: 20px; align-items: start;
-    max-width: 1440px !important; width: 100%; box-sizing: border-box; margin: 0 auto;
-    padding: 20px 24px 96px;
+    max-width: none !important; width: 100%; box-sizing: border-box; margin: 0;
+    padding: 20px var(--pc-gut) 96px;
   }
   .card-page:not(.dk-page) > * { min-width: 0; grid-column: 2; }
   /* the left column is fixed to the screen, so it never moves while the right column scrolls */
@@ -17,7 +18,7 @@
     display: flex; flex-direction: column; gap: 14px;
     position: fixed; z-index: 2; width: 340px;
     top: calc(var(--tb-h, 64px) + 12px);
-    left: calc((100% - min(100%, 1440px)) / 2 + 24px);
+    left: var(--pc-gut);
   }
   /* short landscape screens: scale the card down so it fits without being cut off */
   @media (max-height: 560px) { .card-page:not(.dk-page) > .pc-left { zoom: .78; } }
@@ -33,6 +34,7 @@
   .card-page:not(.dk-page) > .pc-cta .pc-cta-desc { font-size: 12px; color: var(--muted, inherit); font-weight: 300; display: block; margin-top: 4px; }
   .card-page:not(.dk-page) > .pc-cta .pc-cta-btn { flex-shrink: 0; font-family: var(--mono, monospace); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; padding: 11px 15px; border-radius: 999px; background: var(--accent, #ff8a3d); color: #fff; display: inline-flex; align-items: center; gap: 8px; }
   .card-page:not(.dk-page) > section.list ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  @media (min-width: 1800px) { .card-page:not(.dk-page) > section.list ul { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   .card-page:not(.dk-page) .idcard-body { display: block; }
   /* the pane around a basic card was capped at 1120px; let the card page use the whole screen so the ID card and the content line up */
   .pg-main:has(> .card-page:not(.dk-page)) { max-width: none !important; padding-left: 0 !important; padding-right: 0 !important; }
