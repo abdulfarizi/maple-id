@@ -1,0 +1,57 @@
+/* M-ID · Studio (new layout) — organizing layer, loaded only by /studio-new.
+ * It restyles the existing Studio markup: collapsible sections, tucked-away tips, sticky tabs. */
+
+/* "New layout" badge in the link bar */
+.studio-v2 .st2-badge{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
+  color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+
+/* the link bar may wrap on narrow screens (badge + extra button) */
+.studio-v2 .linkbar{flex-wrap:wrap}
+.studio-v2 .linkbar-actions{flex-wrap:wrap}
+.studio-v2 .linkbar-url{min-width:0}
+
+/* tab bar stays in view while you scroll a long section (desktop; phones already stick it) */
+@media (min-width:981px){
+  .studio-v2 .editor .tabs{position:sticky;top:calc(var(--tb-h,64px) + 8px);z-index:6}
+}
+
+/* expand / collapse all */
+.studio-v2 .st2-tools{display:flex;justify-content:flex-end;gap:6px;margin:0 2px 10px}
+.studio-v2 .st2-tools button{height:30px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+.studio-v2 .st2-tools button:hover{color:var(--text);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+
+/* each section is a collapsible card */
+.studio-v2 .editor fieldset.st2-acc{padding:0 18px 4px;transition:border-color .2s}
+.studio-v2 .editor fieldset.st2-acc:not(.st2-open){padding-bottom:0}
+.studio-v2 .editor fieldset.st2-acc.st2-open{border-color:color-mix(in srgb,var(--accent) 28%,var(--line))}
+.studio-v2 .editor fieldset.st2-acc::after{content:"";display:block;clear:both}
+
+.studio-v2 .editor fieldset.st2-acc > legend{float:left;box-sizing:border-box;width:calc(100% + 36px);margin:0 -18px;padding:15px 18px;display:flex;align-items:center;gap:8px;
+  cursor:pointer;user-select:none;-webkit-user-select:none;border-radius:20px;transition:background .2s}
+.studio-v2 .editor fieldset.st2-acc > legend:hover{background:color-mix(in srgb,var(--text) 4%,transparent)}
+.studio-v2 .editor fieldset.st2-acc > legend:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.studio-v2 .editor fieldset.st2-acc.st2-open > legend{margin-bottom:14px;border-bottom-left-radius:0;border-bottom-right-radius:0;box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--line) 70%,transparent)}
+
+.studio-v2 .st2-chev{margin-left:auto;font-size:12px;opacity:.65;transition:transform .25s}
+.studio-v2 fieldset.st2-open > legend .st2-chev{transform:rotate(180deg)}
+
+/* collapsed: only the heading row shows */
+.studio-v2 .editor fieldset.st2-acc:not(.st2-open) > *:not(legend){display:none}
+
+/* tips: hidden until you tap the info button */
+.studio-v2 .editor fieldset.st2-acc > p.hint:not(.media-status){display:none}
+.studio-v2 .editor fieldset.st2-acc.st2-open.st2-hints > p.hint:not(.media-status){display:block}
+.studio-v2 .st2-info{display:none;margin-left:auto;width:30px;height:30px;padding:0;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:14px;cursor:pointer;transition:color .2s,background .2s}
+.studio-v2 fieldset.st2-open > legend .st2-info{display:inline-flex;align-items:center;justify-content:center}
+.studio-v2 fieldset.st2-open > legend .st2-info ~ .st2-chev{margin-left:8px}
+.studio-v2 .st2-info:hover{color:var(--text);background:color-mix(in srgb,var(--text) 8%,transparent)}
+.studio-v2 fieldset.st2-hints > legend .st2-info{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+
+@media (max-width:980px){
+  .studio-v2 .editor fieldset.st2-acc{padding:0 14px 2px}
+  .studio-v2 .editor fieldset.st2-acc > legend{width:calc(100% + 28px);margin:0 -14px;padding:14px;border-radius:18px}
+  .studio-v2 .editor fieldset.st2-acc.st2-open > legend{margin-bottom:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  .studio-v2 .st2-chev,.studio-v2 .editor fieldset.st2-acc,.studio-v2 .editor fieldset.st2-acc > legend{transition:none}
+}
