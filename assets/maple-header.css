@@ -102,3 +102,6 @@ body.pager-on .dock-i{flex:0 0 auto!important;min-width:96px}
 /* the M app icon in place of the old leaf: the icon already has its own rounded square, so drop the leaf's box */
 .leaf-img,.brand .leaf-img{width:30px!important;height:30px!important;padding:0!important;border-radius:9px!important;background:none!important;box-shadow:0 6px 14px -10px rgba(0,0,0,.8)!important;filter:none!important;display:inline-block;flex:none;object-fit:cover}
 .foot .leaf-img{width:20px!important;height:20px!important;border-radius:6px!important}
+
+/* Studio (and other full-screen layers): the + button is for posting, so the bar shows only Home and Profile, centred */
+body.has-layer .dock-post{display:none!important}
