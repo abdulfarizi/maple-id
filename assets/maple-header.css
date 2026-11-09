@@ -74,3 +74,12 @@ body[data-page="explore"] .dock-ind{opacity:0!important}
 /* the bottom bar: Home, + and Profile sit evenly around the centre (the tabs no longer stretch to fill the bar) */
 body.pager-on .dock{justify-content:center}
 body.pager-on .dock-i{flex:0 0 auto!important;min-width:96px}
+/* search icon: floating panel that drops down from the header */
+.tb-float{position:fixed;left:12px;right:12px;z-index:40;max-height:72vh;border-radius:22px;background:var(--panel-solid,var(--panel));border:1px solid var(--line);box-shadow:var(--shadow,0 16px 40px #0006);overflow:hidden;transform-origin:top right;opacity:0;transform:translateY(-16px) scale(.96);transition:opacity .22s ease,transform .32s cubic-bezier(.2,.8,.2,1)}
+.tb-float.in{opacity:1;transform:none}
+.tb-float.out{opacity:0;transform:translateY(-16px) scale(.96);transition-duration:.2s}
+.tb-float-body{max-height:72vh;overflow-y:auto;overscroll-behavior:contain;padding:44px 8px 12px}
+.tb-float-x{position:absolute;top:8px;right:8px;z-index:2;width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:50%;background:var(--bg-2,transparent);color:var(--text);cursor:pointer}
+.tb-float{position:fixed}
+@media (min-width:900px){.tb-float{left:auto;right:24px;width:460px}}
+@media (prefers-reduced-motion:reduce){.tb-float,.tb-float.out{transition:none}}

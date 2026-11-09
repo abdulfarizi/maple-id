@@ -47,7 +47,7 @@
     if (!ex || !ex.isConnected) {
       ex = document.createElement('a'); ex.href = '/#explore'; ex.className = 'tb-ex';
       ex.setAttribute('aria-label', 'Explore'); ex.title = 'Explore';
-      ex.addEventListener('click', function (e) { if (window.dgPager && dgPager.explore) { e.preventDefault(); dgPager.explore(); } });
+      ex.addEventListener('click', function (e) { e.preventDefault(); openSearch(); });
       ex.innerHTML = '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>';
       end.insertBefore(ex, end.firstChild);
     }
@@ -58,6 +58,35 @@
       end.insertBefore(bell, btn.nextSibling);
     }
     return true;
+  }
+  /* search icon: a floating panel drops down from the header and holds Explore */
+  var fx = null, fxHome = null, fxNext = null, fxSrc = null;
+  function outside(e) { if (fx && !fx.contains(e.target) && !(ex && ex.contains(e.target))) closeSearch(); }
+  function esc(e) { if (e.key === 'Escape') closeSearch(); }
+  function openSearch() {
+    if (fx) return closeSearch();
+    var src = document.getElementById('explore') || (window.dgPager && dgPager.panes && dgPager.panes().explore);
+    if (!src) return;
+    var tb = document.querySelector('.topbar'), top = tb ? tb.getBoundingClientRect().bottom : 64;
+    fxSrc = src; fxHome = src.parentNode; fxNext = src.nextSibling; src.hidden = false;
+    fx = document.createElement('div'); fx.className = 'tb-float'; fx.setAttribute('role', 'dialog'); fx.setAttribute('aria-label', 'Explore');
+    fx.style.top = (top + 8) + 'px';
+    var x = document.createElement('button'); x.type = 'button'; x.className = 'tb-float-x'; x.setAttribute('aria-label', 'Close');
+    x.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>'; x.addEventListener('click', closeSearch);
+    var box = document.createElement('div'); box.className = 'tb-float-body';
+    box.appendChild(src); fx.appendChild(x); fx.appendChild(box); document.body.appendChild(fx);
+    requestAnimationFrame(function () { if (fx) fx.classList.add('in'); });
+    setTimeout(function () { document.addEventListener('pointerdown', outside, true); document.addEventListener('keydown', esc); }, 0);
+  }
+  function closeSearch() {
+    if (!fx) return;
+    var f = fx, src = fxSrc;
+    fx = null;
+    document.removeEventListener('pointerdown', outside, true); document.removeEventListener('keydown', esc);
+    if (src && fxHome) { if (fxNext && fxNext.parentNode === fxHome) fxHome.insertBefore(src, fxNext); else fxHome.appendChild(src); }
+    src && (src.hidden = true);
+    f.classList.remove('in'); f.classList.add('out');
+    setTimeout(function () { f.remove(); }, 260);
   }
   function paintNav() {
     if (!nav) return;
