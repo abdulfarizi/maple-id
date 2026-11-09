@@ -231,3 +231,25 @@ html.mode-swap .mpx-mini,html.mode-swap .mpx-sheet{transition:none!important}
 .mpx-mini.compact{width:auto;min-width:0}
 .mpx-sheet{height:100vh;height:100dvh;max-height:100dvh}
 .mpx-sheet.open{visibility:visible}
+
+/* ── v14 · small player bar, refined ──
+   A rounded capsule above the bottom bar: round artwork that turns while a song plays, a "NOW PLAYING" label
+   (so it reads as the thing you tap to open the full player), a filled play button and a clear expand button. */
+.mpx-mini{min-height:66px;height:auto;padding:9px 9px 9px 9px;gap:10px;border-radius:24px;
+  background:linear-gradient(120deg,color-mix(in srgb,var(--accent) 14%,transparent),transparent 60%),color-mix(in srgb,var(--panel-solid,var(--panel)) 86%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 26%,var(--line));box-shadow:0 22px 44px -20px rgba(0,0,0,.75),0 1px 0 color-mix(in srgb,var(--ink,#fff) 8%,transparent) inset}
+.mpx-hit{gap:12px;padding:0;min-width:0;text-align:left}
+.mpx-art{width:46px;height:46px;border-radius:50%;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 38%,transparent),0 8px 18px -10px rgba(0,0,0,.8)}
+.mpx-mini.playing .mpx-art{animation:mpx-turn 10s linear infinite;box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 55%,transparent),0 8px 18px -10px rgba(0,0,0,.8)}
+@keyframes mpx-turn{to{transform:rotate(360deg)}}
+.mpx-meta{gap:1px;min-width:0}
+.mpx-meta::before{content:'Now playing';font:700 9.5px/1 var(--mono,monospace);letter-spacing:.16em;text-transform:uppercase;color:var(--accent-t,var(--accent));margin-bottom:3px}
+.mpx-meta b{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.mpx-meta small{font-size:12.5px}
+.mpx-pp{width:44px;height:44px;background:linear-gradient(140deg,var(--accent-2,var(--accent)),var(--accent));color:var(--on-accent,#fff);box-shadow:0 10px 22px -12px var(--accent-glow,rgba(0,0,0,.6))}
+.mpx-pp svg{width:18px;height:18px}
+.mpx-ex{width:36px;height:36px;background:color-mix(in srgb,var(--text) 8%,transparent);color:var(--muted)}
+.mpx-ex svg{width:16px;height:16px}
+.mpx-ex:hover{color:var(--text);background:color-mix(in srgb,var(--text) 14%,transparent)}
+.mpx-mini.compact .mpx-art{width:40px;height:40px}
+@media (prefers-reduced-motion:reduce){.mpx-mini.playing .mpx-art{animation:none}}
