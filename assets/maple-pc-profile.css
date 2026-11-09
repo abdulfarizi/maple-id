@@ -3,8 +3,8 @@
    On a PC (wide and mouse/trackpad) the page now uses the width: the identity card on the left, the links and
    sections on the right in two columns. Phones and tablets keep the single column. */
 @media (min-width: 1100px) and (pointer: fine) {
-  body[data-page="card"] .card-page:not(.dk-page),
-  body[data-page="profile"] .card-page:not(.dk-page) {
+  .card-page:not(.dk-page),
+  .card-page:not(.dk-page) {
     display: grid !important;
     grid-template-columns: minmax(340px, 400px) minmax(0, 1fr);
     column-gap: 56px;
@@ -16,18 +16,18 @@
     margin: 0 auto;
     padding: 40px 48px 96px;
   }
-  body[data-page="card"] .card-page:not(.dk-page) > *, body[data-page="profile"] .card-page:not(.dk-page) > * { grid-column: 2; min-width: 0; }
-  body[data-page="card"] .card-page:not(.dk-page) > .idcard, body[data-page="profile"] .card-page:not(.dk-page) > .idcard { grid-column: 1; grid-row: 1; }
-  body[data-page="card"] .card-page:not(.dk-page) > .actions, body[data-page="profile"] .card-page:not(.dk-page) > .actions { grid-column: 1; grid-row: 2; }
-  body[data-page="card"] .card-page:not(.dk-page) > .reactions, body[data-page="profile"] .card-page:not(.dk-page) > .reactions { grid-column: 1; grid-row: 3; }
+  .card-page:not(.dk-page) > *, .card-page:not(.dk-page) > * { grid-column: 2; min-width: 0; }
+  .card-page:not(.dk-page) > .idcard, .card-page:not(.dk-page) > .idcard { grid-column: 1; grid-row: 1; }
+  .card-page:not(.dk-page) > .actions, .card-page:not(.dk-page) > .actions { grid-column: 1; grid-row: 2; }
+  .card-page:not(.dk-page) > .reactions, .card-page:not(.dk-page) > .reactions { grid-column: 1; grid-row: 3; }
   
-  body[data-page="card"] .card-page:not(.dk-page) section.list ul, body[data-page="profile"] .card-page:not(.dk-page) section.list ul {
+  .card-page:not(.dk-page) section.list ul, .card-page:not(.dk-page) section.list ul {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
-  body[data-page="card"] .card-page:not(.dk-page) section.list h2, body[data-page="profile"] .card-page:not(.dk-page) section.list h2 { margin-top: 14px; }
-  body[data-page="card"] .card-page:not(.dk-page) .mx-sec, body[data-page="profile"] .card-page:not(.dk-page) .mx-sec { margin-top: 0; }
+  .card-page:not(.dk-page) section.list h2, .card-page:not(.dk-page) section.list h2 { margin-top: 14px; }
+  .card-page:not(.dk-page) .mx-sec, .card-page:not(.dk-page) .mx-sec { margin-top: 0; }
 }
 
 /* v2 · the deck profile on a PC: the identity card on the left, every other section stacked on the right.
