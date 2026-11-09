@@ -27,7 +27,7 @@
   ];
 
   // Card-details fields that live inside Star look but belong to the Profile section
-  var PROFILE_FIELDS = ['cardTag', 'statusText', 'statusMode', 'footerText', 'avatarShape', 'bannerGray', 'bannerDim'];
+  var PROFILE_FIELDS = ['cardTag', 'statusText', 'statusMode', 'footerText', 'avatarShape', 'bannerGray', 'bannerDim', 'specsText'];
 
   document.documentElement.classList.add('studio-new');
 
