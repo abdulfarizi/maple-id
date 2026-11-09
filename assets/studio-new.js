@@ -1,6 +1,7 @@
 /* M-ID · Studio (new layout) — organizing layer, loaded only by /studio-new.
  * The Studio itself (fields, saving, music, frames, builder) is the existing one and is not touched.
- * This only reshapes what it rendered: collapsible sections, tips behind an info button, expand/collapse all. */
+ * This only reshapes what it rendered: collapsible sections, tips behind an info button, expand/collapse all.
+ * The address bar is left alone: the app routes on /studio, so rewriting the URL here sent people back to the home page. */
 (function () {
   'use strict';
   var KEY = 'st2:open';
@@ -10,8 +11,6 @@
   try { var s0 = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (s0 && typeof s0 === 'object') saved = s0; } catch (e) {}
 
   document.documentElement.classList.add('studio-new');
-
-  function pathNow() { return location.pathname.replace(/\/+$/, '') || '/'; }
 
   function label(legend) {
     var n = legend.firstChild;
@@ -33,18 +32,10 @@
     }
   }
 
-  // The address bar should say /studio-new, while the app itself routes on /studio.
-  function fixUrl() {
-    try { if (pathNow() === '/studio' && document.querySelector('.studio')) history.replaceState(null, '', '/studio-new'); } catch (e) {}
-  }
   // The app's own unsaved-changes warning only fires on /studio, so repeat it for this address.
   function setGuard() {
     window.onbeforeunload = function () { return (window.dgStudioDirty && window.dgStudioDirty()) ? true : null; };
   }
-  // Back/forward onto /studio-new: let the app route it as /studio.
-  window.addEventListener('popstate', function () {
-    try { if (pathNow() === '/studio-new') { history.replaceState(null, '', '/studio'); setTimeout(fixUrl, 80); } } catch (e) {}
-  }, true);
 
   function enhance(st) {
     if (st.__st2) return;
@@ -118,7 +109,6 @@
       }
     });
 
-    fixUrl();
     setGuard();
     setTimeout(setGuard, 400);
     setTimeout(setGuard, 1500);
