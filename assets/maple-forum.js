@@ -122,7 +122,9 @@
       + '.fm-b{max-width:82%;padding:9px 13px;border-radius:16px;background:var(--panel,#ffffff12);border:1px solid var(--line,#ffffff1f);white-space:pre-wrap;word-break:break-word;align-self:flex-start}'
       + '.fm-b.me{align-self:flex-end;background:var(--accent,#ff7a1a);border-color:transparent;color:#fff}.fm-b small{display:block;opacity:.7;font-size:10px;margin-top:3px}'
       + '.fm-n{display:flex;gap:10px;padding:11px 12px;border:1px solid var(--line,#ffffff1f);border-radius:14px;margin-bottom:8px;background:var(--panel,#ffffff0a)}.fm-n.new{border-color:var(--accent,#ff7a1a)}'
-      + '.fm-more{display:block;margin:6px auto}.fm-more[hidden]{display:none}.fm-err{color:#ff8a80;margin:8px 0 0;font-size:13px}.fm-empty{text-align:center;color:var(--muted,#9a9aa6);padding:36px 10px}';
+      + '.fm-more{display:block;margin:6px auto}.fm-more[hidden]{display:none}.fm-err{color:#ff8a80;margin:8px 0 0;font-size:13px}.fm-empty{text-align:center;color:var(--muted,#9a9aa6);padding:36px 10px}'
+      + '.dock-post{flex:none;width:48px;height:48px;margin:0 4px;padding:0;border:0;border-radius:50%;display:grid;place-items:center;background:var(--accent,#ff7a1a);color:var(--on-accent,#fff);font-size:18px;cursor:pointer;box-shadow:0 6px 18px color-mix(in srgb,var(--accent,#ff7a1a) 40%,transparent);touch-action:manipulation}'
+      + '.dock-post:active{transform:scale(.92)}.dock-post:focus-visible{outline:2px solid var(--accent,#ff7a1a);outline-offset:3px}';
     document.head.appendChild(st);
   }
 
@@ -355,6 +357,7 @@
     row.appendChild(parts[0]); row.appendChild(body); return row;
   }
 
+  var openComposer = null, pendingCompose = false;
   function composer() {
     var wrap = h('div');
     var start = h('button', { type: 'button', class: 'fm-start' }, [h('span', { text: 'What\u2019s on your mind?' }), h('b', { text: 'Post' })]);
@@ -377,7 +380,11 @@
         title.value = body.value = img.value = ''; toggle(false); load(true);
       });
     });
-    wrap.appendChild(start); wrap.appendChild(form); return wrap;
+    // the post form is opened from the centre "+" in the dock (no bar at the top of the feed)
+    openComposer = function () { toggle(true); };
+    wrap.appendChild(form);
+    if (pendingCompose) { pendingCompose = false; toggle(true); }
+    return wrap;
   }
   function feedView() {
     viewEl.appendChild(composer());
@@ -519,6 +526,28 @@
     if (window.dgNavigate) window.dgNavigate('/');
     else location.href = '/?pm=1';
   }
+  /* the centre "+" in the bottom dock: opens the post form on the feed */
+  function compose() {
+    if (sec && document.body.contains(sec) && sec.offsetParent && S.view === 'feed' && openComposer) { openComposer(); return; }
+    pendingCompose = true; open('feed');   // not on the feed yet: go there, and the form opens when the feed is built
+  }
+  function dockPost() {
+    var nav = document.querySelector('nav.dock'); if (!nav || nav.querySelector('.dock-post')) return;
+    var b = h('button', { type: 'button', class: 'dock-post', 'aria-label': 'Create a post', title: 'Create a post' }, [h('i', { class: 'fa-solid fa-plus', 'aria-hidden': 'true' })]);
+    b.addEventListener('click', compose);
+    nav.insertBefore(b, nav.querySelector('.dock-i[data-dock="profile"]') || null);
+  }
+  // the dock is rebuilt on every page change (innerHTML), so put the "+" back whenever that happens
+  var dockWatch = null;
+  function watchDock() {
+    if (dockWatch) return;
+    dockWatch = setInterval(function () {
+      var nav = document.querySelector('nav.dock'); if (!nav) return;
+      clearInterval(dockWatch); dockWatch = 'on';
+      new MutationObserver(dockPost).observe(nav, { childList: true });
+      dockPost();
+    }, 300);
+  }
   function mount(pane) {
     if (!pane || pane.querySelector('#forum')) return; css();
     // hide the default landing sections (the creator directory stays, so it can still move to the Explore tab)
@@ -527,7 +556,7 @@
     sec = h('section', { class: 'fm', id: 'forum', 'aria-label': 'Feed' });
     viewEl = h('div'); sec.appendChild(viewEl);
     pane.insertBefore(sec, pane.firstChild);
-    var w = takeWant(); S.view = 'feed'; go(w ? w.v : 'feed', w && w.a); updateBadges();
+    var w = takeWant(); S.view = 'feed'; go(w ? w.v : 'feed', w && w.a); updateBadges(); watchDock();
     clearInterval(poll); poll = setInterval(function () { if (!document.body.contains(sec)) { clearInterval(poll); clearInterval(threadTimer); return; } if (!document.hidden) updateBadges(); }, 60000);
   }
   window.dgForum = { mount: mount, open: open, view: function () { return S.view; }, badges: function () { return { dm: S.dm, unread: S.unread, mod: S.mod }; } };
