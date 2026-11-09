@@ -9,7 +9,7 @@
  * smooth scroll, and native smooth scroll fights scroll-snap in Chrome). */
 (function () {
   'use strict';
-  var ALL = ['home', 'explore', 'card', 'profile'];
+  var ALL = ['home', 'card', 'profile'];              // the swipe strip: Explore is not in it (it opens from the header search)
   // The dock mirrors the strip: Home · Explore · [ Card ] · Profile. The Card tab only exists while someone's link is open.
   var URLS = { home: '/', explore: '/#explore', profile: '/profile' };
   var TITLES = { home: 'M-ID · one link for every handle', explore: 'Explore · M-ID', profile: 'Profile · M-ID' };
@@ -69,13 +69,14 @@
     footEl = document.querySelector('footer.foot');
     root = document.createElement('div'); root.id = 'pager'; root.className = 'pager'; root.hidden = true;
     track = document.createElement('div'); track.className = 'pager-track';
-    ALL.forEach(function (n) {
+    ['home', 'explore', 'card', 'profile'].forEach(function (n) {
       var sec = document.createElement('section'); sec.className = 'pg'; sec.dataset.pg = n; sec.setAttribute('aria-label', n);
       if (n === 'card') sec.hidden = true;
       var m = document.createElement('main'); m.className = 'pg-main'; m.id = 'pg-' + n;
       sec.appendChild(m); track.appendChild(sec); panes[n] = m; sections[n] = sec;
     });
     root.appendChild(track);
+    sections.explore.remove();                         // its content is kept in panes.explore and moved into the Explore layer
     document.body.insertBefore(root, appEl);
     track.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', function () { if (isOn && cur) track.scrollLeft = idx(cur) * width(); });
@@ -93,7 +94,7 @@
   }
 
   /* ───── dock highlight (3 tabs; the card pane lights Explore) ───── */
-  function items() { var d = dockEl(); return d ? d.querySelectorAll('.dock-i') : []; }
+  function items() { var d = dockEl(); return d ? Array.prototype.filter.call(d.querySelectorAll('.dock-i'), function (a) { return a.dataset.dock !== 'explore'; }) : []; }
   var M = { x: [], w: [], key: '' };                   // cached tab geometry: no layout reads while scrolling
   function measure(it) {
     var key = it.length + ':' + (it[0] ? it[0].offsetWidth : 0) + ':' + (dockEl() ? dockEl().offsetWidth : 0);
@@ -185,6 +186,7 @@
 
   function go(name, instant) {
     ensure(); name = toName(name);
+    if (name === 'explore') { openExplore(); return; }
     if (idx(name) < 0) return;
     var left = idx(name) * width();
     if (layerKind) { instant = true; }
@@ -215,7 +217,7 @@
     if (!cardOn) return;
     var leave = cur === 'card';
     panes.card.replaceChildren(); delete panes.card.dataset.ready; cardSlug = ''; setFullNow('card', false);
-    if (leave) setCur('explore');
+    if (leave) setCur('home');
     showCardPane(false);
     if (isOn) { jump(idx(cur || 'home') * width()); paint(); }
   }
@@ -321,7 +323,19 @@
     if (e.key === 'ArrowRight' && i < v.length - 1) go(v[i + 1]); else if (e.key === 'ArrowLeft' && i > 0) go(v[i - 1]);
   });
 
+  /* Explore opens as a full-screen layer from the header search icon (no sideways swipe to it) */
+  function openExplore() {
+    ensure(); ensureLayer();
+    if (layerKind === 'explore') return;
+    openLayer('explore');
+    var back = document.createElement('button'); back.type = 'button'; back.className = 'pg-ex-back'; back.textContent = '\u2039 Back';
+    back.addEventListener('click', function () { closeLayer('home'); });
+    panes.explore.hidden = false;
+    layerMain.appendChild(back); layerMain.appendChild(panes.explore);
+    window.scrollTo(0, 0);
+  }
   var api = window.dgPager = {
+    explore: openExplore,
     built: false, sig: '',
     panes: function () { ensure(); return panes; },
     active: function () { return isOn; },

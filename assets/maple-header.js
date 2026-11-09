@@ -45,8 +45,9 @@
       end.insertBefore(btn, end.firstChild);
     }
     if (!ex || !ex.isConnected) {
-      ex = document.createElement('a'); ex.href = '/#explore'; ex.setAttribute('data-link', ''); ex.className = 'tb-ex';
+      ex = document.createElement('a'); ex.href = '/#explore'; ex.className = 'tb-ex';
       ex.setAttribute('aria-label', 'Explore'); ex.title = 'Explore';
+      ex.addEventListener('click', function (e) { if (window.dgPager && dgPager.explore) { e.preventDefault(); dgPager.explore(); } });
       ex.innerHTML = '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>';
       end.insertBefore(ex, end.firstChild);
     }
