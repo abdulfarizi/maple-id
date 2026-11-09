@@ -368,6 +368,11 @@
         }, { threshold: [0, 0.5, 1] }).observe(deck);
       }
       document.addEventListener('visibilitychange', function () { setPlay(deckOn && !document.hidden); });
+      /* The deck is replaced when you go to another page; a removed video keeps playing, so stop it. */
+      var gone = setInterval(function () {
+        if (document.body.contains(deck)) return;
+        clearInterval(gone); deckOn = false; setPlay(false);
+      }, 400);
     })();
     if (bannerMedia) {
       deck.querySelector('[data-dk-slot="banner"]').prepend(take(bannerMedia));
