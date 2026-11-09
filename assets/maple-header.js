@@ -86,7 +86,8 @@
   var REDUCE_M = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
   function toggleSearch() { if (sp && !sp.hidden && !sp.classList.contains('out')) closeSearch(); else openSearch(); }
   function openSearch() {
-    var box = document.getElementById('explore');
+    // with the swipe pager on, the Explore section lives in the pager's (detached) explore pane
+    var box = document.getElementById('explore') || (window.dgPager && dgPager.panes && dgPager.panes().explore && dgPager.panes().explore.querySelector('#explore'));
     if (!box) { if (window.dgNavigate) window.dgNavigate('/#explore'); else location.href = '/#explore'; return; }
     if (!sp) {
       sp = document.createElement('div'); sp.id = 'tb-search'; sp.className = 'tb-search'; sp.hidden = true;

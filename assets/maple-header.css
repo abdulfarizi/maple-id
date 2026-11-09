@@ -72,7 +72,7 @@ body.has-dock.star-mode:not(.pager-on) .star-frame{height:calc(100vh - var(--tb-
 /* the Explore panel: it grows out of the top bar's bottom edge and rolls back up into it */
 .tb-search{position:fixed;left:50%;top:var(--tb-h,64px);z-index:90;width:min(580px,calc(100vw - 20px));max-height:calc(100dvh - var(--tb-h,64px) - 14px);
   display:flex;flex-direction:column;transform:translateX(-50%);transform-origin:50% 0;overflow:hidden;
-  background:color-mix(in srgb,var(--panel-solid,var(--panel)) 96%,transparent);border:1px solid var(--line-strong);border-top:0;border-radius:0 0 26px 26px;
+  background:var(--panel-solid,var(--panel));border:1px solid var(--line-strong);border-top:0;border-radius:0 0 26px 26px;
   box-shadow:0 30px 60px -24px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 .tb-search[hidden]{display:none}
 .tb-search.in{animation:tbs-in .36s cubic-bezier(.22,1,.36,1) both}
@@ -88,6 +88,7 @@ body.has-dock.star-mode:not(.pager-on) .star-frame{height:calc(100vh - var(--tb-
 .tb-search-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:4px 12px 16px}
 .tb-search-body #explore{margin:0;padding:0;scroll-margin:0}
 .tb-search-body #explore .ex-box{border:0;box-shadow:none;background:transparent;padding:0}
+.tb-search-body #explore .sec-head{display:none}   /* the panel's own title already says Explore */
 @media (prefers-reduced-motion:reduce){.tb-search.in,.tb-search.out{animation:none}}
 @media (min-width:900px){.tb-ex{display:none}}
 .dock-i[data-dock="explore"]{display:none}   /* the pager no longer counts this tab, so it can leave the bar completely */
