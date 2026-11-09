@@ -1,0 +1,16 @@
+/* M-ID · Studio (new layout): save bar position fix, loaded only by /studio-new.
+ * The publish bar floats centred on the screen, above the bottom dock. */
+.studio-v2 .savebar{
+  position:fixed !important;
+  left:50% !important;
+  right:auto !important;
+  top:auto !important;
+  bottom:calc(var(--dock-space,0px) + 14px) !important;
+  transform:translateX(-50%);
+  margin:0 !important;
+  width:max-content;
+  max-width:calc(100vw - 24px);
+  z-index:60;
+}
+/* room at the end of the form so the last section isn't hidden behind the floating bar */
+.studio-v2 .editor{padding-bottom:110px}
