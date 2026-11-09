@@ -1,6 +1,7 @@
-/* M-ID · Studio test layout: custom checkbox (test page only, loaded by /studio-test).
- * Replaces the browser's native checkbox inside Studio toggles. The input stays in the page, so every
- * script that reads or sets .checked keeps working. */
+/* M-ID · Studio test layout (test page only, loaded by /studio-test). */
+
+/* Custom checkbox: replaces the browser's native checkbox inside Studio toggles.
+ * The input stays in the page, so every script that reads or sets .checked keeps working. */
 .studio .toggle input[type=checkbox],
 .studio label.toggle > input[type=checkbox],
 .studio .mxs-themes input[type=checkbox] {
@@ -33,4 +34,24 @@
 .studio .toggle > span { flex: 1; min-width: 0; }
 @media (prefers-reduced-motion: reduce) {
   .studio .toggle input[type=checkbox] { transition: none; }
+}
+
+/* QR code symbol section (added by maple-builder.js after Card layout): centre the preview and the picker */
+#qr-sym > div[style*="display:flex"] {
+  justify-content: center !important;
+  text-align: center;
+}
+#qr-sym #qr-prev {
+  margin: 0 auto;
+}
+#qr-sym .field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#qr-sym .field > label {
+  align-self: center;
+}
+#qr-sym select {
+  margin: 0 auto;
 }
