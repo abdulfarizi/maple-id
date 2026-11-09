@@ -1,13 +1,13 @@
 /* M-ID · Studio (new layout) — organizing layer, loaded only by /studio-new.
  * The Studio itself (fields, saving, music, frames, builder) is the existing one and is not touched.
  * This reshapes what it rendered: the sections are moved into the new groups in a fixed order,
- * collapsible sections, tips behind an info button, expand/collapse all.
+ * collapsible sections, tips behind an info button, expand/collapse all, and the badge display option (Extras).
  * The address bar is left alone: the app routes on /studio, so rewriting the URL here sent people back to the home page. */
 (function () {
   'use strict';
   var KEY = 'st2:open';
   // sections that start open; everything else starts collapsed (a click opens it)
-  var DEFAULT_OPEN = ['identity', 'photos', 'card details', 'socials', 'game ids', 'card layout', 'theme', 'sounds', 'card features', 'seller shop', 'support', 'bottom music player'];
+  var DEFAULT_OPEN = ['identity', 'photos', 'card details', 'socials', 'game ids', 'card layout', 'theme', 'sounds', 'card features', 'seller shop', 'support', 'bottom music player', 'badge display'];
   var saved = {};
   try { var s0 = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (s0 && typeof s0 === 'object') saved = s0; } catch (e) {}
 
@@ -23,13 +23,15 @@
     { key: 'media', label: 'Music & Sounds', icon: 'fa-solid fa-compact-disc',
       take: ['bottom music player', 'music i like', 'anime', 'sounds'] },
     { key: 'extras', label: 'Extras', icon: 'fa-solid fa-wand-magic-sparkles',
-      take: ['visitor controls'] },
+      take: ['visitor controls', 'badge display'] },
     { key: 'shop', label: 'Shop & Payments', icon: 'fa-solid fa-bag-shopping',
       take: ['seller shop'] }
   ];
 
   // Card-details fields that live inside Star look but belong to the Profile section
   var PROFILE_FIELDS = ['cardTag', 'statusText', 'statusMode', 'footerText', 'avatarShape', 'bannerGray', 'bannerDim', 'specsText'];
+
+  var BADGE_SPEED_DEFAULT = 2.6;
 
   document.documentElement.classList.add('studio-new');
 
@@ -57,6 +59,71 @@
   // The app's own unsaved-changes warning only fires on /studio, so repeat it for this address.
   function setGuard() {
     window.onbeforeunload = function () { return (window.dgStudioDirty && window.dgStudioDirty()) ? true : null; };
+  }
+
+  // ----- Badge display (Extras): all at once, or one by one with a timing slider -----
+  function makeBadgeSection() {
+    var f = document.createElement('fieldset');
+    f.setAttribute('data-badge-display', '');
+    f.innerHTML =
+      '<legend>Badge display</legend>' +
+      '<p class="hint">When someone has more than one badge (tick, seller, crown, music artist), choose how they show on your card.</p>' +
+      '<div class="field"><label>Show the badges</label>' +
+        '<label class="toggle"><input type="radio" name="badgeMode" value="all" checked><span>All at once, side by side</span></label>' +
+        '<label class="toggle"><input type="radio" name="badgeMode" value="cycle"><span>One by one, taking turns in one spot</span></label>' +
+      '</div>' +
+      '<div class="field"><label>Time between badges <small data-badge-speed-out>' + BADGE_SPEED_DEFAULT + ' s</small></label>' +
+        '<input type="range" name="badgeSpeed" min="1" max="8" step="0.5" value="' + BADGE_SPEED_DEFAULT + '" aria-label="Seconds between badges">' +
+      '</div>';
+    var slider = f.querySelector('input[name=badgeSpeed]');
+    var out = f.querySelector('[data-badge-speed-out]');
+    slider.addEventListener('input', function () { out.textContent = Number(slider.value) + ' s'; });
+    return f;
+  }
+
+  // read the two values from the Studio form (null if the Studio isn't on screen)
+  function readBadgeValues() {
+    var form = document.getElementById('editor');
+    if (!form) return null;
+    var mode = form.querySelector('input[name=badgeMode]:checked');
+    var speed = form.querySelector('input[name=badgeSpeed]');
+    if (!mode || !speed) return null;
+    return { mode: mode.value === 'cycle' ? 'cycle' : 'all', speed: Math.min(8, Math.max(1, Number(speed.value) || BADGE_SPEED_DEFAULT)) };
+  }
+
+  // when the Studio saves the profile, add the two badge settings to the same save
+  var origFetch = window.fetch;
+  window.fetch = function (input, init) {
+    try {
+      var url = typeof input === 'string' ? input : ((input && input.url) || '');
+      var method = String((init && init.method) || 'GET').toUpperCase();
+      if (method === 'PUT' && /\/api\/me(\?|$)/.test(url) && init && typeof init.body === 'string') {
+        var vals = readBadgeValues();
+        if (vals) {
+          var body = JSON.parse(init.body);
+          body.badgeMode = vals.mode;
+          body.badgeSpeed = vals.speed;
+          init = Object.assign({}, init, { body: JSON.stringify(body) });
+        }
+      }
+    } catch (e) {}
+    return origFetch.call(this, input, init);
+  };
+
+  // show the saved choice when the Studio opens
+  function loadBadgeValues(form) {
+    origFetch('/api/me').then(function (r) { return r.json(); }).then(function (d) {
+      var p = d && d.profile;
+      if (!p) return;
+      var mode = form.querySelector('input[name=badgeMode][value="' + (p.badgeMode === 'cycle' ? 'cycle' : 'all') + '"]');
+      if (mode) mode.checked = true;
+      var speed = form.querySelector('input[name=badgeSpeed]');
+      if (speed && p.badgeSpeed) {
+        speed.value = Math.min(8, Math.max(1, Number(p.badgeSpeed) || BADGE_SPEED_DEFAULT));
+        var out = form.querySelector('[data-badge-speed-out]');
+        if (out) out.textContent = Number(speed.value) + ' s';
+      }
+    }).catch(function () {});
   }
 
   // Move every section into its new group in the order set above, rebuild the tab bar, and drop the old tabs.
@@ -100,6 +167,9 @@
       });
       if (details.querySelector('.field')) named['card details'] = [details];
     }
+
+    // Badge display goes in Extras
+    named['badge display'] = [makeBadgeSection()];
 
     // Place every section in its group, in the order listed in GROUPS
     var byKey = {};
@@ -145,6 +215,8 @@
     var start = 'profile';
     try { var t = sessionStorage.getItem('dg-tab'); if (t && GROUPS.some(function (g) { return g.key === t; })) start = t; } catch (e) {}
     if (typeof form.__tab === 'function') form.__tab(start);
+
+    loadBadgeValues(form);
   }
 
   function enhance(st) {
