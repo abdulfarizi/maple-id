@@ -1,38 +1,79 @@
 /* M-ID · Studio (new layout) — organizing layer, loaded only by /studio-new.
- * It restyles the existing Studio markup: collapsible sections, tucked-away tips, sticky tabs. */
+ * It restyles the existing Studio markup: bento section cards, collapsible sections, pill tabs, a floating save bar. */
+
+/* ===== 2026 design tokens (scoped to the new Studio only) ===== */
+.studio-v2{
+  --st-r:24px;
+  --st-r-sm:14px;
+  --st-edge:color-mix(in srgb,var(--ink) 10%,transparent);
+  --st-surface:color-mix(in srgb,var(--ink) 3.5%,transparent);
+  --st-surface-2:color-mix(in srgb,var(--ink) 6%,transparent);
+  --st-glow:color-mix(in srgb,var(--accent) 24%,transparent);
+  --st-spec:color-mix(in srgb,var(--ink) 8%,transparent);
+  --st-shadow:0 24px 48px -30px rgba(0,0,0,.55);
+  --st-ease:cubic-bezier(.22,1,.36,1);
+  font-feature-settings:"cv11","ss01";
+  -webkit-font-smoothing:antialiased;
+}
 
 /* "New layout" badge in the link bar */
 .studio-v2 .st2-badge{display:inline-flex;align-items:center;height:30px;padding:0 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
   color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
 
 /* the link bar may wrap on narrow screens (badge + extra button) */
-.studio-v2 .linkbar{flex-wrap:wrap}
+.studio-v2 .linkbar{flex-wrap:wrap;position:relative;border:1px solid var(--st-edge);border-radius:var(--st-r);padding:16px 18px;
+  background:linear-gradient(160deg,var(--st-surface-2),transparent 70%);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);
+  box-shadow:inset 0 1px 0 var(--st-spec)}
 .studio-v2 .linkbar-actions{flex-wrap:wrap}
 .studio-v2 .linkbar-url{min-width:0}
+.studio-v2 .linkbar-url .eyebrow{letter-spacing:.14em;color:var(--muted)}
+.studio-v2 .linkbar-url a{letter-spacing:-.015em;font-weight:500}
 
-/* tab bar stays in view while you scroll a long section (desktop; phones already stick it) */
+/* ambient mesh glow behind the editor */
+.studio-v2 .studio-grid{position:relative;isolation:isolate}
+.studio-v2 .studio-grid::before{content:"";position:absolute;left:-10%;right:-10%;top:-80px;height:420px;z-index:-1;pointer-events:none;
+  background:radial-gradient(closest-side at 30% 40%,var(--st-glow),transparent 70%),radial-gradient(closest-side at 80% 20%,color-mix(in srgb,var(--accent-2,var(--accent)) 16%,transparent),transparent 70%);
+  filter:blur(30px);opacity:.8}
+
+/* tab bar: a docked segmented control */
 @media (min-width:981px){
-  .studio-v2 .editor .tabs{position:sticky;top:calc(var(--tb-h,64px) + 8px);z-index:6}
+  .studio-v2 .editor .tabs{position:sticky;top:calc(var(--tb-h,64px) + 10px);z-index:6}
 }
+.studio-v2 .editor .tabs{display:flex;gap:4px;padding:5px;margin-bottom:18px;border-radius:999px;border:1px solid var(--st-edge);
+  background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(16px) saturate(130%);-webkit-backdrop-filter:blur(16px) saturate(130%);
+  overflow-x:auto;scrollbar-width:none;box-shadow:var(--st-shadow)}
+.studio-v2 .editor .tabs::-webkit-scrollbar{display:none}
+.studio-v2 .editor .tab{flex:none;border:0;border-radius:999px;padding:9px 15px;font-size:13px;font-weight:500;letter-spacing:-.005em;color:var(--muted);background:transparent;
+  transition:background .25s var(--st-ease),color .25s,transform .2s var(--st-ease),box-shadow .3s}
+.studio-v2 .editor .tab:hover{color:var(--text);background:var(--st-surface-2)}
+.studio-v2 .editor .tab:active{transform:scale(.96)}
+.studio-v2 .editor .tab.active{background:var(--accent);color:#fff;box-shadow:0 10px 24px -12px var(--accent-glow,var(--accent))}
 
 /* expand / collapse all */
-.studio-v2 .st2-tools{display:flex;justify-content:flex-end;gap:6px;margin:0 2px 10px}
-.studio-v2 .st2-tools button{height:30px;padding:0 12px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
-.studio-v2 .st2-tools button:hover{color:var(--text);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.studio-v2 .st2-tools{display:flex;justify-content:flex-end;gap:6px;margin:0 2px 12px}
+.studio-v2 .st2-tools button{height:30px;padding:0 13px;border-radius:999px;border:1px solid var(--st-edge);background:var(--st-surface);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+.studio-v2 .st2-tools button:hover{color:var(--text);border-color:color-mix(in srgb,var(--accent) 45%,var(--st-edge));background:var(--st-surface-2)}
 
-/* each section is a collapsible card */
-.studio-v2 .editor fieldset.st2-acc{padding:0 18px 4px;transition:border-color .2s}
+/* each section is a bento card */
+.studio-v2 .editor fieldset.st2-acc{position:relative;margin:0 0 14px;padding:0 18px 4px;border:1px solid var(--st-edge);border-radius:var(--st-r);
+  background:linear-gradient(170deg,var(--st-surface-2),transparent 45%),var(--st-surface);
+  box-shadow:inset 0 1px 0 var(--st-spec),var(--st-shadow);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  transition:border-color .3s var(--st-ease),box-shadow .3s var(--st-ease),background .3s}
+.studio-v2 .editor fieldset.st2-acc:hover{border-color:color-mix(in srgb,var(--ink) 16%,transparent)}
 .studio-v2 .editor fieldset.st2-acc:not(.st2-open){padding-bottom:0}
-.studio-v2 .editor fieldset.st2-acc.st2-open{border-color:color-mix(in srgb,var(--accent) 28%,var(--line))}
+.studio-v2 .editor fieldset.st2-acc.st2-open{border-color:color-mix(in srgb,var(--accent) 32%,var(--st-edge));
+  box-shadow:inset 0 1px 0 var(--st-spec),0 0 0 1px color-mix(in srgb,var(--accent) 8%,transparent),0 30px 60px -36px var(--st-glow)}
 .studio-v2 .editor fieldset.st2-acc::after{content:"";display:block;clear:both}
 
-.studio-v2 .editor fieldset.st2-acc > legend{float:left;box-sizing:border-box;width:calc(100% + 36px);margin:0 -18px;padding:15px 18px;display:flex;align-items:center;gap:8px;
-  cursor:pointer;user-select:none;-webkit-user-select:none;border-radius:20px;transition:background .2s}
-.studio-v2 .editor fieldset.st2-acc > legend:hover{background:color-mix(in srgb,var(--text) 4%,transparent)}
+.studio-v2 .editor fieldset.st2-acc > legend{float:left;box-sizing:border-box;width:calc(100% + 36px);margin:0 -18px;padding:17px 18px;display:flex;align-items:center;gap:10px;
+  cursor:pointer;user-select:none;-webkit-user-select:none;border-radius:var(--st-r);transition:background .2s;
+  font-size:15px;font-weight:600;letter-spacing:-.018em;line-height:1.2}
+.studio-v2 .editor fieldset.st2-acc > legend:hover{background:color-mix(in srgb,var(--text) 3%,transparent)}
 .studio-v2 .editor fieldset.st2-acc > legend:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-.studio-v2 .editor fieldset.st2-acc.st2-open > legend{margin-bottom:14px;border-bottom-left-radius:0;border-bottom-right-radius:0;box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--line) 70%,transparent)}
+.studio-v2 .editor fieldset.st2-acc.st2-open > legend{margin-bottom:16px;border-bottom-left-radius:0;border-bottom-right-radius:0;box-shadow:inset 0 -1px 0 var(--st-edge)}
+.studio-v2 .editor fieldset.st2-acc > legend small{font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--muted);opacity:.9}
 
-.studio-v2 .st2-chev{margin-left:auto;font-size:12px;opacity:.65;transition:transform .25s}
+.studio-v2 .st2-chev{margin-left:auto;font-size:11px;width:26px;height:26px;display:inline-grid;place-items:center;border-radius:999px;background:var(--st-surface-2);opacity:.85;transition:transform .35s var(--st-ease),background .2s}
 .studio-v2 fieldset.st2-open > legend .st2-chev{transform:rotate(180deg)}
 
 /* collapsed: only the heading row shows */
@@ -41,91 +82,91 @@
 /* tips: hidden until you tap the info button */
 .studio-v2 .editor fieldset.st2-acc > p.hint:not(.media-status){display:none}
 .studio-v2 .editor fieldset.st2-acc.st2-open.st2-hints > p.hint:not(.media-status){display:block}
-.studio-v2 .st2-info{display:none;margin-left:auto;width:30px;height:30px;padding:0;border:0;border-radius:10px;background:transparent;color:var(--muted);font-size:14px;cursor:pointer;transition:color .2s,background .2s}
+.studio-v2 .st2-info{display:none;margin-left:auto;width:28px;height:28px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--muted);font-size:14px;cursor:pointer;transition:color .2s,background .2s}
 .studio-v2 fieldset.st2-open > legend .st2-info{display:inline-flex;align-items:center;justify-content:center}
-.studio-v2 fieldset.st2-open > legend .st2-info ~ .st2-chev{margin-left:8px}
-.studio-v2 .st2-info:hover{color:var(--text);background:color-mix(in srgb,var(--text) 8%,transparent)}
+.studio-v2 fieldset.st2-open > legend .st2-info ~ .st2-chev{margin-left:6px}
+.studio-v2 .st2-info:hover{color:var(--text);background:var(--st-surface-2)}
 .studio-v2 fieldset.st2-hints > legend .st2-info{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
 
-@media (max-width:980px){
-  .studio-v2 .editor fieldset.st2-acc{padding:0 14px 2px}
-  .studio-v2 .editor fieldset.st2-acc > legend{width:calc(100% + 28px);margin:0 -14px;padding:14px;border-radius:18px}
-  .studio-v2 .editor fieldset.st2-acc.st2-open > legend{margin-bottom:12px}
-}
-@media (prefers-reduced-motion:reduce){
-  .studio-v2 .st2-chev,.studio-v2 .editor fieldset.st2-acc,.studio-v2 .editor fieldset.st2-acc > legend{transition:none}
+/* muted labels, calmer hints, quiet inputs */
+.studio-v2 .field > label{color:var(--muted);font-size:12.5px;font-weight:500;letter-spacing:.01em}
+.studio-v2 p.hint{color:var(--muted);font-size:12.5px;line-height:1.6}
+.studio-v2 .field input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]),
+.studio-v2 .field select,
+.studio-v2 .field textarea{border-radius:var(--st-r-sm);border:1px solid var(--st-edge);background:color-mix(in srgb,var(--ink) 3%,transparent);
+  transition:border-color .2s,box-shadow .25s,background .2s}
+.studio-v2 .field input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=file]):focus,
+.studio-v2 .field select:focus,
+.studio-v2 .field textarea:focus{outline:none;border-color:color-mix(in srgb,var(--accent) 60%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}
+
+/* numbers and times line up in columns */
+.studio-v2 input[type=number],
+.studio-v2 input[type=time],
+.studio-v2 [data-count],
+.studio-v2 .frost o{font-variant-numeric:tabular-nums}
+
+/* compact pill buttons */
+.studio-v2 .btn{border-radius:999px;transition:transform .2s var(--st-ease),box-shadow .3s,background .2s}
+.studio-v2 .btn:hover{transform:translateY(-1px)}
+.studio-v2 .btn:active{transform:scale(.97)}
+.studio-v2 .btn-accent{box-shadow:0 12px 26px -14px var(--accent-glow,var(--accent))}
+
+/* live preview as a floating card */
+.studio-v2 .preview{position:relative;border:1px solid var(--st-edge);border-radius:var(--st-r);padding:14px;background:var(--st-surface);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:var(--st-shadow)}
+@media (min-width:981px){
+  .studio-v2 .preview{position:sticky;top:calc(var(--tb-h,64px) + 84px)}
 }
 
-/* Custom checkbox: replaces the browser's native checkbox inside Studio toggles.
- * The input stays in the page, so every script that reads or sets .checked keeps working. */
+/* save bar: a floating pill docked to the bottom */
+.studio-v2 .savebar{position:sticky;bottom:calc(var(--dock-space,0px) + 12px);z-index:20;width:fit-content;max-width:calc(100% - 24px);margin:20px auto 0;
+  display:flex;align-items:center;gap:10px;padding:7px 7px 7px 18px;border-radius:999px;border:1px solid var(--st-edge);
+  background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
+  box-shadow:0 22px 44px -20px rgba(0,0,0,.6)}
+.studio-v2 .save-state{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.studio-v2 .save-state.dirty{color:var(--accent)}
+
+/* the custom checkbox, kept with the other toggles */
+.studio-v2 .toggle{display:flex;align-items:center;gap:0;cursor:pointer;padding:11px 13px;margin-bottom:8px;border-radius:var(--st-r-sm);border:1px solid var(--st-edge);background:var(--st-surface);transition:border-color .25s,background .25s}
+.studio-v2 .toggle:hover{border-color:color-mix(in srgb,var(--ink) 16%,transparent)}
+.studio-v2 .toggle:has(input:checked){border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.studio-v2 .toggle > span{flex:1;min-width:0}
 .studio-v2 .toggle input[type=checkbox],
 .studio-v2 label.toggle > input[type=checkbox],
 .studio-v2 .mxs-themes input[type=checkbox] {
-  -webkit-appearance: none; appearance: none;
-  position: relative; flex: none;
-  width: 22px; height: 22px; margin: 0 10px 0 0;
-  border-radius: 7px;
-  border: 1.5px solid color-mix(in srgb, var(--ink) 22%, transparent);
-  background: color-mix(in srgb, var(--ink) 4%, transparent);
-  cursor: pointer; vertical-align: middle;
-  transition: background .28s cubic-bezier(.22,1,.36,1), border-color .28s ease, box-shadow .28s ease, transform .18s ease;
-  background-repeat: no-repeat; background-position: center;
-  background-size: 0 0;
-}
-.studio-v2 .toggle input[type=checkbox]:hover { border-color: color-mix(in srgb, var(--accent) 60%, transparent); }
-.studio-v2 .toggle input[type=checkbox]:active { transform: scale(.9); }
-.studio-v2 .toggle input[type=checkbox]:checked {
-  border-color: transparent;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.5 12.6l3.6 3.5 7.4-7.6' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-size: 78% 78%;
-  background-color: var(--accent);
-  box-shadow: 0 4px 14px -4px var(--accent-glow, var(--accent));
-}
-.studio-v2 .toggle input[type=checkbox]:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-.studio-v2 .toggle input[type=checkbox]:disabled { opacity: .45; cursor: not-allowed; }
-.studio-v2 .toggle { display: flex; align-items: center; gap: 0; cursor: pointer; }
-.studio-v2 .toggle > span { flex: 1; min-width: 0; }
-@media (prefers-reduced-motion: reduce) {
-  .studio-v2 .toggle input[type=checkbox] { transition: none; }
-}
+  -webkit-appearance:none;appearance:none;position:relative;flex:none;width:22px;height:22px;margin:0 10px 0 0;border-radius:7px;
+  border:1.5px solid color-mix(in srgb,var(--ink) 22%,transparent);background:color-mix(in srgb,var(--ink) 4%,transparent);
+  cursor:pointer;vertical-align:middle;transition:background .28s var(--st-ease),border-color .28s ease,box-shadow .28s ease,transform .18s ease;
+  background-repeat:no-repeat;background-position:center;background-size:0 0}
+.studio-v2 .toggle input[type=checkbox]:hover{border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+.studio-v2 .toggle input[type=checkbox]:active{transform:scale(.9)}
+.studio-v2 .toggle input[type=checkbox]:checked{
+  border-color:transparent;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.5 12.6l3.6 3.5 7.4-7.6' fill='none' stroke='%23fff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size:78% 78%;background-color:var(--accent);box-shadow:0 4px 14px -4px var(--accent-glow,var(--accent))}
+.studio-v2 .toggle input[type=checkbox]:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 35%,transparent)}
+.studio-v2 .toggle input[type=checkbox]:disabled{opacity:.45;cursor:not-allowed}
 
 /* QR code symbol section (added by maple-builder.js after Card layout): stack everything and centre it */
-.studio-v2 #qr-sym {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  text-align: center;
-}
+.studio-v2 #qr-sym{display:flex !important;flex-direction:column !important;align-items:center !important;text-align:center}
 .studio-v2 #qr-sym > legend,
-.studio-v2 #qr-sym > .hint {
-  align-self: stretch;
-  text-align: center;
-}
-.studio-v2 #qr-sym > div {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 100%;
-  gap: 12px !important;
-}
-.studio-v2 #qr-sym > div > div {
-  width: 100%;
-  max-width: 320px;
-  min-width: 0 !important;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.studio-v2 #qr-sym #qr-prev {
-  margin: 0 auto;
-}
+.studio-v2 #qr-sym > .hint{align-self:stretch;text-align:center}
+.studio-v2 #qr-sym > div{display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;width:100%;gap:12px !important}
+.studio-v2 #qr-sym > div > div{width:100%;max-width:320px;min-width:0 !important;display:flex;flex-direction:column;align-items:center}
+.studio-v2 #qr-sym #qr-prev{margin:0 auto}
 .studio-v2 #qr-sym .field,
 .studio-v2 #qr-sym label,
-.studio-v2 #qr-sym select {
-  width: 100%;
-  text-align: center;
+.studio-v2 #qr-sym select{width:100%;text-align:center}
+
+/* mobile */
+@media (max-width:980px){
+  .studio-v2 .linkbar{padding:14px}
+  .studio-v2 .editor fieldset.st2-acc{padding:0 14px 2px;border-radius:20px}
+  .studio-v2 .editor fieldset.st2-acc > legend{width:calc(100% + 28px);margin:0 -14px;padding:15px 14px;border-radius:20px}
+  .studio-v2 .editor fieldset.st2-acc.st2-open > legend{margin-bottom:14px}
+  .studio-v2 .savebar{left:50%;transform:translateX(-50%)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .studio-v2 *,.studio-v2 *::before,.studio-v2 *::after{transition:none !important;animation:none !important}
 }
