@@ -292,38 +292,17 @@
         @keyframes lovePop { 0% { transform:scale(1); } 40% { transform:scale(1.55); } 100% { transform:scale(1); } }
         .modal:not(.show) { backdrop-filter:none; }
         #star-intro { position:fixed; inset:0; z-index:99999; background:var(--bg); }
-            /* PC only (wide screen + mouse): one balanced two-column page.
-               Row 1: the profile card across the top, with identity and gear side by side.
-               Row 2: music (left) and links (right), so both halves are about the same weight. */
-        @media (min-width:900px) and (min-height:640px) {
-            .shell { max-width:1240px; width:100%; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:28px; row-gap:24px; align-items:start; padding:32px 48px 96px; box-sizing:border-box; }
-            .shell > .topbar { grid-column:1 / -1; grid-row:1; }
-            .shell > .pc-left { display:contents; }
-            .shell > .pc-left > .panel { grid-column:1 / -1; grid-row:2; min-width:0; }
-            .shell > .mx-stack { grid-column:1; grid-row:3; min-width:0; }
-            .shell > .pager { grid-column:1 / -1; grid-row:3; min-width:0; }
-            .shell:has(> .mx-stack:not([hidden])) > .pager { grid-column:2; }
-            .shell > #cta { grid-column:1 / -1; grid-row:4; }
-            .shell > footer { grid-column:1 / -1; grid-row:5; }
-            .shell > *:not(.topbar):not(.pc-left):not(.pager):not(.mx-stack):not(footer):not(.modal):not(.music-panel):not(#cta) { grid-column:1 / -1; min-width:0; }
-
-            /* the profile card: the same glass as the cards on the right, laid out in a grid */
-            .shell > .pc-left > .panel { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); column-gap:32px; row-gap:16px; align-items:start; padding:0 0 24px; }
-            .shell > .pc-left > .panel > .banner { grid-column:1 / -1; grid-row:1; height:168px; }
-            .shell > .pc-left > .panel > .identity { grid-column:1; grid-row:2; margin-top:-60px; padding:0 14px; }
-            .shell > .pc-left > .panel > .gear { grid-column:2; grid-row:2; margin:0; padding:0 14px 0 0; }
-            .shell > .pc-left > .panel > .stats { grid-column:1 / -1; grid-row:3; margin:0 14px; }
-            .shell > .pc-left > .panel > .bio { grid-column:1; grid-row:4; margin:0; padding:0 14px; }
-            .shell > .pc-left > .panel > .status-line { grid-column:2; grid-row:4; margin:0; padding:0 14px 0 0; }
-            .shell > .pc-left > .panel > .actions { grid-column:1 / -1; grid-row:5; margin:0 14px; }
-            .shell > .pc-left > .panel > .reacts { grid-column:1 / -1; grid-row:6; margin:0 14px; }
-            .shell > .pc-left > .panel > .support { grid-column:1 / -1; grid-row:7; margin:0 14px; }
-            /* the like button sits inline beside the name on the wide layout */
-            .shell > .pc-left > .panel .name-row .love { position:static; flex:none; }
-            .shell > .pc-left > .panel .support { width:auto; }
-            /* no music block: the links fill the page as two side-by-side columns */
-            .shell:not(:has(> .mx-stack:not([hidden]))) #sections { display:grid !important; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px !important; align-items:start; }
-
+            /* PC only (wide screen + mouse): the basic layout.
+               Left column: the profile card, fixed on screen while you scroll (with the "Create yours" link under it).
+               Right column: everything else (music, links, footer) scrolls. Phones and tablets keep the single column. */
+        @media (min-width:900px) and (min-height:640px), (min-width:640px) and (orientation:landscape) {
+            :root { --pc-gut: clamp(24px,3vw,72px); }
+            .shell:not([hidden]) { display:grid; grid-template-columns:340px minmax(0,1fr); column-gap:28px; row-gap:20px; align-items:start; max-width:none; width:100%; box-sizing:border-box; margin:0; padding:20px var(--pc-gut) 96px; }
+            .shell:not([hidden]) > * { grid-column:2; min-width:0; }
+            .shell:not([hidden]) > .topbar { grid-column:1 / -1; }
+            .shell:not([hidden]) > .pc-left { display:flex; flex-direction:column; gap:14px; position:fixed; z-index:2; width:340px; top:calc(var(--tb-h,64px) + 12px); left:var(--pc-gut); }
+            @media (max-height:560px) { .shell:not([hidden]) > .pc-left { zoom:.78; } }
+            .shell:not([hidden]) > .pc-left > .panel { position:relative; }
             .pager.single .pslides { overflow:visible; }
             .pager.single .ptabs { display:none !important; }
             .pager.single .pslide.hidden { display:block !important; }
