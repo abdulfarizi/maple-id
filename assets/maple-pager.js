@@ -324,7 +324,7 @@
 
   /* Explore opens as a floating panel under the top bar (maple-header.js owns it); the old full-screen layer is no longer used */
   function openExplore() {
-    if (window.dgSearch) { window.dgSearch.open(); return; }
+    if (window.dgSearch) { if (!dgSearch.isOpen()) dgSearch.open(); return; }
     ensure(); ensureLayer();
     if (layerKind === 'explore') return;
     openLayer('explore');

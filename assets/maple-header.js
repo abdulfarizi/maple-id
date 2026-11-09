@@ -48,7 +48,6 @@
       ex = document.createElement('a'); ex.href = '/#explore'; ex.className = 'tb-ex';
       ex.setAttribute('aria-label', 'Explore'); ex.title = 'Explore';
       ex.setAttribute('aria-haspopup', 'dialog'); ex.setAttribute('aria-expanded', 'false');
-      ex.addEventListener('click', function (e) { e.preventDefault(); toggleSearch(); });
       ex.innerHTML = '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>';
       end.insertBefore(ex, end.firstChild);
     }
@@ -132,10 +131,10 @@
     closeT = setTimeout(finish, 220);
   }
 
-  // the Explore tab in the top bar (wide screens) opens and closes the same panel as the search icon.
+  // the search icon (phones) and the Explore tab (wide screens) open and close the same panel; the page router never sees these clicks.
   // Handled first (capture) so the router does not treat it as a navigation and the outside-click rule does not close it at once.
   document.addEventListener('click', function (e) {
-    var t = e.target && e.target.closest && e.target.closest('.topbar a.tb-nl[href="/#explore"]');
+    var t = e.target && e.target.closest && e.target.closest('.topbar a.tb-nl[href="/#explore"], .topbar a.tb-ex');
     if (!t) return;
     e.preventDefault(); e.stopPropagation();
     toggleSearch();
