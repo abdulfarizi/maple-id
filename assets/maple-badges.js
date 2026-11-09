@@ -1,6 +1,7 @@
-/* M-ID · profile badges: tick (verified), crown (special honor), music artist, and seller.
- * window.dgBadgeHTML({verified, crown, musicArtist, seller}) → the badges shown beside a name on every card style.
- * If a person has more than one, they share one slot and take turns (the slot is the width of the widest badge).
+/* M-ID · profile badges: tick (verified), crown (special honor), music artist, seller.
+ * window.dgBadgeHTML({verified, crown, musicArtist, seller, badgeMode, badgeSpeed}) → the badges beside a name on every card style.
+ *  · badgeMode "all" (default): every badge shows side by side at once.
+ *  · badgeMode "cycle": the badges share one slot and take turns, changing every badgeSpeed seconds (1 to 8, default 2.6).
  * Badges are given by the site owner only (Menu → Badges); the card just displays what the server sends. */
 (function () {
   'use strict';
@@ -19,31 +20,44 @@
     { k: 'musicArtist', cls: 'mid-vb-music', t: 'Music artist', svg: MUSIC }
   ];
 
+  function speedOf(v) {
+    var n = Number(v);
+    if (!isFinite(n) || n <= 0) n = 2.6;
+    return Math.min(8, Math.max(1, n));
+  }
+
   window.dgBadgeHTML = function (b) {
     if (!b) return '';
     var on = DEF.filter(function (d) { return !!b[d.k]; });
     if (!on.length) return '';
+    var cycle = b.badgeMode === 'cycle' && on.length > 1;
+    var speed = speedOf(b.badgeSpeed);
     var layers = on.map(function (d, i) {
-      return '<span class="mid-vb ' + d.cls + (i === 0 ? ' on' : '') + '" title="' + d.t + '" role="img" aria-label="' + d.t + '">' + d.svg + '</span>';
+      var active = !cycle || i === 0;
+      return '<span class="mid-vb ' + d.cls + (active ? ' on' : '') + '" title="' + d.t + '" role="img" aria-label="' + d.t + '">' + d.svg + '</span>';
     }).join('');
-    var cycle = on.length > 1 ? ' data-bcycle' : '';
-    return '<span class="mid-vbs"' + cycle + '>' + layers + '</span>';
+    return '<span class="mid-vbs' + (cycle ? ' is-cycle' : '') + '"' + (cycle ? ' data-bcycle data-speed="' + speed + '"' : '') + '>' + layers + '</span>';
   };
 
-  // Several badges share one slot: every few seconds the next one takes its place.
-  // One shared timer for the whole page; people who prefer reduced motion see the first badge only.
+  // Cycling slots: each one moves on after its own speed. One shared timer for the page.
+  // People who prefer reduced motion see the first badge only.
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduce) return;
   setInterval(function () {
+    var now = Date.now();
     var slots = document.querySelectorAll('.mid-vbs[data-bcycle]');
     for (var s = 0; s < slots.length; s++) {
       var el = slots[s], L = el.children, n = L.length;
       if (n < 2) continue;
+      var ms = speedOf(el.getAttribute('data-speed')) * 1000;
+      if (!el.__t) el.__t = now;
+      if (now - el.__t < ms) continue;
+      el.__t = now;
       var cur = el.__cur || 0;
       if (L[cur]) L[cur].classList.remove('on');
       cur = (cur + 1) % n;
       if (L[cur]) L[cur].classList.add('on');
       el.__cur = cur;
     }
-  }, 2600);
+  }, 200);
 })();
