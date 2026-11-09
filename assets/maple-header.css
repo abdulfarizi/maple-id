@@ -70,7 +70,7 @@ body.has-dock.star-mode:not(.pager-on) .star-frame{height:calc(100vh - var(--tb-
 .tb-ex:active{transform:scale(.92)}
 .tb-ex[aria-expanded=true]{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));color:var(--accent-t,var(--accent))}
 /* the Explore panel: it grows out of the top bar's bottom edge and rolls back up into it */
-.tb-search{position:fixed;left:50%;top:var(--tb-h,64px);z-index:29;width:min(580px,calc(100vw - 20px));max-height:calc(100dvh - var(--tb-h,64px) - 14px);
+.tb-search{position:fixed;left:50%;top:var(--tb-h,64px);z-index:90;width:min(580px,calc(100vw - 20px));max-height:calc(100dvh - var(--tb-h,64px) - 14px);
   display:flex;flex-direction:column;transform:translateX(-50%);transform-origin:50% 0;overflow:hidden;
   background:color-mix(in srgb,var(--panel-solid,var(--panel)) 96%,transparent);border:1px solid var(--line-strong);border-top:0;border-radius:0 0 26px 26px;
   box-shadow:0 30px 60px -24px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
