@@ -12,3 +12,20 @@
   .mh2{grid-template-columns:1fr;min-height:0}
   .mh2 .stage{min-height:0;margin-top:24px}
 }
+
+/* ── the rest of the homepage: bento, steps, guides, discovery, join ── */
+.mh2-ticker{margin:clamp(32px,5vw,64px) 0}
+.mh2-head{text-align:left;max-width:860px;margin:clamp(64px,9vw,120px) auto 28px;padding:0 clamp(16px,4vw,40px)}
+.mh2-head h2{margin:14px 0 10px}
+.mh2-bento{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px;max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+.mh2-bento .bx{grid-column:span 2;min-height:240px;display:flex;flex-direction:column;justify-content:space-between}
+.mh2-bento .bx:first-child{grid-column:span 4;min-height:300px}
+@media (max-width:900px){ .mh2-bento{grid-template-columns:1fr} .mh2-bento .bx,.mh2-bento .bx:first-child{grid-column:span 1;min-height:0} }
+.mh2-steps{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;max-width:1180px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+@media (max-width:900px){ .mh2-steps{grid-template-columns:1fr} }
+.mh2-guides{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:1180px;margin:clamp(32px,5vw,56px) auto 0;padding:0 clamp(16px,4vw,40px)}
+@media (max-width:900px){ .mh2-guides{grid-template-columns:1fr} }
+.explore{max-width:1180px;margin:clamp(64px,9vw,120px) auto 0;padding:0 clamp(16px,4vw,40px)}
+.explore .ex-list{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;list-style:none;padding:0;margin:18px 0 0}
+.join{max-width:1180px;margin:clamp(64px,9vw,120px) auto clamp(64px,9vw,120px);padding:clamp(28px,5vw,64px);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center}
+@media (max-width:900px){ .join{grid-template-columns:1fr} }
