@@ -4,306 +4,280 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="robots" content="noindex,nofollow" />
-<title>EMBER & CO. · Sauce test page</title>
-<meta name="description" content="Gourmet sauce, slow-burned in small batches. Test page." />
+<title>M-ID · Test page</title>
+<meta name="description" content="M-ID: one link for every game ID and social handle. Claim yours." />
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon.png?v=2" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bricolage+Grotesque:wght@400;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 <style>
   :root{
-    --orange:#ff6a13; --orange-2:#ffb14a; --red:#e8381a;
-    --black:#0b0907; --ink:#16110e; --paper:#f7efe6; --muted:#a79b92;
-    --line:rgba(255,255,255,.12);
-    --display:'Anton','Impact',system-ui,sans-serif; --sans:'Inter',system-ui,-apple-system,sans-serif;
+    --accent:#9b5cff; --accent-2:#e0479e; --black:#0b0a10; --panel:#15121c; --paper:#f4f0fa; --muted:#a79fb8; --dim:#7b7390;
+    --line:rgba(255,255,255,.1);
+    --display:'Bricolage Grotesque',system-ui,sans-serif; --sans:'Inter',system-ui,-apple-system,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{background:var(--black);color:var(--paper);scroll-behavior:smooth}
   body{font-family:var(--sans);overflow-x:hidden;-webkit-font-smoothing:antialiased}
   a{color:inherit;text-decoration:none}
-  img,canvas{display:block;max-width:100%}
-
-  /* textured backdrop: grain + warm glow */
-  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.09;mix-blend-mode:overlay;
+  img{display:block;max-width:100%}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.08;mix-blend-mode:overlay;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
   main,header,footer{position:relative;z-index:1}
+  .glow{position:fixed;inset:-20% -10% auto;height:70vh;z-index:0;pointer-events:none;filter:blur(60px);opacity:.5;
+    background:radial-gradient(closest-side at 30% 40%,rgba(155,92,255,.45),transparent 70%),radial-gradient(closest-side at 75% 30%,rgba(224,71,158,.35),transparent 70%)}
 
-  /* nav */
-  .nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:18px clamp(18px,4vw,48px);
-    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:linear-gradient(to bottom,rgba(11,9,7,.7),transparent)}
-  .logo{font-family:var(--display);font-size:24px;letter-spacing:.02em}
-  .logo span{color:var(--orange)}
-  .nav ul{display:flex;gap:28px;list-style:none;font-size:14px;color:var(--muted)}
-  .nav ul a:hover{color:var(--paper)}
-  .cart{padding:10px 18px;border-radius:999px;background:var(--orange);color:#140803;font-weight:700;font-size:14px;transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s}
-  .cart:hover{transform:translateY(-2px);box-shadow:0 12px 28px -10px rgba(255,106,19,.7)}
+  /* header */
+  .top{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;gap:14px;padding:12px clamp(14px,3vw,36px);
+    background:rgba(11,10,16,.65);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border-bottom:1px solid var(--line)}
+  .icon-btn{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--paper);cursor:pointer;font-size:16px;transition:border-color .25s,background .25s}
+  .icon-btn:hover{border-color:rgba(155,92,255,.6);background:rgba(155,92,255,.1)}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img.emblem{width:34px;height:34px;object-fit:contain}
+  .brand img.word{height:24px;width:auto;object-fit:contain}
+  .nav{display:flex;gap:4px;margin-left:12px}
+  .nav a{padding:9px 14px;border-radius:999px;font-size:14px;color:var(--muted);transition:color .2s,background .2s}
+  .nav a:hover{color:var(--paper);background:rgba(255,255,255,.06)}
+  .top-end{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:999px;font-weight:600;font-size:15px;transition:transform .3s var(--ease),box-shadow .3s,border-color .3s,color .3s}
+  .btn-accent{background:linear-gradient(100deg,var(--accent),var(--accent-2));color:#fff;box-shadow:0 12px 28px -14px rgba(155,92,255,.8)}
+  .btn-accent:hover{transform:translateY(-2px)}
+  .btn-ghost{border:1px solid var(--line);color:var(--paper);background:rgba(255,255,255,.03)}
+  .btn-ghost:hover{border-color:rgba(155,92,255,.6)}
+  .btn-sm{padding:9px 14px;font-size:13px}
+  @media (max-width:820px){ .nav{display:none} .top-end .btn-ghost{display:none} }
+
+  /* hamburger drawer */
+  .scrim{position:fixed;inset:0;z-index:60;background:rgba(5,4,8,.6);opacity:0;pointer-events:none;transition:opacity .3s}
+  .drawer{position:fixed;top:0;left:0;bottom:0;z-index:61;width:min(340px,86vw);padding:18px;display:flex;flex-direction:column;gap:6px;
+    background:linear-gradient(170deg,rgba(255,255,255,.07),transparent 50%),#120f18;border-right:1px solid var(--line);
+    transform:translateX(-102%);transition:transform .45s var(--ease);overflow-y:auto}
+  body.menu-open .scrim{opacity:1;pointer-events:auto}
+  body.menu-open .drawer{transform:none}
+  .drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .drawer-head img{height:24px;width:auto}
+  .drawer h4{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:18px 6px 6px;font-weight:600}
+  .drawer a.item{display:flex;align-items:center;gap:14px;padding:13px 14px;border-radius:16px;font-size:15px;color:var(--paper);transition:background .2s,transform .3s var(--ease)}
+  .drawer a.item i{width:20px;text-align:center;color:var(--accent)}
+  .drawer a.item:hover{background:rgba(255,255,255,.06);transform:translateX(4px)}
+  .drawer .grow{flex:1}
+  .drawer .cta{margin-top:12px;justify-content:center}
 
   /* hero */
-  .hero{position:relative;min-height:100vh;display:grid;grid-template-columns:1fr;align-items:center;padding:120px clamp(18px,4vw,48px) 60px;overflow:hidden}
-  .hero-glow{position:absolute;inset:-10%;background:radial-gradient(closest-side at 70% 45%,rgba(255,106,19,.35),transparent 70%),radial-gradient(closest-side at 20% 80%,rgba(232,56,26,.18),transparent 70%);filter:blur(20px);z-index:0}
-  .hero-title{position:relative;z-index:2;font-family:var(--display);font-size:clamp(64px,15vw,230px);line-height:.86;letter-spacing:-.01em;text-transform:uppercase}
-  .hero-title .o{color:var(--orange)}
-  .hero-title .outline{color:transparent;-webkit-text-stroke:2px var(--paper)}
-  .hero-sub{position:relative;z-index:2;max-width:44ch;margin-top:26px;color:var(--muted);font-size:clamp(15px,1.4vw,18px);line-height:1.6}
-  .hero-cta{position:relative;z-index:2;display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
-  .btn{display:inline-flex;align-items:center;gap:10px;padding:16px 26px;border-radius:999px;font-weight:700;font-size:15px;transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s,background .3s}
-  .btn-main{background:var(--orange);color:#140803}
-  .btn-main:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 18px 40px -12px rgba(255,106,19,.75)}
-  .btn-ghost{border:1px solid var(--line);color:var(--paper);background:rgba(255,255,255,.03)}
-  .btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
-  .profile-stage{position:absolute;right:clamp(-20px,4vw,60px);top:50%;transform:translateY(-50%);width:min(44vw,400px);perspective:1100px;z-index:1}
-  .pcard{position:relative;border-radius:30px;overflow:hidden;transform-style:preserve-3d;
-    background:linear-gradient(170deg,rgba(255,255,255,.14),rgba(255,255,255,.03) 50%),rgba(20,14,11,.72);
-    border:1px solid rgba(255,255,255,.22);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 40px 80px -30px rgba(255,106,19,.5);
-    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
-    transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s cubic-bezier(.22,1,.36,1)}
-  .pc-ban{height:150px;background:linear-gradient(135deg,var(--orange),var(--red) 60%,#3a0d05)}
-  .pc-av{position:relative;z-index:2;width:104px;height:104px;border-radius:50%;margin:-52px 0 0 28px;display:grid;place-items:center;
-    font-family:var(--display);font-size:34px;background:var(--black);border:4px solid var(--orange);color:var(--paper);box-shadow:0 0 0 6px rgba(255,106,19,.18)}
-  .pc-body{position:relative;z-index:1;padding:14px 28px 28px}
-  .pc-name{font-family:var(--display);font-size:38px;text-transform:uppercase;line-height:1}
-  .pc-tick{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--orange);color:#140803;font-size:12px;vertical-align:middle;margin-left:6px}
-  .pc-slug{color:var(--muted);font-size:13px;margin-top:6px}
-  .pc-bio{color:var(--paper);opacity:.85;font-size:15px;line-height:1.55;margin-top:14px}
-  .pc-ids{list-style:none;margin-top:18px;display:grid;gap:8px}
-  .pc-ids li{display:flex;justify-content:space-between;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:14px}
-  .pc-ids span{color:var(--orange);font-weight:600}
-  .pc-btns{display:flex;gap:10px;margin-top:20px}
-  .pc-btn{flex:1;border-radius:999px;padding:13px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;background:rgba(255,255,255,.08);color:var(--paper);border:1px solid rgba(255,255,255,.14);transition:transform .3s cubic-bezier(.22,1,.36,1)}
-  .pc-btn.main{background:var(--orange);color:#140803;border:0}
-  .pc-btn:hover{transform:translateY(-2px)}
-  .pc-glow{position:absolute;left:-20%;right:-20%;bottom:-30%;height:60%;background:radial-gradient(closest-side,rgba(255,106,19,.45),transparent 70%);pointer-events:none;z-index:0}
+  .hero{min-height:100vh;display:grid;align-content:center;padding:130px clamp(18px,4vw,48px) 60px;max-width:1180px;margin:0 auto}
+  .pill{display:inline-flex;align-items:center;gap:10px;margin-bottom:22px;padding:7px 14px 7px 10px;border-radius:999px;font-size:13px;font-weight:600;
+    background:rgba(255,255,255,.05);border:1px solid rgba(155,92,255,.35);width:fit-content}
+  .pill .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(155,92,255,.25)}
+  h1.title{font-family:var(--display);font-size:clamp(44px,8vw,112px);line-height:.96;letter-spacing:-.03em;font-weight:700;max-width:12em}
+  h1.title .grad{background:linear-gradient(100deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{margin-top:24px;max-width:50ch;color:var(--muted);font-size:clamp(15px,1.4vw,18px);line-height:1.65}
+  .claim{margin-top:30px;display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;max-width:560px;
+    background:rgba(255,255,255,.05);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+  .claim span{color:var(--dim);font-size:15px;padding-left:12px;white-space:nowrap}
+  .claim input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--paper);font:inherit;font-size:15px;padding:12px 4px}
+  .proof{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .proof li{padding:7px 12px;border-radius:999px;font-size:13px;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid var(--line)}
+  .proof i{color:var(--accent);margin-right:6px}
 
-  /* marquee */
-  .marquee{overflow:hidden;border-block:1px solid var(--line);background:var(--orange);color:#140803;padding:18px 0;transform:rotate(-1.2deg);margin:40px -4vw 0;width:108vw}
-  .marquee-track{display:flex;gap:44px;white-space:nowrap;font-family:var(--display);font-size:clamp(28px,4vw,52px);text-transform:uppercase;will-change:transform;animation:slide 22s linear infinite}
-  .marquee-track span:nth-child(even){color:var(--black)}
+  /* ticker */
+  .ticker{overflow:hidden;border-block:1px solid var(--line);padding:20px 0;background:rgba(255,255,255,.02)}
+  .ticker-track{display:flex;gap:48px;white-space:nowrap;font-family:var(--display);font-size:clamp(24px,3.4vw,44px);font-weight:700;color:var(--paper);opacity:.9;animation:slide 26s linear infinite;width:max-content}
+  .ticker-track span:nth-child(odd){color:var(--accent)}
   @keyframes slide{to{transform:translateX(-50%)}}
 
   /* sections */
-  section{padding:clamp(80px,12vw,160px) clamp(18px,4vw,48px)}
-  .kicker{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--orange)}
-  .kicker::before{content:"";width:28px;height:2px;background:var(--orange)}
-  h2.big{font-family:var(--display);font-size:clamp(52px,9vw,150px);line-height:.9;text-transform:uppercase;margin-top:18px;letter-spacing:-.005em}
-  .lede{max-width:52ch;color:var(--muted);font-size:17px;line-height:1.7;margin-top:22px}
+  section{padding:clamp(70px,10vw,130px) clamp(18px,4vw,48px);max-width:1180px;margin:0 auto}
+  .kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+    background:rgba(255,255,255,.04);border:1px solid var(--line)}
+  .kicker i{color:var(--accent)}
+  h2.sec{font-family:var(--display);font-size:clamp(34px,5vw,64px);line-height:1;letter-spacing:-.025em;margin-top:18px;font-weight:700}
+  .sec-sub{color:var(--muted);margin-top:14px;max-width:56ch;line-height:1.6}
+  .glass{border-radius:24px;padding:26px;border:1px solid var(--line);
+    background:linear-gradient(170deg,rgba(255,255,255,.06),transparent 50%),rgba(255,255,255,.025);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 24px 48px -30px rgba(0,0,0,.6);transition:transform .35s var(--ease),border-color .3s}
+  .glass:hover{transform:translateY(-3px);border-color:rgba(155,92,255,.4)}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:40px}
+  .glass .num{font-family:var(--display);font-size:44px;color:var(--accent);line-height:1}
+  .glass h3{font-family:var(--display);font-size:22px;margin:14px 0 8px}
+  .glass p{color:var(--muted);line-height:1.6;font-size:15px}
 
-  /* story: scroll-driven */
-  .story{position:relative}
-  .story-list{display:grid;gap:clamp(90px,14vw,200px);margin-top:70px}
-  .story-item{display:grid;grid-template-columns:auto 1fr;gap:clamp(18px,4vw,60px);align-items:start}
-  .story-num{font-family:var(--display);font-size:clamp(90px,14vw,200px);line-height:.8;color:transparent;-webkit-text-stroke:1.5px var(--orange)}
-  .story-item h3{font-family:var(--display);font-size:clamp(36px,5vw,70px);line-height:.95;text-transform:uppercase}
-  .story-item p{color:var(--muted);margin-top:16px;max-width:46ch;line-height:1.7;font-size:16px}
+  /* guides */
+  .guides{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:40px}
+  .guide{padding:26px}
+  .guide-tag{display:inline-flex;align-items:center;gap:8px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:600;color:var(--accent);background:rgba(155,92,255,.14);border:1px solid rgba(155,92,255,.35)}
+  .guide h3{font-family:var(--display);font-size:24px;margin:14px 0 10px}
+  .guide ol{padding-left:20px;color:var(--muted);line-height:1.6}
+  .guide li{margin:6px 0}
+  .guide li b{color:var(--paper);font-weight:600}
+  .guide-note{margin-top:14px;font-size:13px;color:var(--dim)}
 
-  /* flavours */
-  .flavours{background:linear-gradient(180deg,var(--black),#1a0f0a 60%,var(--black))}
-  .flavour-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:60px}
-  .flavour{position:relative;border-radius:28px;padding:28px;min-height:420px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;
-    border:1px solid var(--line);background:linear-gradient(170deg,rgba(255,255,255,.06),transparent 55%),#120d0a;
-    transition:transform .45s cubic-bezier(.22,1,.36,1),border-color .35s,box-shadow .45s}
-  .flavour:hover{transform:translateY(-8px);border-color:rgba(255,106,19,.55);box-shadow:0 30px 60px -30px rgba(255,106,19,.55)}
-  .flavour .heat{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);font-weight:700}
-  .flavour h3{font-family:var(--display);font-size:clamp(40px,4.4vw,60px);line-height:.92;text-transform:uppercase;margin:14px 0}
-  .flavour p{color:var(--muted);font-size:15px;line-height:1.6}
-  .flavour .price{display:flex;justify-content:space-between;align-items:center;margin-top:26px;font-weight:700}
-  .flavour .add{width:46px;height:46px;border-radius:50%;background:var(--orange);color:#140803;display:grid;place-items:center;font-size:18px;transition:transform .35s cubic-bezier(.22,1,.36,1)}
-  .flavour:hover .add{transform:rotate(90deg) scale(1.08)}
-  .flavour .glow{position:absolute;width:320px;height:320px;right:-120px;top:-120px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,106,19,.35),transparent 70%);pointer-events:none}
+  /* join */
+  .join{border-radius:28px;padding:clamp(28px,5vw,56px);border:1px solid var(--line);
+    background:linear-gradient(160deg,rgba(155,92,255,.2),transparent 60%),rgba(255,255,255,.03);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 30px 60px -36px rgba(155,92,255,.6)}
+  .join ul{list-style:none;margin:22px 0 28px;display:grid;gap:10px;color:var(--muted)}
+  .join li i{color:var(--accent);margin-right:10px}
 
-  /* ingredients */
-  .ingredients{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,6vw,90px);align-items:center}
-  .ing-list{list-style:none;border-top:1px solid var(--line)}
-  .ing-list li{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:22px 0;border-bottom:1px solid var(--line);transition:padding .35s cubic-bezier(.22,1,.36,1),color .3s}
-  .ing-list li:hover{padding-left:14px;color:var(--orange)}
-  .ing-list b{font-family:var(--display);font-size:clamp(28px,3.4vw,44px);text-transform:uppercase;font-weight:400}
-  .ing-list small{color:var(--muted);font-size:14px;text-align:right}
-  .stat{font-family:var(--display);font-size:clamp(90px,16vw,230px);line-height:.85;color:var(--orange)}
-  .stat-label{color:var(--muted);margin-top:10px;font-size:15px;max-width:30ch}
+  footer{padding:36px clamp(18px,4vw,48px);border-top:1px solid var(--line);color:var(--dim);font-size:13px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+  footer a:hover{color:var(--paper)}
 
-  /* footer / CTA */
-  .cta{text-align:center;padding:clamp(100px,14vw,180px) clamp(18px,4vw,48px);background:var(--orange);color:#140803}
-  .cta h2{font-family:var(--display);font-size:clamp(60px,12vw,190px);line-height:.86;text-transform:uppercase}
-  .cta p{margin:20px auto 0;max-width:44ch;font-size:17px;line-height:1.6;opacity:.85}
-  .cta .btn{background:var(--black);color:var(--paper);margin-top:34px}
-  .cta .btn:hover{transform:translateY(-3px);box-shadow:0 18px 40px -12px rgba(0,0,0,.6)}
-  footer{padding:36px clamp(18px,4vw,48px);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
-
-  /* reveal before JS runs */
-  .reveal{opacity:0;transform:translateY(40px)}
-
-  @media (max-width:820px){
-    .nav ul{display:none}
-    .profile-stage{position:relative;right:auto;top:auto;transform:none;width:min(92vw,400px);margin:30px auto 0}
-    .hero{padding-top:110px}
-    .ingredients{grid-template-columns:1fr}
-    .story-item{grid-template-columns:1fr}
-  }
-  @media (prefers-reduced-motion:reduce){
-    .marquee-track{animation:none}
-    .reveal{opacity:1!important;transform:none!important}
-  }
+  .reveal{opacity:0;transform:translateY(30px)}
+  @media (prefers-reduced-motion:reduce){ .ticker-track{animation:none} .reveal{opacity:1!important;transform:none!important} }
 </style>
 </head>
 <body>
-<header class="nav">
-  <a class="logo" href="#top">EMBER<span>&amp;</span>CO.</a>
-  <ul>
-    <li><a href="#story">Story</a></li>
-    <li><a href="#flavours">Flavours</a></li>
-    <li><a href="#ingredients">Ingredients</a></li>
-  </ul>
-  <a class="cart" href="#cta">Cart (0)</a>
+<div class="glow" aria-hidden="true"></div>
+
+<header class="top">
+  <button class="icon-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><i class="fa-solid fa-bars"></i></button>
+  <a class="brand" href="/" aria-label="M-ID home">
+    <img class="emblem" src="/assets/maple-mid-emblem.png" alt="" />
+    <img class="word" src="/assets/maple-mid-wordmark.png" alt="M-ID" />
+  </a>
+  <nav class="nav" aria-label="Primary">
+    <a href="#how">How it works</a>
+    <a href="#guides">Guides</a>
+    <a href="/#explore">Explore</a>
+  </nav>
+  <div class="top-end">
+    <a class="btn btn-ghost btn-sm" href="/">Log in</a>
+    <a class="btn btn-accent btn-sm" href="/">Get your ID</a>
+  </div>
 </header>
 
-<main id="top">
-  <!-- HERO -->
-  <div class="hero" id="hero">
-    <div class="hero-glow" aria-hidden="true"></div>
-    <h1 class="hero-title" id="hero-title">
-      <span class="o">Slow</span> burn.<br />
-      <span class="outline">Small</span> batch.<br />
-      Real heat.
-    </h1>
-    <p class="hero-sub">Gourmet sauces, slow-simmered in twelve-jar batches and bottled by hand. Bold enough to start a conversation, balanced enough to finish one.</p>
-    <div class="hero-cta">
-      <a class="btn btn-main" href="#flavours">Shop the flavours</a>
-      <a class="btn btn-ghost" href="#story">Our story</a>
-    </div>
-    <div class="profile-stage" id="profile-stage">
-      <div class="pcard" id="pcard">
-        <div class="pc-ban"></div>
-        <div class="pc-av">EC</div>
-        <div class="pc-body">
-          <div class="pc-name">Ember Kitchen <span class="pc-tick">✓</span></div>
-          <div class="pc-slug">m-id.app/ember</div>
-          <p class="pc-bio">Gourmet sauce maker. Bold heat, slow burn. Find us, order, say hi.</p>
-          <ul class="pc-ids">
-            <li><b>Mobile Legends</b><span>ember#1234</span></li>
-            <li><b>Instagram</b><span>@emberco</span></li>
-            <li><b>Online hours</b><span>9pm–1am</span></li>
-          </ul>
-          <div class="pc-btns">
-            <button class="pc-btn main" type="button">Message me</button>
-            <button class="pc-btn" type="button">WhatsApp</button>
-          </div>
-        </div>
-        <div class="pc-glow"></div>
-      </div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Menu">
+  <div class="drawer-head">
+    <img src="/assets/maple-mid-wordmark.png" alt="M-ID" />
+    <button class="icon-btn" id="menu-close" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <h4>Menu</h4>
+  <a class="item" href="/"><i class="fa-solid fa-house"></i> Home</a>
+  <a class="item" href="/#explore"><i class="fa-solid fa-compass"></i> Explore creators</a>
+  <a class="item" href="#how"><i class="fa-solid fa-route"></i> How it works</a>
+  <a class="item" href="#guides"><i class="fa-solid fa-book-open"></i> Guides</a>
+  <h4>Your ID</h4>
+  <a class="item" href="/"><i class="fa-solid fa-user-plus"></i> Register</a>
+  <a class="item" href="/"><i class="fa-solid fa-id-card"></i> Make your card</a>
+  <a class="item" href="/"><i class="fa-solid fa-right-to-bracket"></i> Log in</a>
+  <div class="grow"></div>
+  <a class="btn btn-accent cta" href="/">Claim my ID <i class="fa-solid fa-arrow-right"></i></a>
+</aside>
+
+<main>
+  <section class="hero" id="top">
+    <span class="pill reveal"><span class="dot"></span>Free digital ID for gamers &amp; creators</span>
+    <h1 class="title" id="hero-title">One digital ID for every <span class="grad">game handle, stream,</span> and social.</h1>
+    <p class="lede reveal">Collect your Mobile Legends ID, Roblox name, Discord, streams and socials on one profile with your own link and QR code. Friends tap once to copy your ID, follow you or save your contact. No retyping, no screenshots.</p>
+    <form class="claim reveal" onsubmit="return false">
+      <span>m-id.site/</span>
+      <input type="text" placeholder="yourname" aria-label="Your M-ID link" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="30" />
+      <a class="btn btn-accent" href="/">Claim my ID <i class="fa-solid fa-arrow-right"></i></a>
+    </form>
+    <ul class="proof reveal">
+      <li><i class="fa-solid fa-bolt"></i>Live in about a minute</li>
+      <li><i class="fa-solid fa-qrcode"></i>Link + QR code</li>
+      <li><i class="fa-solid fa-palette"></i>Many themes</li>
+    </ul>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>Mobile Legends</span><span>Roblox</span><span>Free Fire</span><span>Minecraft</span><span>Valorant</span><span>Genshin Impact</span>
+      <span>Mobile Legends</span><span>Roblox</span><span>Free Fire</span><span>Minecraft</span><span>Valorant</span><span>Genshin Impact</span>
     </div>
   </div>
 
-  <div class="marquee" aria-hidden="true">
-    <div class="marquee-track">
-      <span>Smoky chili</span><span>Citrus ember</span><span>Black garlic</span><span>Ghost pepper</span><span>Smoky chili</span><span>Citrus ember</span><span>Black garlic</span><span>Ghost pepper</span>
-    </div>
-  </div>
-
-  <!-- STORY (scroll-driven) -->
-  <section class="story" id="story">
-    <p class="kicker reveal">The story</p>
-    <h2 class="big reveal">Made slow.<br />Eaten fast.</h2>
-    <p class="lede reveal">Ember &amp; Co. started in a rented kitchen with one stubborn idea: heat should taste like something, not just hurt.</p>
-    <div class="story-list">
-      <div class="story-item reveal">
-        <div class="story-num">01</div>
-        <div><h3>Roast it first</h3><p>Peppers and garlic go over open flame until they char, then sit for a day. That char is where the depth comes from.</p></div>
-      </div>
-      <div class="story-item reveal">
-        <div class="story-num">02</div>
-        <div><h3>Simmer for hours</h3><p>Each batch simmers low and slow in a single pot, stirred by hand. Nothing is rushed, and nothing is added to hide a flavour.</p></div>
-      </div>
-      <div class="story-item reveal">
-        <div class="story-num">03</div>
-        <div><h3>Bottle with heat</h3><p>Every jar is sealed while still warm and sent out the same week it is made. Open one and you will taste the difference.</p></div>
-      </div>
+  <section id="what">
+    <p class="kicker reveal"><i class="fa-solid fa-layer-group"></i> What's on a profile</p>
+    <h2 class="sec reveal">Everything fans ask you for, answered once</h2>
+    <p class="sec-sub reveal">The questions you answer in every chat and live stream, on one card that looks like you.</p>
+    <div class="grid3">
+      <div class="glass reveal"><div class="num">01</div><h3>Game IDs</h3><p>Tap an ID to copy it, then the game opens. Fans never retype a long number.</p></div>
+      <div class="glass reveal"><div class="num">02</div><h3>Socials and streams</h3><p>Discord, TikTok, YouTube, Instagram, Twitch and WhatsApp in one place.</p></div>
+      <div class="glass reveal"><div class="num">03</div><h3>Online hours</h3><p>Show when you are online so people know when to find you.</p></div>
     </div>
   </section>
 
-  <!-- FLAVOURS -->
-  <section class="flavours" id="flavours">
-    <p class="kicker reveal">The flavours</p>
-    <h2 class="big reveal">Pick your<br />fire</h2>
-    <div class="flavour-grid">
-      <article class="flavour reveal">
-        <div class="glow"></div>
-        <div>
-          <div class="heat">Heat 3 / 5</div>
-          <h3>Smoky<br />Chili</h3>
-          <p>Smoked red chili, tomato and a little brown sugar. Deep, sticky and warm, works on eggs as well as grilled chicken.</p>
-        </div>
-        <div class="price"><span>RM 18.90</span><button class="add" aria-label="Add Smoky Chili to cart">+</button></div>
+  <section id="how">
+    <p class="kicker reveal"><i class="fa-solid fa-route"></i> How it works</p>
+    <h2 class="sec reveal">Live in three steps</h2>
+    <p class="sec-sub reveal">No design work, no code. Pick a name, fill in what you play and where people can find you, then share.</p>
+    <div class="grid3">
+      <div class="glass reveal"><div class="num">01</div><h3>Claim your link</h3><p>Pick a name. It's checked live and locked to your account, so nobody else can take it.</p></div>
+      <div class="glass reveal"><div class="num">02</div><h3>Fill your card</h3><p>Game IDs, socials, online hours, music, anime, a banner and a theme. All in Studio.</p></div>
+      <div class="glass reveal"><div class="num">03</div><h3>Share anywhere</h3><p>Copy the link, show the QR, or let people save you as a contact.</p></div>
+    </div>
+  </section>
+
+  <section id="guides">
+    <p class="kicker reveal"><i class="fa-solid fa-book-open"></i> Guides</p>
+    <h2 class="sec reveal">New here? Start with these</h2>
+    <div class="guides">
+      <article class="glass guide reveal" id="guide-register">
+        <span class="guide-tag"><i class="fa-solid fa-user-plus"></i> Register</span>
+        <h3>How to register</h3>
+        <ol>
+          <li><b>Tap Claim my ID</b> above, or open Join M-ID.</li>
+          <li><b>Type your name</b> in the link box. It is checked live, so you will see if it is free.</li>
+          <li><b>Sign up</b> with your email to lock the link to your account.</li>
+          <li><b>Confirm</b> the sign-up from your email if asked, then sign in.</li>
+        </ol>
+        <p class="guide-note">Your link is yours after sign-up, and nobody else can take it.</p>
       </article>
-      <article class="flavour reveal">
-        <div class="glow"></div>
-        <div>
-          <div class="heat">Heat 2 / 5</div>
-          <h3>Citrus<br />Ember</h3>
-          <p>Calamansi, lime zest and orange peel with a slow chili finish. Bright enough for seafood, fresh enough for rice bowls.</p>
-        </div>
-        <div class="price"><span>RM 16.90</span><button class="add" aria-label="Add Citrus Ember to cart">+</button></div>
-      </article>
-      <article class="flavour reveal">
-        <div class="glow"></div>
-        <div>
-          <div class="heat">Heat 4 / 5</div>
-          <h3>Black<br />Garlic</h3>
-          <p>Fermented black garlic, a splash of soy and a ghost pepper hit. Dark, savoury and built for steak.</p>
-        </div>
-        <div class="price"><span>RM 21.90</span><button class="add" aria-label="Add Black Garlic to cart">+</button></div>
+      <article class="glass guide reveal" id="guide-card">
+        <span class="guide-tag"><i class="fa-solid fa-id-card"></i> Make your card</span>
+        <h3>How to make your card</h3>
+        <ol>
+          <li><b>Open Studio</b> from the header once you are signed in.</li>
+          <li><b>Add your details</b>: game IDs, socials, online hours, music and anime.</li>
+          <li><b>Pick a look</b> in the Look tab: a theme, a banner and a card frame.</li>
+          <li><b>Publish</b> to save. Share your link, QR code or contact card anywhere.</li>
+        </ol>
+        <p class="guide-note">You can change everything later in Studio.</p>
       </article>
     </div>
   </section>
 
-  <!-- INGREDIENTS -->
-  <section id="ingredients">
-    <div class="ingredients">
-      <div class="reveal">
-        <p class="kicker">What is inside</p>
-        <h2 class="big">Three things.<br />No fillers.</h2>
-        <ul class="ing-list" style="margin-top:40px">
-          <li><b>Chili</b><small>Hand-picked, roasted over flame</small></li>
-          <li><b>Citrus</b><small>Zest and juice, pressed the same day</small></li>
-          <li><b>Garlic</b><small>Fermented for 30 days for black garlic</small></li>
-          <li><b>Salt</b><small>Sea salt, measured by weight</small></li>
-        </ul>
-      </div>
-      <div class="reveal">
-        <div class="stat" data-count="12">0</div>
-        <p class="stat-label">Jars per batch. Small on purpose, so every bottle gets the same attention.</p>
-      </div>
+  <section>
+    <div class="join reveal">
+      <p class="kicker"><i class="fa-solid fa-id-card"></i> Join M-ID</p>
+      <h2 class="sec">Make your ID.</h2>
+      <p class="sec-sub">Create an account to claim your link and open your Studio. It takes about a minute.</p>
+      <ul>
+        <li><i class="fa-solid fa-check"></i>Your own permanent link</li>
+        <li><i class="fa-solid fa-check"></i>Unlimited game IDs and socials</li>
+        <li><i class="fa-solid fa-check"></i>Themes, music and anime shelf</li>
+      </ul>
+      <a class="btn btn-accent" href="/">Get your ID <i class="fa-solid fa-arrow-right"></i></a>
     </div>
-  </section>
-
-  <!-- CTA -->
-  <section class="cta" id="cta">
-    <h2 class="reveal">Turn up<br />the heat</h2>
-    <p class="reveal">Order a three-jar tasting pack and find your favourite. Free delivery within Kajang.</p>
-    <a class="btn reveal" href="#flavours">Order the tasting pack</a>
   </section>
 </main>
 
 <footer>
-  <span>© Ember &amp; Co. Test page, not for sale.</span>
-  <span>Built with GSAP</span>
+  <span>© M-ID · m-id.site</span>
+  <span><a href="/">Home</a> · <a href="/#explore">Explore</a> · <a href="#guides">Guides</a></span>
 </footer>
 
 <script>
-  // 3D profile card: tilts with the pointer on desktop, still on touch and reduced-motion.
+  // hamburger menu
   (function () {
-    var card = document.getElementById('pcard');
-    if (!card) return;
-    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var fine = matchMedia('(hover: hover)').matches;
-    if (reduce || !fine) return;
-    window.addEventListener('pointermove', function (e) {
-      var x = e.clientX / innerWidth - 0.5, y = e.clientY / innerHeight - 0.5;
-      card.style.setProperty('--ry', (x * 16).toFixed(2) + 'deg');
-      card.style.setProperty('--rx', (-y * 12).toFixed(2) + 'deg');
-    });
+    var body = document.body, btn = document.getElementById('menu-btn');
+    function set(open) {
+      body.classList.toggle('menu-open', open);
+      btn.setAttribute('aria-expanded', String(open));
+    }
+    btn.addEventListener('click', function () { set(!body.classList.contains('menu-open')); });
+    document.getElementById('menu-close').addEventListener('click', function () { set(false); });
+    document.getElementById('scrim').addEventListener('click', function () { set(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') set(false); });
+    document.querySelectorAll('.drawer a').forEach(function (a) { a.addEventListener('click', function () { set(false); }); });
   })();
 </script>
 <script type="module">
-  // GSAP is loaded from the CDN M-ID already allows.
+  // scroll motion (GSAP from the CDN M-ID already allows)
   async function initMotion() {
     try {
       const gm = await import('https://cdn.jsdelivr.net/npm/gsap@3.12.5/+esm');
@@ -311,31 +285,13 @@
       const stm = await import('https://cdn.jsdelivr.net/npm/gsap@3.12.5/ScrollTrigger/+esm');
       const ScrollTrigger = stm.ScrollTrigger || stm.default;
       gsap.registerPlugin(ScrollTrigger);
-
-      gsap.from('#hero-title', { y: 80, opacity: 0, duration: 1.2, ease: 'power4.out' });
-      gsap.from('.hero-sub, .hero-cta', { y: 30, opacity: 0, duration: 1, delay: 0.3, stagger: 0.12, ease: 'power3.out' });
-
+      gsap.from('#hero-title', { y: 60, opacity: 0, duration: 1.1, ease: 'power4.out' });
       gsap.utils.toArray('.reveal').forEach(el => {
         gsap.to(el, {
-          opacity: 1, y: 0, duration: 1, ease: 'power3.out',
-          scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
+          opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' }
         });
       });
-
-      gsap.to('#profile-stage', {
-        y: 160, ease: 'none',
-        scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
-      });
-
-      const stat = document.querySelector('.stat');
-      if (stat) {
-        const counter = { v: 0 };
-        gsap.to(counter, {
-          v: Number(stat.dataset.count), duration: 1.6, ease: 'power2.out',
-          scrollTrigger: { trigger: stat, start: 'top 80%' },
-          onUpdate: () => { stat.textContent = Math.round(counter.v); }
-        });
-      }
     } catch (err) {
       console.warn('Motion library unavailable', err);
       document.querySelectorAll('.reveal').forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
