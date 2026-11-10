@@ -1,0 +1,89 @@
+/* M-ID · guest homepage, 2026 style.
+ * Loaded after maple-home.css. Restyles only the homepage (the mh2-* blocks in index-maple1.js) using the
+ * same 2026 tokens as the new Studio (studio-new.css): 24px glass cards, soft edges, pill controls, accent glow.
+ * Light and dark mode both follow --ink / --accent, so nothing here is hard-coded to one palette. */
+
+.mh2-aura i{opacity:.45}
+
+/* ── intro pill ── */
+.mh2-pill{border-radius:999px;padding:8px 16px 8px 12px;
+  background:color-mix(in srgb,var(--ink) 4%,transparent);
+  border:1px solid color-mix(in srgb,var(--ink) 10%,transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 8%,transparent),0 18px 40px -28px var(--accent-glow,var(--accent))}
+
+/* ── headline ── */
+.mh2 .hero-copy h1.mh-title{letter-spacing:-.035em}
+
+/* ── claim field: one glass pill with the button inside ── */
+.mh2-claim{border-radius:999px;padding:6px;gap:6px;
+  background:color-mix(in srgb,var(--ink) 4%,transparent);
+  border:1px solid color-mix(in srgb,var(--ink) 11%,transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 7%,transparent),0 24px 48px -30px rgba(0,0,0,.55);
+  -webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%)}
+.mh2-claim:focus-within{border-color:color-mix(in srgb,var(--accent) 50%,transparent);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent),0 24px 48px -30px var(--accent-glow,var(--accent))}
+.mh2-field{border-radius:999px}
+.mh2-go{border-radius:999px;height:auto;padding:12px 20px;font-weight:600;
+  box-shadow:0 10px 24px -12px var(--accent-glow,var(--accent))}
+
+/* ── social proof row ── */
+.mh2-proof{gap:8px}
+.mh2-proof li{border-radius:999px;padding:6px 12px;font-size:12.5px;
+  background:color-mix(in srgb,var(--ink) 4%,transparent);
+  border:1px solid color-mix(in srgb,var(--ink) 9%,transparent)}
+
+/* ── preview card + floating chips ── */
+.mh2-chip{border-radius:18px;
+  background:color-mix(in srgb,var(--panel) 72%,transparent);
+  border:1px solid color-mix(in srgb,var(--ink) 10%,transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 7%,transparent),0 22px 44px -26px rgba(0,0,0,.6);
+  -webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%)}
+
+/* ── section kickers ── */
+.mh2-kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
+  font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  background:color-mix(in srgb,var(--ink) 4%,transparent);border:1px solid color-mix(in srgb,var(--ink) 9%,transparent)}
+.mh2-kicker i{color:var(--accent)}
+.mh2-head h2{letter-spacing:-.03em}
+
+/* ── game ticker: a glass strip ── */
+.mh2-ticker{border-radius:24px;border:1px solid color-mix(in srgb,var(--ink) 10%,transparent);
+  background:linear-gradient(160deg,color-mix(in srgb,var(--ink) 5%,transparent),transparent 70%),color-mix(in srgb,var(--ink) 2.5%,transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 7%,transparent);overflow:hidden}
+.mh2-ticker .gt{border-radius:999px}
+
+/* ── bento: 24px glass cards ── */
+.mh2-bento{gap:14px}
+.mh2-bento .bx{position:relative;border-radius:24px;overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--ink) 10%,transparent);
+  background:linear-gradient(170deg,color-mix(in srgb,var(--ink) 5%,transparent),transparent 45%),color-mix(in srgb,var(--ink) 3%,transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 7%,transparent),0 24px 48px -30px rgba(0,0,0,.55);
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .3s,box-shadow .35s}
+.mh2-bento .bx:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.mh2-bento .bx-tag{border-radius:999px;background:color-mix(in srgb,var(--accent) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);color:var(--accent)}
+
+/* ── how it works: numbered glass steps ── */
+.mh2-steps{gap:14px}
+.mh2-steps > div{border-radius:24px;padding:22px;
+  border:1px solid color-mix(in srgb,var(--ink) 10%,transparent);
+  background:linear-gradient(170deg,color-mix(in srgb,var(--ink) 5%,transparent),transparent 50%),color-mix(in srgb,var(--ink) 3%,transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 7%,transparent),0 24px 48px -30px rgba(0,0,0,.55)}
+.mh2-n{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:12px;
+  background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);font-weight:700;font-size:13px}
+
+/* ── buttons across the homepage: pill shape ── */
+.mh2 .btn,.mh2-bento .btn,.mh2-steps .btn{border-radius:999px}
+
+@media (max-width:640px){
+  .mh2-claim{padding:5px}
+  .mh2-go{padding:11px 16px}
+  .mh2-bento .bx{border-radius:20px}
+  .mh2-steps > div{border-radius:20px;padding:18px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .mh2-bento .bx{transition:none}
+  .mh2-bento .bx:hover{transform:none}
+}
