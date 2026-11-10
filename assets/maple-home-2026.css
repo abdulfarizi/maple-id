@@ -1,0 +1,81 @@
+/* M-ID · homepage, 2026. Bold, layered, textured. Styles only the homepage (the mh2-* blocks).
+ * Structure, copy and behaviour are unchanged. Light and dark mode follow --ink and --accent. */
+
+/* ── texture: grain plus a slow colour mesh behind the page ── */
+body:has(#maple-home)::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.08;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+body:has(#maple-home)::after{content:"";position:fixed;inset:-20% -10% auto;height:80vh;z-index:0;pointer-events:none;filter:blur(70px);opacity:.45;
+  background:radial-gradient(closest-side at 25% 40%,color-mix(in srgb,var(--accent) 55%,transparent),transparent 70%),radial-gradient(closest-side at 80% 30%,color-mix(in srgb,var(--accent-2,var(--accent)) 45%,transparent),transparent 70%)}
+body:has(#maple-home) main,body:has(#maple-home) .join,body:has(#maple-home) .explore{position:relative;z-index:1}
+
+/* ── hero: oversized and bold ── */
+.mh2 .hero-copy h1.mh-title{font-size:clamp(52px,9.2vw,132px);line-height:.92;letter-spacing:-.045em;font-weight:700}
+.mh2-grad{background-size:220% 100%}
+.mh2-pill{border-radius:999px;padding:9px 16px 9px 12px;background:color-mix(in srgb,var(--ink) 6%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);box-shadow:0 0 0 6px color-mix(in srgb,var(--accent) 8%,transparent)}
+.mh2 .hero-copy .lede{font-size:clamp(16px,1.5vw,19px);line-height:1.6;color:color-mix(in srgb,var(--ink) 70%,transparent)}
+
+/* claim field: one glowing pill with the button inside */
+.mh2-claim{border-radius:999px;padding:7px;gap:6px;background:color-mix(in srgb,var(--ink) 5%,transparent);
+  border:1px solid color-mix(in srgb,var(--ink) 12%,transparent);
+  box-shadow:0 30px 60px -30px color-mix(in srgb,var(--accent) 60%,transparent),inset 0 1px 0 color-mix(in srgb,var(--ink) 8%,transparent);
+  -webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%)}
+.mh2-claim:focus-within{border-color:color-mix(in srgb,var(--accent) 60%,transparent);box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 18%,transparent)}
+.mh2-field{border-radius:999px}
+.mh2-go{border-radius:999px;height:auto;padding:14px 22px;font-weight:700;background:linear-gradient(100deg,var(--accent),var(--accent-2,var(--accent)));border:0;
+  box-shadow:0 14px 30px -12px var(--accent)}
+.mh2-go:hover{transform:translateY(-2px) scale(1.02)}
+
+.mh2-proof li{border-radius:999px;padding:7px 13px;background:color-mix(in srgb,var(--ink) 5%,transparent);border:1px solid color-mix(in srgb,var(--ink) 10%,transparent)}
+
+/* ── ticker: a bold strip ── */
+.mh2-ticker{border-radius:0;border-block:1px solid color-mix(in srgb,var(--ink) 10%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent);overflow:hidden}
+.mh2-ticker .gt{border-radius:999px}
+
+/* ── section headings: large and tight ── */
+.mh2-head h2{font-size:clamp(38px,5.6vw,80px);line-height:.95;letter-spacing:-.04em;font-weight:700}
+.mh2-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)}
+
+/* ── bento and steps: glass cards with a lift on hover ── */
+.mh2-bento{gap:16px}
+.mh2-bento .bx,.mh2-steps > div,.mh2-guide,.explore .ex-box,.join{position:relative;border-radius:28px;overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--ink) 11%,transparent);
+  background:linear-gradient(165deg,color-mix(in srgb,var(--ink) 7%,transparent),transparent 45%),color-mix(in srgb,var(--ink) 3%,transparent);
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--ink) 9%,transparent),0 30px 60px -36px rgba(0,0,0,.6);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  transition:transform .45s cubic-bezier(.22,1,.36,1),border-color .35s,box-shadow .45s}
+.mh2-bento .bx:hover,.mh2-steps > div:hover,.mh2-guide:hover{transform:translateY(-6px);border-color:color-mix(in srgb,var(--accent) 45%,transparent);
+  box-shadow:0 40px 70px -34px color-mix(in srgb,var(--accent) 55%,transparent)}
+.mh2-bento .bx-tag{border-radius:999px;background:color-mix(in srgb,var(--accent) 16%,transparent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);color:var(--accent)}
+.mh2-steps{gap:16px}
+.mh2-steps > div{padding:26px}
+.mh2-n{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:14px;font-size:14px;font-weight:700;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2,var(--accent)));color:#fff}
+.mh2-guide{padding:28px}
+.mh2-guide-tag{display:inline-flex;align-items:center;gap:8px;padding:6px 13px;border-radius:999px;font-size:12px;font-weight:700;color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 14%,transparent);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.mh2-guide h3{font-size:clamp(22px,2.4vw,28px);letter-spacing:-.02em}
+
+/* ── discovery and join ── */
+.explore .ex-box{padding:22px}
+.explore .ex-search{border-radius:999px;background:color-mix(in srgb,var(--ink) 5%,transparent);border:1px solid color-mix(in srgb,var(--ink) 11%,transparent)}
+.explore .ex-search:focus-within{border-color:color-mix(in srgb,var(--accent) 60%,transparent);box-shadow:0 0 0 5px color-mix(in srgb,var(--accent) 16%,transparent)}
+.explore .ex-tabs{display:inline-flex;gap:4px;padding:5px;border-radius:999px;background:color-mix(in srgb,var(--ink) 5%,transparent)}
+.explore .ex-tabs button{border:0;border-radius:999px;padding:9px 16px;background:transparent;color:var(--muted);font-weight:600;cursor:pointer}
+.explore .ex-tabs button[aria-selected="true"]{background:linear-gradient(100deg,var(--accent),var(--accent-2,var(--accent)));color:#fff;box-shadow:0 10px 24px -12px var(--accent)}
+.explore .ex-list > li{border-radius:20px;background:color-mix(in srgb,var(--ink) 4%,transparent);border:1px solid color-mix(in srgb,var(--ink) 9%,transparent);transition:transform .35s cubic-bezier(.22,1,.36,1),border-color .3s}
+.explore .ex-list > li:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.join{padding:clamp(28px,5vw,60px);background:linear-gradient(150deg,color-mix(in srgb,var(--accent) 22%,transparent),transparent 60%),color-mix(in srgb,var(--ink) 3%,transparent)}
+
+.mh2 .btn,.mh2-bento .btn,.mh2-steps .btn,.join .btn{border-radius:999px}
+
+@media (max-width:640px){
+  .mh2 .hero-copy h1.mh-title{font-size:clamp(44px,13vw,64px)}
+  .mh2-bento .bx,.mh2-steps > div,.mh2-guide,.join{border-radius:22px}
+  .mh2-steps > div,.mh2-guide{padding:20px}
+}
+@media (prefers-reduced-motion:reduce){
+  .mh2-bento .bx,.mh2-steps > div,.mh2-guide{transition:none}
+  .mh2-bento .bx:hover,.mh2-steps > div:hover,.mh2-guide:hover{transform:none}
+}
