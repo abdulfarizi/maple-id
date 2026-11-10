@@ -154,35 +154,6 @@ GoTrue REQUIRES HTTPS to work securely.`),t&&(this.audience=t),this.setCookie=n,
       <div><span class="mh2-n">03</span><h3>Share anywhere</h3><p>Copy the link, show the QR, or let people save you as a contact.</p></div>
     </section>
 
-    <div class="sec-head mh2-head mh2-guide-head">
-      <p class="mh2-kicker"><i class="fa-solid fa-book-open"></i> Guides</p>
-      <h2>New here? Start with these</h2>
-    </div>
-    <section class="mh2-guides">
-      <article class="mh2-guide" id="guide-register">
-        <span class="mh2-guide-tag"><i class="fa-solid fa-user-plus"></i> Register</span>
-        <h3>How to register</h3>
-        <ol>
-          <li><b>Tap Claim my ID</b> above, or open Join M-ID.</li>
-          <li><b>Type your name</b> in the link box. It is checked live, so you will see if it is free.</li>
-          <li><b>Sign up</b> with your email to lock the link to your account.</li>
-          <li><b>Confirm</b> the sign-up from your email if asked, then sign in.</li>
-        </ol>
-        <p class="mh2-guide-note">Your link is yours after sign-up, and nobody else can take it.</p>
-      </article>
-      <article class="mh2-guide" id="guide-card">
-        <span class="mh2-guide-tag"><i class="fa-solid fa-id-card"></i> Make your card</span>
-        <h3>How to make your card</h3>
-        <ol>
-          <li><b>Open Studio</b> from the header once you are signed in.</li>
-          <li><b>Add your details</b>: game IDs, socials, online hours, music and anime.</li>
-          <li><b>Pick a look</b> in the Look tab: a theme, a banner and a card frame.</li>
-          <li><b>Publish</b> to save. Share your link, QR code or contact card anywhere.</li>
-        </ol>
-        <p class="mh2-guide-note">You can change everything later in Studio.</p>
-      </article>
-    </section>
-
     <section class="explore" id="explore">
       <div class="sec-head" style="margin-bottom:20px">
         <p class="mh2-kicker"><i class="fa-solid fa-compass"></i> Creator discovery</p><h2>Who's on M-ID</h2>
