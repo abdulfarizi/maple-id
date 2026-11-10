@@ -46,7 +46,8 @@
     if (!b) return '';
     var on = DEF.filter(function (d) { return !!b[d.k]; });
     if (!on.length) return '';
-    var cycle = b.badgeMode === 'cycle' && on.length > 1;
+    // always one slot: with two or more badges they take turns in the same spot
+    var cycle = on.length > 1;
     var speed = speedOf(b.badgeSpeed);
     var layers = on.map(function (d, i) {
       var active = !cycle || i === 0;
