@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="robots" content="noindex,nofollow" />
+<title>EMBER & CO. · Sauce test page</title>
+<meta name="description" content="Gourmet sauce, slow-burned in small batches. Test page." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --orange:#ff6a13; --orange-2:#ffb14a; --red:#e8381a;
+    --black:#0b0907; --ink:#16110e; --paper:#f7efe6; --muted:#a79b92;
+    --line:rgba(255,255,255,.12);
+    --display:'Anton','Impact',system-ui,sans-serif; --sans:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--black);color:var(--paper);scroll-behavior:smooth}
+  body{font-family:var(--sans);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  img,canvas{display:block;max-width:100%}
+
+  /* textured backdrop: grain + warm glow */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.09;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+  main,header,footer{position:relative;z-index:1}
+
+  /* nav */
+  .nav{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:18px clamp(18px,4vw,48px);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);background:linear-gradient(to bottom,rgba(11,9,7,.7),transparent)}
+  .logo{font-family:var(--display);font-size:24px;letter-spacing:.02em}
+  .logo span{color:var(--orange)}
+  .nav ul{display:flex;gap:28px;list-style:none;font-size:14px;color:var(--muted)}
+  .nav ul a:hover{color:var(--paper)}
+  .cart{padding:10px 18px;border-radius:999px;background:var(--orange);color:#140803;font-weight:700;font-size:14px;transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s}
+  .cart:hover{transform:translateY(-2px);box-shadow:0 12px 28px -10px rgba(255,106,19,.7)}
+
+  /* hero */
+  .hero{position:relative;min-height:100vh;display:grid;grid-template-columns:1fr;align-items:center;padding:120px clamp(18px,4vw,48px) 60px;overflow:hidden}
+  .hero-glow{position:absolute;inset:-10%;background:radial-gradient(closest-side at 70% 45%,rgba(255,106,19,.35),transparent 70%),radial-gradient(closest-side at 20% 80%,rgba(232,56,26,.18),transparent 70%);filter:blur(20px);z-index:0}
+  .hero-title{position:relative;z-index:2;font-family:var(--display);font-size:clamp(64px,15vw,230px);line-height:.86;letter-spacing:-.01em;text-transform:uppercase}
+  .hero-title .o{color:var(--orange)}
+  .hero-title .outline{color:transparent;-webkit-text-stroke:2px var(--paper)}
+  .hero-sub{position:relative;z-index:2;max-width:44ch;margin-top:26px;color:var(--muted);font-size:clamp(15px,1.4vw,18px);line-height:1.6}
+  .hero-cta{position:relative;z-index:2;display:flex;gap:12px;margin-top:30px;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:16px 26px;border-radius:999px;font-weight:700;font-size:15px;transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s,background .3s}
+  .btn-main{background:var(--orange);color:#140803}
+  .btn-main:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 18px 40px -12px rgba(255,106,19,.75)}
+  .btn-ghost{border:1px solid var(--line);color:var(--paper);background:rgba(255,255,255,.03)}
+  .btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
+  #jar{position:absolute;inset:0;z-index:1;pointer-events:none}
+  .jar-wrap{position:absolute;right:clamp(-40px,2vw,40px);top:50%;transform:translateY(-50%);width:min(56vw,640px);height:min(80vh,760px);z-index:1}
+  .jar-wrap canvas{width:100%!important;height:100%!important}
+  .fallback{display:none;position:absolute;inset:0;margin:auto;width:min(60vw,360px);aspect-ratio:.7;border-radius:40% 40% 46% 46%/22% 22% 56% 56%;
+    background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.4),transparent 25%),linear-gradient(180deg,var(--orange-2),var(--red) 70%,#7a1408);box-shadow:0 40px 80px -30px rgba(255,106,19,.6)}
+  .no-webgl .fallback{display:block}
+  .no-webgl .jar-wrap canvas{display:none}
+
+  /* marquee */
+  .marquee{overflow:hidden;border-block:1px solid var(--line);background:var(--orange);color:#140803;padding:18px 0;transform:rotate(-1.2deg);margin:40px -4vw 0;width:108vw}
+  .marquee-track{display:flex;gap:44px;white-space:nowrap;font-family:var(--display);font-size:clamp(28px,4vw,52px);text-transform:uppercase;will-change:transform;animation:slide 22s linear infinite}
+  .marquee-track span:nth-child(even){color:var(--black)}
+  @keyframes slide{to{transform:translateX(-50%)}}
+
+  /* sections */
+  section{padding:clamp(80px,12vw,160px) clamp(18px,4vw,48px)}
+  .kicker{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--orange)}
+  .kicker::before{content:"";width:28px;height:2px;background:var(--orange)}
+  h2.big{font-family:var(--display);font-size:clamp(52px,9vw,150px);line-height:.9;text-transform:uppercase;margin-top:18px;letter-spacing:-.005em}
+  .lede{max-width:52ch;color:var(--muted);font-size:17px;line-height:1.7;margin-top:22px}
+
+  /* story: scroll-driven */
+  .story{position:relative}
+  .story-list{display:grid;gap:clamp(90px,14vw,200px);margin-top:70px}
+  .story-item{display:grid;grid-template-columns:auto 1fr;gap:clamp(18px,4vw,60px);align-items:start}
+  .story-num{font-family:var(--display);font-size:clamp(90px,14vw,200px);line-height:.8;color:transparent;-webkit-text-stroke:1.5px var(--orange)}
+  .story-item h3{font-family:var(--display);font-size:clamp(36px,5vw,70px);line-height:.95;text-transform:uppercase}
+  .story-item p{color:var(--muted);margin-top:16px;max-width:46ch;line-height:1.7;font-size:16px}
+
+  /* flavours */
+  .flavours{background:linear-gradient(180deg,var(--black),#1a0f0a 60%,var(--black))}
+  .flavour-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:60px}
+  .flavour{position:relative;border-radius:28px;padding:28px;min-height:420px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;
+    border:1px solid var(--line);background:linear-gradient(170deg,rgba(255,255,255,.06),transparent 55%),#120d0a;
+    transition:transform .45s cubic-bezier(.22,1,.36,1),border-color .35s,box-shadow .45s}
+  .flavour:hover{transform:translateY(-8px);border-color:rgba(255,106,19,.55);box-shadow:0 30px 60px -30px rgba(255,106,19,.55)}
+  .flavour .heat{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);font-weight:700}
+  .flavour h3{font-family:var(--display);font-size:clamp(40px,4.4vw,60px);line-height:.92;text-transform:uppercase;margin:14px 0}
+  .flavour p{color:var(--muted);font-size:15px;line-height:1.6}
+  .flavour .price{display:flex;justify-content:space-between;align-items:center;margin-top:26px;font-weight:700}
+  .flavour .add{width:46px;height:46px;border-radius:50%;background:var(--orange);color:#140803;display:grid;place-items:center;font-size:18px;transition:transform .35s cubic-bezier(.22,1,.36,1)}
+  .flavour:hover .add{transform:rotate(90deg) scale(1.08)}
+  .flavour .glow{position:absolute;width:320px;height:320px;right:-120px;top:-120px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,106,19,.35),transparent 70%);pointer-events:none}
+
+  /* ingredients */
+  .ingredients{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,6vw,90px);align-items:center}
+  .ing-list{list-style:none;border-top:1px solid var(--line)}
+  .ing-list li{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:22px 0;border-bottom:1px solid var(--line);transition:padding .35s cubic-bezier(.22,1,.36,1),color .3s}
+  .ing-list li:hover{padding-left:14px;color:var(--orange)}
+  .ing-list b{font-family:var(--display);font-size:clamp(28px,3.4vw,44px);text-transform:uppercase;font-weight:400}
+  .ing-list small{color:var(--muted);font-size:14px;text-align:right}
+  .stat{font-family:var(--display);font-size:clamp(90px,16vw,230px);line-height:.85;color:var(--orange)}
+  .stat-label{color:var(--muted);margin-top:10px;font-size:15px;max-width:30ch}
+
+  /* footer / CTA */
+  .cta{text-align:center;padding:clamp(100px,14vw,180px) clamp(18px,4vw,48px);background:var(--orange);color:#140803}
+  .cta h2{font-family:var(--display);font-size:clamp(60px,12vw,190px);line-height:.86;text-transform:uppercase}
+  .cta p{margin:20px auto 0;max-width:44ch;font-size:17px;line-height:1.6;opacity:.85}
+  .cta .btn{background:var(--black);color:var(--paper);margin-top:34px}
+  .cta .btn:hover{transform:translateY(-3px);box-shadow:0 18px 40px -12px rgba(0,0,0,.6)}
+  footer{padding:36px clamp(18px,4vw,48px);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+
+  /* reveal before JS runs */
+  .reveal{opacity:0;transform:translateY(40px)}
+
+  @media (max-width:820px){
+    .nav ul{display:none}
+    .jar-wrap{position:relative;right:auto;top:auto;transform:none;width:100%;height:58vh;margin-top:10px}
+    .hero{padding-top:110px}
+    .ingredients{grid-template-columns:1fr}
+    .story-item{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .marquee-track{animation:none}
+    .reveal{opacity:1!important;transform:none!important}
+  }
+</style>
+</head>
+<body>
+<header class="nav">
+  <a class="logo" href="#top">EMBER<span>&amp;</span>CO.</a>
+  <ul>
+    <li><a href="#story">Story</a></li>
+    <li><a href="#flavours">Flavours</a></li>
+    <li><a href="#ingredients">Ingredients</a></li>
+  </ul>
+  <a class="cart" href="#cta">Cart (0)</a>
+</header>
+
+<main id="top">
+  <!-- HERO -->
+  <div class="hero" id="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="jar-wrap" id="jar-wrap" aria-hidden="true">
+      <div class="fallback"></div>
+    </div>
+    <h1 class="hero-title" id="hero-title">
+      <span class="o">Slow</span> burn.<br />
+      <span class="outline">Small</span> batch.<br />
+      Real heat.
+    </h1>
+    <p class="hero-sub">Gourmet sauces, slow-simmered in twelve-jar batches and bottled by hand. Bold enough to start a conversation, balanced enough to finish one.</p>
+    <div class="hero-cta">
+      <a class="btn btn-main" href="#flavours">Shop the flavours</a>
+      <a class="btn btn-ghost" href="#story">Our story</a>
+    </div>
+  </div>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Smoky chili</span><span>Citrus ember</span><span>Black garlic</span><span>Ghost pepper</span><span>Smoky chili</span><span>Citrus ember</span><span>Black garlic</span><span>Ghost pepper</span>
+    </div>
+  </div>
+
+  <!-- STORY (scroll-driven) -->
+  <section class="story" id="story">
+    <p class="kicker reveal">The story</p>
+    <h2 class="big reveal">Made slow.<br />Eaten fast.</h2>
+    <p class="lede reveal">Ember &amp; Co. started in a rented kitchen with one stubborn idea: heat should taste like something, not just hurt.</p>
+    <div class="story-list">
+      <div class="story-item reveal">
+        <div class="story-num">01</div>
+        <div><h3>Roast it first</h3><p>Peppers and garlic go over open flame until they char, then sit for a day. That char is where the depth comes from.</p></div>
+      </div>
+      <div class="story-item reveal">
+        <div class="story-num">02</div>
+        <div><h3>Simmer for hours</h3><p>Each batch simmers low and slow in a single pot, stirred by hand. Nothing is rushed, and nothing is added to hide a flavour.</p></div>
+      </div>
+      <div class="story-item reveal">
+        <div class="story-num">03</div>
+        <div><h3>Bottle with heat</h3><p>Every jar is sealed while still warm and sent out the same week it is made. Open one and you will taste the difference.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLAVOURS -->
+  <section class="flavours" id="flavours">
+    <p class="kicker reveal">The flavours</p>
+    <h2 class="big reveal">Pick your<br />fire</h2>
+    <div class="flavour-grid">
+      <article class="flavour reveal">
+        <div class="glow"></div>
+        <div>
+          <div class="heat">Heat 3 / 5</div>
+          <h3>Smoky<br />Chili</h3>
+          <p>Smoked red chili, tomato and a little brown sugar. Deep, sticky and warm, works on eggs as well as grilled chicken.</p>
+        </div>
+        <div class="price"><span>RM 18.90</span><button class="add" aria-label="Add Smoky Chili to cart">+</button></div>
+      </article>
+      <article class="flavour reveal">
+        <div class="glow"></div>
+        <div>
+          <div class="heat">Heat 2 / 5</div>
+          <h3>Citrus<br />Ember</h3>
+          <p>Calamansi, lime zest and orange peel with a slow chili finish. Bright enough for seafood, fresh enough for rice bowls.</p>
+        </div>
+        <div class="price"><span>RM 16.90</span><button class="add" aria-label="Add Citrus Ember to cart">+</button></div>
+      </article>
+      <article class="flavour reveal">
+        <div class="glow"></div>
+        <div>
+          <div class="heat">Heat 4 / 5</div>
+          <h3>Black<br />Garlic</h3>
+          <p>Fermented black garlic, a splash of soy and a ghost pepper hit. Dark, savoury and built for steak.</p>
+        </div>
+        <div class="price"><span>RM 21.90</span><button class="add" aria-label="Add Black Garlic to cart">+</button></div>
+      </article>
+    </div>
+  </section>
+
+  <!-- INGREDIENTS -->
+  <section id="ingredients">
+    <div class="ingredients">
+      <div class="reveal">
+        <p class="kicker">What is inside</p>
+        <h2 class="big">Three things.<br />No fillers.</h2>
+        <ul class="ing-list" style="margin-top:40px">
+          <li><b>Chili</b><small>Hand-picked, roasted over flame</small></li>
+          <li><b>Citrus</b><small>Zest and juice, pressed the same day</small></li>
+          <li><b>Garlic</b><small>Fermented for 30 days for black garlic</small></li>
+          <li><b>Salt</b><small>Sea salt, measured by weight</small></li>
+        </ul>
+      </div>
+      <div class="reveal">
+        <div class="stat" data-count="12">0</div>
+        <p class="stat-label">Jars per batch. Small on purpose, so every bottle gets the same attention.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="cta">
+    <h2 class="reveal">Turn up<br />the heat</h2>
+    <p class="reveal">Order a three-jar tasting pack and find your favourite. Free delivery within Kajang.</p>
+    <a class="btn reveal" href="#flavours">Order the tasting pack</a>
+  </section>
+</main>
+
+<footer>
+  <span>© Ember &amp; Co. Test page, not for sale.</span>
+  <span>Built with Three.js and GSAP</span>
+</footer>
+
+<script type="module">
+  // Three.js and GSAP are loaded from the CDNs M-ID already allows.
+  const showFallback = () => document.documentElement.classList.add('no-webgl');
+
+  async function initJar() {
+    const wrap = document.getElementById('jar-wrap');
+    try {
+      const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      wrap.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+      camera.position.set(0, 0.2, 7.2);
+
+      // dynamic lights: warm key, orange rim, cool fill
+      scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+      const key = new THREE.DirectionalLight(0xffe2c4, 2.2); key.position.set(3, 4, 5); scene.add(key);
+      const rim = new THREE.PointLight(0xff6a13, 6, 12); rim.position.set(-3, 1.5, -2); scene.add(rim);
+      const fill = new THREE.PointLight(0x9ec8ff, 1.2, 12); fill.position.set(3, -2, 3); scene.add(fill);
+
+      // glass jar: lathe profile, transmissive glass
+      const profile = [
+        [0.0, -1.9], [1.05, -1.9], [1.2, -1.75], [1.22, -1.0], [1.2, 0.9], [1.05, 1.3],
+        [0.82, 1.42], [0.78, 1.62], [0.8, 1.72], [0.72, 1.8]
+      ].map(([x, y]) => new THREE.Vector2(x, y));
+      const jarGroup = new THREE.Group();
+      scene.add(jarGroup);
+
+      const glass = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff, metalness: 0, roughness: 0.05, transmission: 0.95, thickness: 0.6,
+        ior: 1.45, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true, opacity: 0.35
+      });
+      jarGroup.add(new THREE.Mesh(new THREE.LatheGeometry(profile, 96), glass));
+
+      // sauce inside
+      const sauceProfile = [[0.0, -1.7], [1.0, -1.7], [1.05, -0.95], [1.02, 0.95], [0.88, 1.25], [0.0, 1.25]]
+        .map(([x, y]) => new THREE.Vector2(x, y));
+      const sauce = new THREE.Mesh(new THREE.LatheGeometry(sauceProfile, 96), new THREE.MeshPhysicalMaterial({
+        color: 0xc8320f, roughness: 0.35, clearcoat: 0.6, emissive: 0x4a0d02, emissiveIntensity: 0.6
+      }));
+      jarGroup.add(sauce);
+
+      // lid
+      const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.84, 0.84, 0.32, 64),
+        new THREE.MeshStandardMaterial({ color: 0x0b0907, metalness: 0.6, roughness: 0.3 }));
+      lid.position.y = 1.9; jarGroup.add(lid);
+
+      // label band
+      const label = new THREE.Mesh(new THREE.CylinderGeometry(1.215, 1.215, 1.1, 96, 1, true),
+        new THREE.MeshStandardMaterial({ color: 0xff6a13, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide }));
+      label.position.y = -0.1; jarGroup.add(label);
+
+      // spice particles drifting around the jar
+      const spiceCount = 140;
+      const spiceGeo = new THREE.BufferGeometry();
+      const spicePos = new Float32Array(spiceCount * 3);
+      for (let i = 0; i < spiceCount; i++) {
+        const a = Math.random() * Math.PI * 2, r = 1.6 + Math.random() * 1.6;
+        spicePos[i * 3] = Math.cos(a) * r; spicePos[i * 3 + 1] = (Math.random() - 0.5) * 4; spicePos[i * 3 + 2] = Math.sin(a) * r;
+      }
+      spiceGeo.setAttribute('position', new THREE.BufferAttribute(spicePos, 3));
+      const spices = new THREE.Points(spiceGeo, new THREE.PointsMaterial({ color: 0xff8a3d, size: 0.04, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
+      scene.add(spices);
+
+      // steam: rising soft particles above the lid
+      const steamCount = 90;
+      const steamGeo = new THREE.BufferGeometry();
+      const steamPos = new Float32Array(steamCount * 3);
+      const steamSeed = new Float32Array(steamCount);
+      for (let i = 0; i < steamCount; i++) {
+        steamPos[i * 3] = (Math.random() - 0.5) * 0.9; steamPos[i * 3 + 1] = 2.1 + Math.random() * 2.2; steamPos[i * 3 + 2] = (Math.random() - 0.5) * 0.9;
+        steamSeed[i] = Math.random();
+      }
+      steamGeo.setAttribute('position', new THREE.BufferAttribute(steamPos, 3));
+      const steam = new THREE.Points(steamGeo, new THREE.PointsMaterial({ color: 0xffd9b0, size: 0.22, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending }));
+      scene.add(steam);
+
+      // resize
+      const resize = () => {
+        const w = wrap.clientWidth, h = wrap.clientHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h; camera.updateProjectionMatrix();
+      };
+      resize();
+      window.addEventListener('resize', resize);
+
+      // pointer tilt
+      let tx = 0, ty = 0;
+      window.addEventListener('pointermove', e => {
+        tx = (e.clientX / window.innerWidth - 0.5) * 0.4;
+        ty = (e.clientY / window.innerHeight - 0.5) * 0.25;
+      });
+
+      const clock = new THREE.Clock();
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      renderer.setAnimationLoop(() => {
+        const t = clock.getElapsedTime();
+        if (!reduce) jarGroup.rotation.y = t * 0.35 + tx;
+        jarGroup.rotation.x += (ty - jarGroup.rotation.x) * 0.05;
+        jarGroup.position.y = Math.sin(t * 0.8) * 0.08;
+        spices.rotation.y = t * 0.12;
+        const sp = spiceGeo.attributes.position.array;
+        for (let i = 0; i < spiceCount; i++) sp[i * 3 + 1] += Math.sin(t + i) * 0.0015 + 0.0015;
+        for (let i = 0; i < spiceCount; i++) if (sp[i * 3 + 1] > 2.2) sp[i * 3 + 1] = -2.2;
+        spiceGeo.attributes.position.needsUpdate = true;
+        const st = steamGeo.attributes.position.array;
+        for (let i = 0; i < steamCount; i++) {
+          st[i * 3 + 1] += 0.012 + steamSeed[i] * 0.01;
+          st[i * 3] += Math.sin(t * 2 + i) * 0.002;
+          if (st[i * 3 + 1] > 4.6) st[i * 3 + 1] = 2.1;
+        }
+        steamGeo.attributes.position.needsUpdate = true;
+        renderer.render(scene, camera);
+      });
+    } catch (err) {
+      console.warn('3D jar unavailable, using fallback', err);
+      showFallback();
+    }
+  }
+
+  async function initMotion() {
+    try {
+      const gm = await import('https://cdn.jsdelivr.net/npm/gsap@3.12.5/+esm');
+      const gsap = gm.gsap || gm.default;
+      const stm = await import('https://cdn.jsdelivr.net/npm/gsap@3.12.5/ScrollTrigger/+esm');
+      const ScrollTrigger = stm.ScrollTrigger || stm.default;
+      gsap.registerPlugin(ScrollTrigger);
+
+      // hero title in
+      gsap.from('#hero-title', { y: 80, opacity: 0, duration: 1.2, ease: 'power4.out' });
+      gsap.from('.hero-sub, .hero-cta', { y: 30, opacity: 0, duration: 1, delay: 0.3, stagger: 0.12, ease: 'power3.out' });
+
+      // scroll-driven reveals
+      gsap.utils.toArray('.reveal').forEach(el => {
+        gsap.to(el, {
+          opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+          scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
+        });
+      });
+
+      // jar drifts as you scroll the hero away
+      gsap.to('.jar-wrap', {
+        y: 160, ease: 'none',
+        scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
+      });
+
+      // count-up stat
+      const stat = document.querySelector('.stat');
+      if (stat) {
+        const counter = { v: 0 };
+        gsap.to(counter, {
+          v: Number(stat.dataset.count), duration: 1.6, ease: 'power2.out',
+          scrollTrigger: { trigger: stat, start: 'top 80%' },
+          onUpdate: () => { stat.textContent = Math.round(counter.v); }
+        });
+      }
+    } catch (err) {
+      console.warn('Motion library unavailable', err);
+      document.querySelectorAll('.reveal').forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
+    }
+  }
+
+  initJar();
+  initMotion();
+</script>
+</body>
+</html>
