@@ -98,6 +98,7 @@
     background:linear-gradient(170deg,rgba(255,255,255,.06),transparent 50%),rgba(255,255,255,.025);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 24px 48px -30px rgba(0,0,0,.6);transition:transform .35s var(--ease),border-color .3s}
   .glass:hover{transform:translateY(-3px);border-color:rgba(155,92,255,.4)}
+  .grid3,.guides{perspective:1200px}
   .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:40px}
   .glass .num{font-family:var(--display);font-size:44px;color:var(--accent);line-height:1}
   .glass h3{font-family:var(--display);font-size:22px;margin:14px 0 8px}
@@ -286,7 +287,17 @@
       const ScrollTrigger = stm.ScrollTrigger || stm.default;
       gsap.registerPlugin(ScrollTrigger);
       gsap.from('#hero-title', { y: 60, opacity: 0, duration: 1.1, ease: 'power4.out' });
-      gsap.utils.toArray('.reveal').forEach(el => {
+      // scroll-driven 3D: cards tilt up out of the page and settle flat as you scroll
+      gsap.utils.toArray('.glass').forEach(el => {
+        gsap.fromTo(el,
+          { rotateX: 22, y: 90, scale: 0.92, opacity: 0, transformOrigin: '50% 100%' },
+          {
+            rotateX: 0, y: 0, scale: 1, opacity: 1, ease: 'none',
+            scrollTrigger: { trigger: el, start: 'top 95%', end: 'top 60%', scrub: true },
+            onComplete: () => gsap.set(el, { clearProps: 'transform' })
+          });
+      });
+      gsap.utils.toArray('.reveal:not(.glass)').forEach(el => {
         gsap.to(el, {
           opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
           scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' }
