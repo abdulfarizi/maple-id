@@ -24,7 +24,12 @@
 (function () {
   const SUPABASE_URL = 'https://qebbuxixnqsqjuprfpyv.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_Qv4cn8rMnLdciXrOR6EjVg_AmG8vMIV';
-  const OWNER_EMAIL = 'abdulfarizi15@gmail.com';
+    const OWNER_FP = '5387edd-d59fe72f-23';
+  function ownerFp(v) { var s = String(v || '').trim().toLowerCase(), h1 = 0x811c9dc5, h2 = 5381;
+    for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0; h2 = ((h2 << 5) + h2 + c) >>> 0; }
+    return h1.toString(16) + '-' + h2.toString(16) + '-' + s.length; }
+  function isOwnerEmail(v) { return !!v && ownerFp(v) === OWNER_FP; }
+  window.isOwnerEmail = isOwnerEmail;
   const IDENTITY = '/.netlify/identity';
   const originalFetch = window.fetch.bind(window);
 
@@ -396,7 +401,7 @@
     }
     if (stale()) return null;
     const email = String(s.claims.email || '').toLowerCase();
-    return { token: s.token, uid: s.claims.sub, email, isOwner: email === OWNER_EMAIL };
+    return { token: s.token, uid: s.claims.sub, email, isOwner: isOwnerEmail(email) };
   }
   // v34: the Studio's song uploader asks for the logged-in user's token (sent only to this site's /api/songs)
   window.__mAuth = () => authUser().then((a) => (a ? { token: a.token, uid: a.uid } : null));
@@ -412,7 +417,7 @@
     const out = { ...u };
     if (!out.confirmed_at && out.email_confirmed_at) out.confirmed_at = out.email_confirmed_at;
     out.app_metadata = { provider: 'email', ...(out.app_metadata || {}) };
-    if (String(out.email || '').toLowerCase() === OWNER_EMAIL) out.app_metadata.roles = ['owner'];
+    if (isOwnerEmail(out.email)) out.app_metadata.roles = ['owner'];
     return out;
   }
 
@@ -527,8 +532,8 @@
         const body = parse(options.body);
         const email = String(body.email || '').trim().toLowerCase();
         const meta = body.data || {};
-        const slug = email === OWNER_EMAIL ? 'maple' : normSlug(meta.digital_slug);
-        if (email !== OWNER_EMAIL) {
+        const slug = isOwnerEmail(email) ? 'maple' : normSlug(meta.digital_slug);
+        if (!isOwnerEmail(email)) {
           const conflict = await slugConflict(slug, null, false);
           if (conflict) return json({ code: 400, msg: conflict }, 400);
         }
@@ -1013,7 +1018,7 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
     <script src="/assets/maple-profile.js?v=3" defer></script>
     <link rel="stylesheet" href="/assets/maple-badges.css?v=9" />
     <script src="/assets/maple-badges.js?v=12"></script>
-    <script type="module" crossorigin src="/assets/index-maple1.js?v=27"></script>
+    <script type="module" crossorigin src="/assets/index-maple1.js?v=28"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-bhqqsojp.css?v=2" />
     <link rel="stylesheet" href="/assets/maple.css?v=3" />
     <link rel="stylesheet" href="/assets/themes.css?v=4" />
@@ -1051,8 +1056,8 @@ r.style.setProperty('--accent',a);r.style.setProperty('--accent-2',b);r.style.se
       (function () {
         if (location.pathname !== '/studio') return;
         var files = [
-          ['link', '/assets/studio-new.css?v=13'], ['link', '/assets/studio-new-fix.css?v=3'], ['link', '/assets/studio-new-controls.css?v=2'],
-          ['script', '/assets/studio-new.js?v=13'], ['script', '/assets/studio-new-stars.js?v=2']
+          ['link', '/assets/studio-new.css?v=14'], ['link', '/assets/studio-new-fix.css?v=4'], ['link', '/assets/studio-new-controls.css?v=3'],
+          ['script', '/assets/studio-new.js?v=14'], ['script', '/assets/studio-new-stars.js?v=3']
         ];
         function add() {
           files.forEach(function (f) {
