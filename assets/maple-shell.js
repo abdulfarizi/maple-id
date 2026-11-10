@@ -117,7 +117,7 @@
     paintBadges();
   }
 
-  /* ───── owner-only badge manager: pick any profile and give or take the tick (verified) and crown (special honor) ───── */
+  /* ───── owner-only badge manager: pick any profile and give or take the tick (verified), crown (special honor), music artist or seller badge ───── */
   var bdEl = null;
   function badgeDialog() {
     if (!S.mod) return;
@@ -125,12 +125,13 @@
     var cur = null;
     bdEl = h('div', { class: 'sh-bd', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Manage badges' },
       '<div class="sh-bd-card"><div class="sh-bd-h"><b>Badges</b><button type="button" class="sh-x" data-x aria-label="Close">' + ICON_X + '</button></div>'
-      + '<p class="sh-bd-p">Give a <b>tick</b> (verified), a <b>crown</b> (special honor) or a <b>music artist</b> badge to any profile. Only you, the owner, can see this.</p>'
+      + '<p class="sh-bd-p">Give a <b>tick</b> (verified), a <b>crown</b> (special honor), a <b>music artist</b> or a <b>seller</b> badge to any profile. Only you, the owner, can see this.</p>'
       + '<form class="sh-bd-f"><input name="slug" placeholder="Profile name, e.g. maple" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Profile name" maxlength="30"><button class="btn btn-sm btn-accent" type="submit">Find</button></form>'
       + '<p class="sh-bd-m" data-m></p><div class="sh-bd-t" data-t hidden>'
       + '<button type="button" data-k="verified" aria-pressed="false"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Verified tick</button>'
       + '<button type="button" data-k="crown" aria-pressed="false"><i class="fa-solid fa-crown" aria-hidden="true"></i> Crown</button>'
-      + '<button type="button" data-k="musicArtist" aria-pressed="false"><i class="fa-solid fa-music" aria-hidden="true"></i> Music artist</button></div></div>');
+      + '<button type="button" data-k="musicArtist" aria-pressed="false"><i class="fa-solid fa-music" aria-hidden="true"></i> Music artist</button>'
+      + '<button type="button" data-k="seller" aria-pressed="false"><i class="fa-solid fa-store" aria-hidden="true"></i> Seller</button></div></div>');
     document.body.appendChild(bdEl);
     var f = bdEl.querySelector('form'), m = bdEl.querySelector('[data-m]'), t = bdEl.querySelector('[data-t]');
     function paint() { t.querySelectorAll('[data-k]').forEach(function (b) { b.setAttribute('aria-pressed', String(!!(cur && cur.b[b.dataset.k]))); }); }
@@ -152,11 +153,11 @@
     });
     t.addEventListener('click', function (e) {
       var b = e.target.closest('[data-k]'); if (!b || !cur) return;
-      var next = { verified: !!cur.b.verified, crown: !!cur.b.crown, musicArtist: !!cur.b.musicArtist }; next[b.dataset.k] = !next[b.dataset.k];
+      var next = { verified: !!cur.b.verified, crown: !!cur.b.crown, musicArtist: !!cur.b.musicArtist, seller: !!cur.b.seller }; next[b.dataset.k] = !next[b.dataset.k];
       b.disabled = true;
       fetch('/api/badges/' + encodeURIComponent(cur.slug), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(next) })
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
-        .then(function (r) { b.disabled = false; if (!r.ok) { say(r.d.error || 'Could not save.'); return; } cur.b = { verified: !!r.d.verified, crown: !!r.d.crown, musicArtist: !!r.d.musicArtist }; paint(); say('Saved.'); }, function () { b.disabled = false; say('Could not reach the server.'); });
+        .then(function (r) { b.disabled = false; if (!r.ok) { say(r.d.error || 'Could not save.'); return; } cur.b = { verified: !!r.d.verified, crown: !!r.d.crown, musicArtist: !!r.d.musicArtist, seller: !!r.d.seller }; paint(); say('Saved.'); }, function () { b.disabled = false; say('Could not reach the server.'); });
     });
     setTimeout(function () { f.elements.slug.focus(); }, 30);
   }
