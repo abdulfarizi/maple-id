@@ -1,0 +1,18 @@
+/* M-ID · 3D profile card (real profile page).
+ * The ID card tilts toward the pointer on desktop and sits flat on touch and for reduced motion.
+ * Driven by --rx / --ry set in maple-3d-card.js. */
+.idcard{
+  transform-style:preserve-3d;
+  transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transition:transform .5s cubic-bezier(.22,1,.36,1),box-shadow .5s cubic-bezier(.22,1,.36,1);
+  will-change:transform;
+}
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  .idcard:hover{
+    box-shadow:0 34px 70px -34px rgba(0,0,0,.6),
+      calc(var(--ry,0deg) * -0.6) calc(var(--rx,0deg) * 0.8) 40px -18px color-mix(in srgb,var(--accent) 45%,transparent);
+  }
+}
+@media (prefers-reduced-motion:reduce){
+  .idcard{transform:none;transition:none;will-change:auto}
+}
