@@ -1,0 +1,14 @@
+/* M-ID · homepage layout v3 (hero, CSS only). Keeps every element and ID the scripts use.
+ * Two columns on desktop: copy on the left, the live example card on the right; one column on phones. */
+.mh2{display:grid!important;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(24px,4vw,64px);align-items:center;
+  min-height:92vh;padding-top:clamp(120px,14vh,160px)!important;padding-bottom:clamp(48px,8vh,96px)}
+.mh2 .hero-copy{min-width:0}
+.mh2 .hero-copy h1.mh-title{font-size:clamp(46px,7.4vw,118px)}
+.mh2 .stage{position:relative;min-height:min(78vh,700px);display:grid;place-items:center}
+.mh2 .hero-card{position:relative;z-index:2;width:min(100%,400px)}
+.mh2 .theme-pick{position:relative;z-index:3;margin-top:16px;justify-self:center}
+.mh2-proof{margin-top:6px}
+@media (max-width:900px){
+  .mh2{grid-template-columns:1fr;min-height:0}
+  .mh2 .stage{min-height:0;margin-top:24px}
+}
