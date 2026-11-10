@@ -39,7 +39,7 @@
     'widgetEnabled','widgetCode','sociabuzzEnabled','sociabuzz','sociabuzzLabel','sociabuzzPosition',
     'sociabuzzColor','sociabuzzTextColor','gaming','channels',
     // layout + star-layout options
-    'layout','accent','accent2','cardTag','statusText','statusMode','specs','footerText','bannerGray','bannerDim',
+    'layout','accent','accent2','cardTag','statusText','statusMode','specs','footerText','bannerGray','bannerDim','badgeMode','badgeSpeed',
     'avatarShape','showVisits','showTime','showReactions','showCta','intro','confetti','sfx','music','themeSwitch','grid',
     'spotify','musicAuto','shopEnabled','shopTitle','shopNote','shopWhatsApp','currency','products',
     'payEnabled','payQr','payFg','payBg','payDots','payIcon','payAmount','qrIcon',
@@ -250,7 +250,8 @@
     m.avatarDecoColor = HEX_RE.test(m.avatarDecoColor || '') ? m.avatarDecoColor : '';
     m.accent = HEX_RE.test(m.accent || '') ? m.accent : '';
     m.accent2 = HEX_RE.test(m.accent2 || '') ? m.accent2 : '';
-    m.cardTag = str(m.cardTag, 24);
+    m.cardTag = str(m.cardTag, 24); m.badgeMode = m.badgeMode === 'cycle' ? 'cycle' : 'all'; m.badgeSpeed = Math.min(8, Math.max(1, Number(m.badgeSpeed) || 2.6));
+    m.badgeMode = m.badgeMode === 'cycle' ? 'cycle' : 'all'; m.badgeSpeed = Math.min(8, Math.max(1, Number(m.badgeSpeed) || 2.6));
     m.statusText = str(m.statusText, 90);
     m.footerText = str(m.footerText, 40);
     m.statusMode = ['auto','online','offline','hidden'].includes(m.statusMode) ? m.statusMode : 'auto';
@@ -449,11 +450,11 @@
 
   // ===== Owner badges (v36-11): a tick for verified people, a crown for special honors. Only the owner account can change them. =====
   async function badgesFor(slug) {
-    const r = await sb(`/rest/v1/profile_badges?select=verified,crown,music_artist&slug=eq.${encodeURIComponent(slug)}`);
+    const r = await sb(`/rest/v1/profile_badges?select=verified,crown,music_artist,seller&slug=eq.${encodeURIComponent(slug)}`);
     if (!r || !r.ok) return { verified: false, crown: false, musicArtist: false };      // table not created yet: no badges
     const rows = await r.json().catch(() => []);
     const b = Array.isArray(rows) && rows[0] ? rows[0] : {};
-    return { verified: !!b.verified, crown: !!b.crown, musicArtist: !!b.music_artist };
+    return { verified: !!b.verified, crown: !!b.crown, musicArtist: !!b.music_artist, seller: !!b.seller };
   }
   function withStats(profile, stats) {
     const ok = stats && typeof stats === 'object' && !Array.isArray(stats) && stats.slug;
@@ -637,7 +638,7 @@
         if (ids.length) { const lr = await sb('/rest/v1/forum_likes?select=post&user_id=eq.' + au.uid + '&post=in.(' + ids.join(',') + ')', { token: T }); if (lr && lr.ok) mine = (await lr.json().catch(() => [])).map((x) => x.post); }
         // the badges of every author on this page (one query), so each name can show its tick / crown / music badge
         const bmap = {}, aslugs = [...new Set(rows.concat(pinRows).map((x) => x.author_slug).filter((s) => /^[a-z0-9-]{1,30}$/.test(s || '')))];
-        if (aslugs.length) { const br = await sb('/rest/v1/profile_badges?select=slug,verified,crown,music_artist&slug=in.(' + aslugs.join(',') + ')'); if (br && br.ok) (await br.json().catch(() => [])).forEach((b) => { bmap[b.slug] = { verified: !!b.verified, crown: !!b.crown, musicArtist: !!b.music_artist }; }); }
+        if (aslugs.length) { const br = await sb('/rest/v1/profile_badges?select=slug,verified,crown,music_artist,seller&slug=in.(' + aslugs.join(',') + ')'); if (br && br.ok) (await br.json().catch(() => [])).forEach((b) => { bmap[b.slug] = { verified: !!b.verified, crown: !!b.crown, musicArtist: !!b.music_artist, seller: !!b.seller }; }); }
         const map = (x) => ({ id: x.id, badges: bmap[x.author_slug] || null, mine: x.author === au.uid, slug: x.author_slug, name: x.author_name, cat: x.category, title: x.title, body: x.body, image: x.image, at: x.created_at, pinned: !!x.pinned, likes: cnt(x, 'forum_likes'), comments: cnt(x, 'forum_comments'), liked: mine.includes(x.id) });
         return json({ more, me: { mod: !!au.isOwner }, pinned: pinRows.map(map), posts: rows.map(map) });
       }
@@ -889,10 +890,10 @@
       if (!au.isOwner) return json({ error: 'Only the site owner can change badges.' }, 403);
       const slug = normSlug(decodeURIComponent(url.split('/api/badges/')[1].split('?')[0]));
       if (!/^[a-z0-9-]{1,30}$/.test(slug)) return json({ error: 'Unknown profile.' }, 400);
-      const b = parse(options.body), next = { slug, verified: b.verified === true, crown: b.crown === true, music_artist: b.musicArtist === true, updated_at: new Date().toISOString() };
+      const b = parse(options.body), next = { slug, verified: b.verified === true, crown: b.crown === true, music_artist: b.musicArtist === true, seller: b.seller === true, updated_at: new Date().toISOString() };
       const r = await sb('/rest/v1/profile_badges?on_conflict=slug', { method: 'POST', token: au.token, headers: { Prefer: 'resolution=merge-duplicates,return=representation' }, body: next });
       if (!r || !r.ok) return json({ error: 'Could not save. Run supabase_badges.sql and supabase_badges_music.sql in Supabase first.' }, 400);
-      return json({ verified: next.verified, crown: next.crown, musicArtist: next.music_artist });
+      return json({ verified: next.verified, crown: next.crown, musicArtist: next.music_artist, seller: next.seller });
     }
 
     // ===== Public profiles, likes, reactions =====
@@ -920,7 +921,7 @@
       let stats = null;
       if (!url.includes('preview')) stats = await rpcStats('bump_visit', { p_slug: slug });
       if (!stats) stats = await fetchStats(slug);
-      return json({ ...withStats(profile, stats), badges: await badgesFor(slug) });
+      return json({ ...withStats(profile, stats), badges: { ...(await badgesFor(slug)), badgeMode: profile.badgeMode, badgeSpeed: profile.badgeSpeed } });
     }
 
     // ===== Signed-in user's own profile =====
