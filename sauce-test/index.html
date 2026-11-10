@@ -50,29 +50,13 @@
   .btn-main:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 18px 40px -12px rgba(255,106,19,.75)}
   .btn-ghost{border:1px solid var(--line);color:var(--paper);background:rgba(255,255,255,.03)}
   .btn-ghost:hover{border-color:var(--orange);color:var(--orange)}
-  .profile-stage{position:absolute;right:clamp(-20px,4vw,60px);top:50%;transform:translateY(-50%);width:min(44vw,400px);perspective:1100px;z-index:1}
-  .pcard{position:relative;border-radius:30px;overflow:hidden;transform-style:preserve-3d;
-    background:linear-gradient(170deg,rgba(255,255,255,.14),rgba(255,255,255,.03) 50%),rgba(20,14,11,.72);
-    border:1px solid rgba(255,255,255,.22);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 40px 80px -30px rgba(255,106,19,.5);
-    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
-    transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .5s cubic-bezier(.22,1,.36,1)}
-  .pc-ban{height:150px;background:linear-gradient(135deg,var(--orange),var(--red) 60%,#3a0d05)}
-  .pc-av{position:relative;z-index:2;width:104px;height:104px;border-radius:50%;margin:-52px 0 0 28px;display:grid;place-items:center;
-    font-family:var(--display);font-size:34px;background:var(--black);border:4px solid var(--orange);color:var(--paper);box-shadow:0 0 0 6px rgba(255,106,19,.18)}
-  .pc-body{position:relative;z-index:1;padding:14px 28px 28px}
-  .pc-name{font-family:var(--display);font-size:38px;text-transform:uppercase;line-height:1}
-  .pc-tick{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--orange);color:#140803;font-size:12px;vertical-align:middle;margin-left:6px}
-  .pc-slug{color:var(--muted);font-size:13px;margin-top:6px}
-  .pc-bio{color:var(--paper);opacity:.85;font-size:15px;line-height:1.55;margin-top:14px}
-  .pc-ids{list-style:none;margin-top:18px;display:grid;gap:8px}
-  .pc-ids li{display:flex;justify-content:space-between;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);font-size:14px}
-  .pc-ids span{color:var(--orange);font-weight:600}
-  .pc-btns{display:flex;gap:10px;margin-top:20px}
-  .pc-btn{flex:1;border-radius:999px;padding:13px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;background:rgba(255,255,255,.08);color:var(--paper);border:1px solid rgba(255,255,255,.14);transition:transform .3s cubic-bezier(.22,1,.36,1)}
-  .pc-btn.main{background:var(--orange);color:#140803;border:0}
-  .pc-btn:hover{transform:translateY(-2px)}
-  .pc-glow{position:absolute;left:-20%;right:-20%;bottom:-30%;height:60%;background:radial-gradient(closest-side,rgba(255,106,19,.45),transparent 70%);pointer-events:none;z-index:0}
+  #jar{position:absolute;inset:0;z-index:1;pointer-events:none}
+  .jar-wrap{position:absolute;right:clamp(-40px,2vw,40px);top:50%;transform:translateY(-50%);width:min(56vw,640px);height:min(80vh,760px);z-index:1}
+  .jar-wrap canvas{width:100%!important;height:100%!important}
+  .fallback{display:none;position:absolute;inset:0;margin:auto;width:min(60vw,360px);aspect-ratio:.7;border-radius:40% 40% 46% 46%/22% 22% 56% 56%;
+    background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.4),transparent 25%),linear-gradient(180deg,var(--orange-2),var(--red) 70%,#7a1408);box-shadow:0 40px 80px -30px rgba(255,106,19,.6)}
+  .no-webgl .fallback{display:block}
+  .no-webgl .jar-wrap canvas{display:none}
 
   /* marquee */
   .marquee{overflow:hidden;border-block:1px solid var(--line);background:var(--orange);color:#140803;padding:18px 0;transform:rotate(-1.2deg);margin:40px -4vw 0;width:108vw}
@@ -133,7 +117,7 @@
 
   @media (max-width:820px){
     .nav ul{display:none}
-    .profile-stage{position:relative;right:auto;top:auto;transform:none;width:min(92vw,400px);margin:30px auto 0}
+    .jar-wrap{position:relative;right:auto;top:auto;transform:none;width:100%;height:58vh;margin-top:10px}
     .hero{padding-top:110px}
     .ingredients{grid-template-columns:1fr}
     .story-item{grid-template-columns:1fr}
@@ -159,6 +143,9 @@
   <!-- HERO -->
   <div class="hero" id="hero">
     <div class="hero-glow" aria-hidden="true"></div>
+    <div class="jar-wrap" id="jar-wrap" aria-hidden="true">
+      <div class="fallback"></div>
+    </div>
     <h1 class="hero-title" id="hero-title">
       <span class="o">Slow</span> burn.<br />
       <span class="outline">Small</span> batch.<br />
@@ -168,27 +155,6 @@
     <div class="hero-cta">
       <a class="btn btn-main" href="#flavours">Shop the flavours</a>
       <a class="btn btn-ghost" href="#story">Our story</a>
-    </div>
-    <div class="profile-stage" id="profile-stage">
-      <div class="pcard" id="pcard">
-        <div class="pc-ban"></div>
-        <div class="pc-av">EC</div>
-        <div class="pc-body">
-          <div class="pc-name">Ember Kitchen <span class="pc-tick">✓</span></div>
-          <div class="pc-slug">m-id.app/ember</div>
-          <p class="pc-bio">Gourmet sauce maker. Bold heat, slow burn. Find us, order, say hi.</p>
-          <ul class="pc-ids">
-            <li><b>Mobile Legends</b><span>ember#1234</span></li>
-            <li><b>Instagram</b><span>@emberco</span></li>
-            <li><b>Online hours</b><span>9pm–1am</span></li>
-          </ul>
-          <div class="pc-btns">
-            <button class="pc-btn main" type="button">Message me</button>
-            <button class="pc-btn" type="button">WhatsApp</button>
-          </div>
-        </div>
-        <div class="pc-glow"></div>
-      </div>
     </div>
   </div>
 
@@ -284,26 +250,133 @@
 
 <footer>
   <span>© Ember &amp; Co. Test page, not for sale.</span>
-  <span>Built with GSAP</span>
+  <span>Built with Three.js and GSAP</span>
 </footer>
 
-<script>
-  // 3D profile card: tilts with the pointer on desktop, still on touch and reduced-motion.
-  (function () {
-    var card = document.getElementById('pcard');
-    if (!card) return;
-    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var fine = matchMedia('(hover: hover)').matches;
-    if (reduce || !fine) return;
-    window.addEventListener('pointermove', function (e) {
-      var x = e.clientX / innerWidth - 0.5, y = e.clientY / innerHeight - 0.5;
-      card.style.setProperty('--ry', (x * 16).toFixed(2) + 'deg');
-      card.style.setProperty('--rx', (-y * 12).toFixed(2) + 'deg');
-    });
-  })();
-</script>
 <script type="module">
-  // GSAP is loaded from the CDN M-ID already allows.
+  // Three.js and GSAP are loaded from the CDNs M-ID already allows.
+  const showFallback = () => document.documentElement.classList.add('no-webgl');
+
+  async function initJar() {
+    const wrap = document.getElementById('jar-wrap');
+    try {
+      const THREE = await import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js');
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      wrap.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+      camera.position.set(0, 0.2, 7.2);
+
+      // dynamic lights: warm key, orange rim, cool fill
+      scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+      const key = new THREE.DirectionalLight(0xffe2c4, 2.2); key.position.set(3, 4, 5); scene.add(key);
+      const rim = new THREE.PointLight(0xff6a13, 6, 12); rim.position.set(-3, 1.5, -2); scene.add(rim);
+      const fill = new THREE.PointLight(0x9ec8ff, 1.2, 12); fill.position.set(3, -2, 3); scene.add(fill);
+
+      // glass jar: lathe profile, transmissive glass
+      const profile = [
+        [0.0, -1.9], [1.05, -1.9], [1.2, -1.75], [1.22, -1.0], [1.2, 0.9], [1.05, 1.3],
+        [0.82, 1.42], [0.78, 1.62], [0.8, 1.72], [0.72, 1.8]
+      ].map(([x, y]) => new THREE.Vector2(x, y));
+      const jarGroup = new THREE.Group();
+      scene.add(jarGroup);
+
+      const glass = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff, metalness: 0, roughness: 0.05, transmission: 0.95, thickness: 0.6,
+        ior: 1.45, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true, opacity: 0.35
+      });
+      jarGroup.add(new THREE.Mesh(new THREE.LatheGeometry(profile, 96), glass));
+
+      // sauce inside
+      const sauceProfile = [[0.0, -1.7], [1.0, -1.7], [1.05, -0.95], [1.02, 0.95], [0.88, 1.25], [0.0, 1.25]]
+        .map(([x, y]) => new THREE.Vector2(x, y));
+      const sauce = new THREE.Mesh(new THREE.LatheGeometry(sauceProfile, 96), new THREE.MeshPhysicalMaterial({
+        color: 0xc8320f, roughness: 0.35, clearcoat: 0.6, emissive: 0x4a0d02, emissiveIntensity: 0.6
+      }));
+      jarGroup.add(sauce);
+
+      // lid
+      const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.84, 0.84, 0.32, 64),
+        new THREE.MeshStandardMaterial({ color: 0x0b0907, metalness: 0.6, roughness: 0.3 }));
+      lid.position.y = 1.9; jarGroup.add(lid);
+
+      // label band
+      const label = new THREE.Mesh(new THREE.CylinderGeometry(1.215, 1.215, 1.1, 96, 1, true),
+        new THREE.MeshStandardMaterial({ color: 0xff6a13, roughness: 0.55, metalness: 0.05, side: THREE.DoubleSide }));
+      label.position.y = -0.1; jarGroup.add(label);
+
+      // spice particles drifting around the jar
+      const spiceCount = 140;
+      const spiceGeo = new THREE.BufferGeometry();
+      const spicePos = new Float32Array(spiceCount * 3);
+      for (let i = 0; i < spiceCount; i++) {
+        const a = Math.random() * Math.PI * 2, r = 1.6 + Math.random() * 1.6;
+        spicePos[i * 3] = Math.cos(a) * r; spicePos[i * 3 + 1] = (Math.random() - 0.5) * 4; spicePos[i * 3 + 2] = Math.sin(a) * r;
+      }
+      spiceGeo.setAttribute('position', new THREE.BufferAttribute(spicePos, 3));
+      const spices = new THREE.Points(spiceGeo, new THREE.PointsMaterial({ color: 0xff8a3d, size: 0.04, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false }));
+      scene.add(spices);
+
+      // steam: rising soft particles above the lid
+      const steamCount = 90;
+      const steamGeo = new THREE.BufferGeometry();
+      const steamPos = new Float32Array(steamCount * 3);
+      const steamSeed = new Float32Array(steamCount);
+      for (let i = 0; i < steamCount; i++) {
+        steamPos[i * 3] = (Math.random() - 0.5) * 0.9; steamPos[i * 3 + 1] = 2.1 + Math.random() * 2.2; steamPos[i * 3 + 2] = (Math.random() - 0.5) * 0.9;
+        steamSeed[i] = Math.random();
+      }
+      steamGeo.setAttribute('position', new THREE.BufferAttribute(steamPos, 3));
+      const steam = new THREE.Points(steamGeo, new THREE.PointsMaterial({ color: 0xffd9b0, size: 0.22, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending }));
+      scene.add(steam);
+
+      // resize
+      const resize = () => {
+        const w = wrap.clientWidth, h = wrap.clientHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h; camera.updateProjectionMatrix();
+      };
+      resize();
+      window.addEventListener('resize', resize);
+
+      // pointer tilt
+      let tx = 0, ty = 0;
+      window.addEventListener('pointermove', e => {
+        tx = (e.clientX / window.innerWidth - 0.5) * 0.4;
+        ty = (e.clientY / window.innerHeight - 0.5) * 0.25;
+      });
+
+      const clock = new THREE.Clock();
+      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      renderer.setAnimationLoop(() => {
+        const t = clock.getElapsedTime();
+        if (!reduce) jarGroup.rotation.y = t * 0.35 + tx;
+        jarGroup.rotation.x += (ty - jarGroup.rotation.x) * 0.05;
+        jarGroup.position.y = Math.sin(t * 0.8) * 0.08;
+        spices.rotation.y = t * 0.12;
+        const sp = spiceGeo.attributes.position.array;
+        for (let i = 0; i < spiceCount; i++) sp[i * 3 + 1] += Math.sin(t + i) * 0.0015 + 0.0015;
+        for (let i = 0; i < spiceCount; i++) if (sp[i * 3 + 1] > 2.2) sp[i * 3 + 1] = -2.2;
+        spiceGeo.attributes.position.needsUpdate = true;
+        const st = steamGeo.attributes.position.array;
+        for (let i = 0; i < steamCount; i++) {
+          st[i * 3 + 1] += 0.012 + steamSeed[i] * 0.01;
+          st[i * 3] += Math.sin(t * 2 + i) * 0.002;
+          if (st[i * 3 + 1] > 4.6) st[i * 3 + 1] = 2.1;
+        }
+        steamGeo.attributes.position.needsUpdate = true;
+        renderer.render(scene, camera);
+      });
+    } catch (err) {
+      console.warn('3D jar unavailable, using fallback', err);
+      showFallback();
+    }
+  }
+
   async function initMotion() {
     try {
       const gm = await import('https://cdn.jsdelivr.net/npm/gsap@3.12.5/+esm');
@@ -312,9 +385,11 @@
       const ScrollTrigger = stm.ScrollTrigger || stm.default;
       gsap.registerPlugin(ScrollTrigger);
 
+      // hero title in
       gsap.from('#hero-title', { y: 80, opacity: 0, duration: 1.2, ease: 'power4.out' });
       gsap.from('.hero-sub, .hero-cta', { y: 30, opacity: 0, duration: 1, delay: 0.3, stagger: 0.12, ease: 'power3.out' });
 
+      // scroll-driven reveals
       gsap.utils.toArray('.reveal').forEach(el => {
         gsap.to(el, {
           opacity: 1, y: 0, duration: 1, ease: 'power3.out',
@@ -322,11 +397,13 @@
         });
       });
 
-      gsap.to('#profile-stage', {
+      // jar drifts as you scroll the hero away
+      gsap.to('.jar-wrap', {
         y: 160, ease: 'none',
         scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true }
       });
 
+      // count-up stat
       const stat = document.querySelector('.stat');
       if (stat) {
         const counter = { v: 0 };
@@ -341,6 +418,8 @@
       document.querySelectorAll('.reveal').forEach(el => { el.style.opacity = 1; el.style.transform = 'none'; });
     }
   }
+
+  initJar();
   initMotion();
 </script>
 </body>
