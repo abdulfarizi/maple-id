@@ -177,6 +177,7 @@ GoTrue REQUIRES HTTPS to work securely.`),t&&(this.audience=t),this.setCookie=n,
         <button type="button" data-mode="signup" role="tab">Create account</button>
         <button type="button" data-mode="login" role="tab">Log in</button>
       </div>
+      <div id="google-auth-wrap"><button type="button" id="google-auth" class="google-auth-btn" onclick="location.href=((window.__mSb&&window.__mSb.url)||'')+'/auth/v1/authorize?provider=google&redirect_to='+encodeURIComponent(location.origin+'/')"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6C12.3 13.5 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.1 5.3-4.5 7l7 5.4c4.1-3.8 6.5-9.4 6.5-16.9z"/><path fill="#FBBC05" d="M10.4 28.8c-.5-1.4-.8-2.9-.8-4.8s.3-3.4.8-4.8l-7.8-6C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7-5.4c-2.1 1.4-4.8 2.3-8.9 2.3-6.3 0-11.7-4-13.6-9.6l-7.8 6C6.5 42.6 14.6 48 24 48z"/></svg>Continue with Google</button><p class="auth-or-line">or</p></div>
       <form id="auth-form" novalidate>
         <div class="field" data-only="signup"><label for="a-name">Display name</label><input id="a-name" autocomplete="name" placeholder="Rizqi Hakim"></div>
         <div class="field" data-only="signup">
