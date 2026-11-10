@@ -1,21 +1,21 @@
 /* M-ID · profile badges: tick (verified), seller, crown (special honor), music artist.
- * All four share one rounded-square badge (a squircle, not a circle or a star), each in its own colour, with one white symbol drawn in the same 24-unit box.
+ * All four use the same scalloped seal (the TikTok-style verified shape), each in its own colour, with one white symbol in the middle.
  * window.dgBadgeHTML({verified, crown, musicArtist, seller, badgeMode, badgeSpeed}) → the badges beside a name on every card style.
  *  · badgeMode "all" (default): every badge shows side by side at once.
  *  · badgeMode "cycle": the badges share one slot and take turns, changing every badgeSpeed seconds (1 to 8, default 2.6).
  * Badges are given by the site owner only (Menu → Badges); the card just displays what the server sends. */
 (function () {
   'use strict';
-  // the rounded-square badge shape, the same for every badge
-  var SHAPE = 'M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z';
+  // the scalloped seal (the TikTok-style verified shape), the same for every badge
+  var SEAL = 'M12 1.8l2.5 1.9 3.1-.2 1 3 2.6 1.8-.9 3 .9 3-2.6 1.8-1 3-3.1-.2-2.5 1.9-2.5-1.9-3.1.2-1-3-2.6-1.8.9-3-.9-3 2.6-1.8 1-3 3.1.2z';
 
-  // every symbol is drawn in the same 24-unit box and placed the same way: scaled to 50%, centred
+  // the seal with one white symbol in the middle, drawn in the same 24-unit box at the same size
   function badge(symbol) {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="' + SHAPE + '"/>'
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="' + SEAL + '"/>'
       + '<g transform="translate(12 12) scale(.5) translate(-12 -12)">' + symbol + '</g></svg>';
   }
 
-  // tick: a bold check
+  // verified tick: the bold white check, as on the TikTok verified badge
   var TICK = badge('<path fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" d="M4 12.6l5.2 5.2L20 6.6"/>');
   // seller: a shop front with an awning and a door
   var SELLER = badge(
