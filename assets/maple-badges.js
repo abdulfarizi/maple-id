@@ -1,17 +1,17 @@
 /* M-ID · profile badges: tick (verified), seller, crown (special honor), music artist.
- * All four are built the same way: one pointed seal, one white symbol drawn in the same 24-unit box and placed in the same spot.
+ * All four share one rounded-square badge (a squircle, not a circle or a star), each in its own colour, with one white symbol drawn in the same 24-unit box.
  * window.dgBadgeHTML({verified, crown, musicArtist, seller, badgeMode, badgeSpeed}) → the badges beside a name on every card style.
  *  · badgeMode "all" (default): every badge shows side by side at once.
  *  · badgeMode "cycle": the badges share one slot and take turns, changing every badgeSpeed seconds (1 to 8, default 2.6).
  * Badges are given by the site owner only (Menu → Badges); the card just displays what the server sends. */
 (function () {
   'use strict';
-  // the pointed seal, the same shape for every badge
-  var SEAL = 'M12 1.8l2.5 1.9 3.1-.2 1 3 2.6 1.8-.9 3 .9 3-2.6 1.8-1 3-3.1-.2-2.5 1.9-2.5-1.9-3.1.2-1-3-2.6-1.8.9-3-.9-3 2.6-1.8 1-3 3.1.2z';
+  // the rounded-square badge shape, the same for every badge
+  var SHAPE = 'M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z';
 
   // every symbol is drawn in the same 24-unit box and placed the same way: scaled to 50%, centred
   function badge(symbol) {
-    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="' + SEAL + '"/>'
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="' + SHAPE + '"/>'
       + '<g transform="translate(12 12) scale(.5) translate(-12 -12)">' + symbol + '</g></svg>';
   }
 
