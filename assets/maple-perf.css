@@ -1,0 +1,12 @@
+/* M-ID · v36-23 · smoothness on phones and tablets
+ * Backdrop blur on many layers is repainted by the browser on every animation frame and on every scroll, which makes the
+ * whole page flicker. On touch screens the glass panels keep their translucent fill and lose only the blur, and CSS blur
+ * filters on background glows are turned off. Desktop keeps the full look. Remove this file to restore the blur. */
+@media (hover: none), (max-width: 1024px) {
+  *, *::before, *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .mpx-bg img, .dk-blob, .mh2-aura i, body::after { filter: none !important; }
+  .dk-blob, .mh2-aura i { mix-blend-mode: normal !important; }
+}
