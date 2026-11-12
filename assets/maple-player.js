@@ -221,7 +221,7 @@
   var audio = null;
   function aud() {
     if (audio) return audio;
-    audio = new Audio(); audio.preload = 'metadata';
+    audio = new Audio(); audio.preload = 'metadata'; audio.volume = 0.5;   // v36-23: quieter default (was full volume)
     var mine = function () { return S.engine === 'file'; };
     audio.addEventListener('playing', function () { if (!mine()) return; S.playing = true; S.buffering = false; paint(); });
     audio.addEventListener('play', function () { if (!mine()) return; S.playing = true; paint(); });
@@ -291,6 +291,7 @@
         events: {
           onReady: function () {
             yt.ready = true; yt.busy = false;
+            try { yt.p.setVolume(50); } catch (e) {}                              // v36-23: quieter default
             try { var v = yt.p.getVideoData && yt.p.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || String(v.author || '').replace(/\s*-\s*Topic$/i, ''); paint(); loadLyrics(); } } catch (e) {}
             try { var d = yt.p.getDuration(); if (d > 0) S.dur = d * 1000; } catch (e) {}
             if (yt.want) { yt.want = false; try { yt.p.playVideo(); } catch (e) {} }
@@ -340,7 +341,7 @@
     sdk.initP = sdkScript().then(function () {
       return new Promise(function (res, rej) {
         var done = false, to = setTimeout(function () { if (!done) { done = true; rej(new Error('timeout')); } }, 12000);
-        var p = sdk.p = new Spotify.Player({ name: 'M-ID player', volume: 0.85, getOAuthToken: function (cb) { msp().token().then(cb, function () { sdkFail(''); }); } });
+        var p = sdk.p = new Spotify.Player({ name: 'M-ID player', volume: 0.5, getOAuthToken: function (cb) { msp().token().then(cb, function () { sdkFail(''); }); } });
         p.addListener('ready', function (e) { sdk.dev = e.device_id; if (!done) { done = true; clearTimeout(to); res(); } });
         p.addListener('not_ready', function () { sdk.dev = ''; sdk.loaded = ''; });
         p.addListener('initialization_error', function () { if (!done) { done = true; clearTimeout(to); } rej(new Error('unsupported')); sdkFail('unsupported'); });
