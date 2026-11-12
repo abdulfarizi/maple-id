@@ -30,7 +30,7 @@
   /* ---------- UI ---------- */
   function build() {
     if (el.mini) return;
-    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=13';
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=14';
     document.head.appendChild(css);
 
     var mini = document.createElement('div'); mini.id = 'mpl-mini'; mini.className = 'mpl-mini'; mini.hidden = true;
@@ -92,8 +92,10 @@
   }
   /* the song's music video shows over the full-screen cover, or over the profile card's Audio Player cover while playing.
    The same YouTube player plays the sound. The video is zoomed so YouTube's title bar and control strip fall outside. */
+  var VIDEO_COVER = false;   // off: the album image shows as before (set to true to bring the video cover back)
   function syncVideoCover() {
     if (!el.ytBox) return;
+    if (!VIDEO_COVER) { el.ytBox.classList.remove('mpl-yt-show'); return; }
     var on = !!(S.track && S.engine === 'yt' && yt.p && yt.ready && S.playing), r = null, z = 25;
     if (on && S.open && el.cover) { r = el.cover.getBoundingClientRect(); z = 5001; }
     else if (on && cardCover && cardCover.frame && cardCover.frame.isConnected) {
