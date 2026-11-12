@@ -30,7 +30,7 @@
   /* ---------- UI ---------- */
   function build() {
     if (el.mini) return;
-    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=11';
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=12';
     document.head.appendChild(css);
 
     var mini = document.createElement('div'); mini.id = 'mpl-mini'; mini.className = 'mpl-mini'; mini.hidden = true;
@@ -93,7 +93,7 @@
   /* the song's music video shows in the full-screen cover, cropped to a square: the same YouTube player plays the sound */
   function syncVideoCover() {
     if (!el.ytBox || !el.cover) return;
-    var on = !!(S.open && S.track && S.engine === 'yt' && yt.p && yt.ready);
+    var on = !!(S.open && S.track && S.engine === 'yt' && yt.p && yt.ready && S.playing);   // only while playing: when paused the cover image shows, so YouTube's paused overlay never appears
     el.ytBox.classList.toggle('mpl-yt-show', on);
     if (!on) return;
     var r = el.cover.getBoundingClientRect();
