@@ -24,7 +24,7 @@
   var S = { track: null, engine: '', playing: false, busy: false, muted: false, err: '', pos: 0, dur: 0, open: false, shown: false, lyrCur: -1 };
   var lyr = { key: '', lines: null, plain: '', msg: '', ok: false, ver: 0 };
   var audio = null, yt = { p: null, ready: false, want: false, id: '' }, tick = 0, lyrCache = {};
-  var userPaused = false, armedTap = false;
+  var userPaused = false, armedTap = false, startMuted = false;
   var el = {};
 
   /* ---------- UI ---------- */
@@ -191,7 +191,7 @@
             yt.ready = true; applyVol();
             try { var d = e.target.getDuration(); if (d > 0) S.dur = d * 1000; } catch (err) {}
             try { var v = e.target.getVideoData && e.target.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || v.author || ''; } } catch (err) {}
-            if (yt.want) { yt.want = false; try { e.target.playVideo(); } catch (err) {} setTimeout(ytFallback, 1500); }
+            if (yt.want) { yt.want = false; try { if (S.muted) e.target.mute(); else e.target.unMute(); e.target.playVideo(); } catch (err) {} setTimeout(ytFallback, 1500); }
             paint();
           },
           onError: function () { if (S.engine !== 'yt') return; S.busy = false; S.playing = false; S.err = 'This YouTube link cannot play here.'; stopTick(); paint(); },
@@ -235,12 +235,12 @@
     if (S.playing) { userPaused = true; pauseAll(); paint(); return; }
     S.err = '';
     if (S.engine === 'file') {
-      var a = aud(); S.busy = true; paint();
+      var a = aud(); a.muted = !!S.muted; S.busy = true; paint();
       var pr = a.play();
       if (pr && pr.catch) pr.catch(function () { S.busy = false; S.err = 'Tap play again to start the sound.'; paint(); });
     } else if (S.engine === 'yt') {
       if (yt.p && yt.ready) {
-        if (S.muted) { try { yt.p.unMute(); } catch (e) {} S.muted = false; }
+        try { if (S.muted) yt.p.mute(); else yt.p.unMute(); } catch (e) {}
         S.busy = true; ytCall(function (p) { p.playVideo(); }); setTimeout(ytFallback, 1500);
       } else { yt.want = true; S.busy = true; }
     }
@@ -323,7 +323,8 @@
       S.engine = 'yt';
       ytPlay(ytid);
     }
-    S.busy = true; S.playing = false; S.muted = false;
+    var m = startMuted; startMuted = false;
+    S.busy = true; S.playing = false; S.muted = m;
     build(); paint();
     if (track.audio) loadLyrics(); else ytMeta(track);
     toggle();
@@ -368,6 +369,21 @@
   }
   hdrHide();
 
+  /* ---------- the music is for the profile page only: anywhere else it stops and the pill hides ---------- */
+  function onProfile() {
+    var p = (document.body && document.body.dataset.page) || '';
+    if (window.dgPager && dgPager.layerKind && dgPager.layerKind() === 'studio') return false;
+    return p === 'profile' || p === 'card';
+  }
+  function pageCheck() {
+    if (onProfile()) return;
+    if (S.open) setOpen(false);
+    if (S.shown || S.playing || S.busy) { pauseAll(); S.shown = false; S.busy = false; paint(); }
+  }
+  new MutationObserver(pageCheck).observe(document.body, { attributes: true, attributeFilter: ['data-page'] });
+  window.addEventListener('popstate', pageCheck);
+  setInterval(pageCheck, 800);
+
   /* ---------- star cards (iframes) talk to this player with postMessage ----------
    * The Audio Player slide inside a card sends mp-play / mp-ctl and listens for mp-state. */
   function toFrames(msg) { document.querySelectorAll('iframe.star-frame').forEach(function (f) { try { f.contentWindow.postMessage(msg, location.origin); } catch (e) {} }); }
@@ -391,19 +407,21 @@
   function autoStart(v) {
     var t = trackFrom(v); if (!t) return;
     var same = S.track && lyrKey(S.track) === lyrKey(t);
-    if (same) { if (!S.playing && !userPaused) { armTap(); toggle(); } return; }
-    play(t); armTap();
+    if (same) { S.shown = true; if (!S.playing && !userPaused) { armTap(); toggle(); } return; }
+    startMuted = true; play(t); armTap();   // browsers always allow muted sound: it starts muted, the first tap turns it on
   }
   function armTap() { if (armedTap) return; armedTap = true; document.addEventListener('pointerdown', tapStart, true); }
   function tapStart(e) {
     if (!S.track || userPaused) return;
     if (el.mini && (el.mini.contains(e.target) || (el.sheet && el.sheet.contains(e.target)))) return;   // the player's own buttons handle themselves
-    if (S.playing && !S.muted) return;                                  // already playing with sound
+    if (!S.muted && S.playing) return;                                  // already playing with sound
     armedTap = false; document.removeEventListener('pointerdown', tapStart, true);
-    toggle();                                                           // muted and playing → this turns the sound on
+    if (S.muted) { unmuteNow(); if (!S.playing && !S.busy) toggle(); return; }
+    toggle();
   }
   function unmuteNow() {
     S.muted = false;
+    try { if (audio) audio.muted = false; } catch (e) {}
     try { if (yt.p && yt.ready) yt.p.unMute(); } catch (e) {}
     applyVol(); paint();
   }
