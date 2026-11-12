@@ -343,7 +343,8 @@
   /* a YouTube link has no title yet: read it from YouTube, then look up the lyrics with it */
   function ytMeta(t) {
     fetch('/api/yt-meta?url=' + encodeURIComponent(t.url)).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
-      if (!m || !S.track || S.track.url !== t.url) return;
+      if (!S.track || S.track.url !== t.url) return;
+      if (!m) { lyr.key = ''; loadLyrics(); return; }                    // no details: still look the lyrics up
       S.track.title = m.songTitle || m.title || S.track.title || ''; S.track.artist = m.songArtist || m.artist || S.track.artist || ''; S.track.art = m.art || S.track.art || '';
       lyr.key = ''; loadLyrics(); paint(); bcast();
     }).catch(function () { if (S.track && S.track.url === t.url) { lyr.key = ''; loadLyrics(); } });
@@ -377,7 +378,8 @@
     }
     S.busy = true; S.playing = false;
     build(); paint();
-    if (track.audio) loadLyrics(); else ytMeta(track);
+    if (track.audio || fixFor(track)) loadLyrics();                     // lyrics picked in Studio do not wait for the song's details
+    if (!track.audio) ytMeta(track);
     toggle();
   }
   function pause() { pauseAll(); paint(); }
@@ -486,7 +488,12 @@
     if (document.body.dataset.page === 'profile') { try { localStorage.setItem('mpl.profileSong', JSON.stringify(Object.assign({ audio: t.audio || '', url: t.url, title: t.title, artist: t.artist, art: t.art, durationMs: t.durationMs || 0 }, flags(t)))); } catch (e) {} }
     if (t.musicAuto === false) return;                                  // Studio: automatic play is off
     var same = S.track && lyrKey(S.track) === lyrKey(t);
-    if (same) { S.shown = true; if (!S.playing && !userPaused) { armTap(); toggle(); } return; }
+    if (same) {
+      var before = JSON.stringify(S.track.lyricsFix || null);
+      Object.assign(S.track, flags(v));                                    // Studio settings may have changed
+      if (JSON.stringify(S.track.lyricsFix || null) !== before) { lyr.key = ''; loadLyrics(); paint(); }
+      S.shown = true; if (!S.playing && !userPaused) { armTap(); toggle(); } return;
+    }
     play(t); armTap();   // if the browser refuses sound before a tap, the first tap starts it
   }
   function armTap() { if (armedTap) return; armedTap = true; document.addEventListener('pointerdown', tapStart, true); }
