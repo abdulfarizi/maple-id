@@ -24,7 +24,7 @@
   var S = { track: null, engine: '', playing: false, busy: false, muted: false, err: '', pos: 0, dur: 0, open: false, shown: false, lyrCur: -1 };
   var lyr = { key: '', lines: null, plain: '', msg: '', ok: false, ver: 0 };
   var audio = null, yt = { p: null, ready: false, want: false, id: '' }, tick = 0, lyrCache = {};
-  var userPaused = false, armedTap = false, wasPlaying = false;
+  var userPaused = false, armedTap = false, wasOn = false;
   var el = {};
 
   /* ---------- UI ---------- */
@@ -373,13 +373,23 @@
     if (window.dgPager && dgPager.layerKind && dgPager.layerKind() === 'studio') return false;
     return p === 'profile' || p === 'card';
   }
+  /* on entering the profile the remembered song starts at once (the page switch comes from the visitor's tap, so the browser allows it) */
+  function startProfileSong() {
+    if (userPaused) return;
+    var t = null; try { t = JSON.parse(localStorage.getItem('mpl.profileSong') || 'null'); } catch (e) {}
+    if (!t || !(t.audio || t.url)) return;
+    if (!t.audio) t = { url: t.url, title: t.title, artist: t.artist, art: t.art, durationMs: t.durationMs };
+    if (S.track && lyrKey(S.track) === lyrKey(t)) { S.shown = true; if (!S.playing) toggle(); return; }
+    play(t); armTap();
+  }
   function pageCheck() {
     if (onProfile()) {
-      if (wasPlaying && S.track && !userPaused) { wasPlaying = false; S.shown = true; toggle(); }   // back on the profile: resume
+      if (!wasOn) { wasOn = true; startProfileSong(); }
       return;
     }
+    wasOn = false;
     if (S.open) setOpen(false);
-    if (S.playing || S.busy) { wasPlaying = true; pauseAll(); S.busy = false; }
+    if (S.playing || S.busy) { pauseAll(); S.busy = false; }
     if (S.shown) { S.shown = false; paint(); }
   }
   new MutationObserver(pageCheck).observe(document.body, { attributes: true, attributeFilter: ['data-page'] });
@@ -408,6 +418,7 @@
   }
   function autoStart(v) {
     var t = trackFrom(v); if (!t) return;
+    if (document.body.dataset.page === 'profile') { try { localStorage.setItem('mpl.profileSong', JSON.stringify({ audio: t.audio || '', url: t.url, title: t.title, artist: t.artist, art: t.art, durationMs: t.durationMs || 0 })); } catch (e) {} }
     var same = S.track && lyrKey(S.track) === lyrKey(t);
     if (same) { S.shown = true; if (!S.playing && !userPaused) { armTap(); toggle(); } return; }
     play(t); armTap();   // if the browser refuses sound before a tap, the first tap starts it
