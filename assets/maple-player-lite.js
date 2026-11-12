@@ -280,6 +280,14 @@
       setLyrics(key, d);
     });
   }
+  /* a YouTube link has no title yet: read it from YouTube, then look up the lyrics with it */
+  function ytMeta(t) {
+    fetch('/api/yt-meta?url=' + encodeURIComponent(t.url)).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
+      if (!m || !S.track || S.track.url !== t.url) return;
+      S.track.title = m.songTitle || m.title || S.track.title || ''; S.track.artist = m.songArtist || m.artist || S.track.artist || ''; S.track.art = m.art || S.track.art || '';
+      lyr.key = ''; loadLyrics(); paint(); bcast();
+    }).catch(function () { if (S.track && S.track.url === t.url) { lyr.key = ''; loadLyrics(); } });
+  }
   function lyricSearch(title, artist) {
     el.lres.hidden = false; el.lres.innerHTML = '<p class="mpl-msg">Searching…</p>';
     fetchLyrics('search?q=' + encodeURIComponent(((title || '') + ' ' + (artist || '')).trim())).then(function (list) {
@@ -307,7 +315,8 @@
       ytPlay(ytid);
     }
     S.busy = true; S.playing = false; S.muted = false;
-    build(); paint(); loadLyrics();
+    build(); paint();
+    if (track.audio) loadLyrics(); else ytMeta(track);
     toggle();
   }
   function pause() { pauseAll(); paint(); }
