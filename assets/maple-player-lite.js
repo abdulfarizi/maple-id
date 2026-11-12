@@ -30,7 +30,7 @@
   /* ---------- UI ---------- */
   function build() {
     if (el.mini) return;
-    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=3';
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=4';
     document.head.appendChild(css);
 
     var mini = document.createElement('div'); mini.id = 'mpl-mini'; mini.className = 'mpl-mini'; mini.hidden = true;
@@ -40,19 +40,23 @@
     var tb = document.querySelector('.topbar');
     (tb && tb.parentNode ? tb.parentNode : document.body).insertBefore(mini, tb ? tb.nextSibling : null);   // same stacking context as the header, so it tucks behind it
 
-    var sheet = document.createElement('div'); sheet.id = 'mpl-sheet'; sheet.className = 'mpl-sheet'; sheet.hidden = true;
+    var sheet = document.createElement('div'); sheet.id = 'mpl-sheet'; sheet.className = 'mpx-sheet mpl-sheet'; sheet.hidden = true;
     sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-label', 'Now playing');
-    sheet.innerHTML = '<div class="mpl-top"><button type="button" class="mpl-btn ghost" data-a="close" aria-label="Close">&#8964;</button><span class="mpl-from">Now playing</span><span></span></div>'
-      + '<div class="mpl-cover"><img alt="" hidden><span class="mpl-noart">&#9835;</span></div>'
-      + '<div class="mpl-info"><h2 class="mpl-title"></h2><p class="mpl-artist"></p><p class="mpl-msg-top" hidden></p></div>'
-      + '<div class="mpl-prog"><input type="range" class="mpl-seek" min="0" max="1000" value="0" aria-label="Seek"><div class="mpl-times"><span class="mpl-t0">0:00</span><span class="mpl-t1">0:00</span></div></div>'
-      + '<div class="mpl-ctrls"><button type="button" class="mpl-btn" data-a="back" aria-label="Back 10 seconds">&#8630;10</button>'
-      + '<button type="button" class="mpl-btn big" data-a="toggle" aria-label="Play"></button>'
-      + '<button type="button" class="mpl-btn" data-a="fwd" aria-label="Forward 10 seconds">10&#8631;</button></div>'
+    sheet.innerHTML = '<div class="mpx-bg"><img alt="" hidden></div><div class="mpx-grab"></div>'
+      + '<div class="mpx-top"><button type="button" class="mpx-ic" data-a="close" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      + '<p class="mpx-from"><span>Now playing</span><b class="mpl-title"></b></p><span style="width:42px;flex:none"></span></div>'
+      + '<div class="mpx-body"><div class="mpx-main">'
+      + '<div class="mpx-cover mpl-cover"><img alt="" hidden><span class="mpl-noart">&#9835;</span></div>'
+      + '<div class="mpx-info"><h2 class="mpl-title"></h2><p class="mpl-artist"></p><p class="mpl-msg-top" hidden></p></div>'
+      + '<div class="mpx-prog mpl-prog"><input type="range" class="mpx-seek mpl-seek" min="0" max="1000" value="0" aria-label="Seek"><div class="mpx-times"><span class="mpl-t0">0:00</span><span class="mpl-t1">0:00</span></div></div>'
+      + '<div class="mpx-ctrls"><button type="button" class="mpx-ic" data-a="back" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      + '<button type="button" class="mpx-big mpl-big-btn" data-a="toggle" aria-label="Play"></button>'
+      + '<button type="button" class="mpx-ic" data-a="fwd" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>'
       + '<label class="mpl-vol">Volume <input type="range" class="mpl-vol-in" min="0" max="100" step="1" aria-label="Volume"></label>'
-      + '<section class="mpl-lyrics" aria-label="Lyrics"><header><b>Lyrics</b><small class="mpl-lsrc"></small><button type="button" class="mpl-btn small" data-a="lsearch">Search</button></header>'
+      + '<section class="mpx-lyrics mpl-lyrics" aria-label="Lyrics"><header><b>Lyrics</b><small class="mpx-lsrc mpl-lsrc"></small><button type="button" class="mpl-btn small" data-a="lsearch">Search</button></header>'
       + '<form class="mpl-lform" hidden><input name="title" placeholder="Song title" aria-label="Song title"><input name="artist" placeholder="Artist" aria-label="Artist"><button type="submit" class="mpl-btn small">Find</button></form>'
-      + '<div class="mpl-lres" hidden></div><div class="mpl-lbody"></div></section>';
+      + '<div class="mpl-lres" hidden></div><div class="mpx-lbody mpl-lbody"></div></section>'
+      + '</div></div>';
     document.body.appendChild(sheet);
 
     var yw = document.createElement('div'); yw.id = 'mpl-yt'; yw.className = 'mpl-yt'; yw.setAttribute('aria-hidden', 'true');
@@ -87,7 +91,9 @@
     else if (a === 'lsearch') { el.lform.hidden = !el.lform.hidden; if (!el.lform.hidden && S.track) { el.lform.elements.title.value = S.track.title || ''; el.lform.elements.artist.value = S.track.artist || ''; } }
   }
   function setOpen(on) {
-    build(); S.open = !!on; el.sheet.hidden = !on; el.sheet.classList.toggle('open', !!on);
+    build(); S.open = !!on;
+    if (on) { clearTimeout(el.hideT); el.sheet.hidden = false; void el.sheet.offsetWidth; el.sheet.classList.add('open'); }
+    else { el.sheet.classList.remove('open'); clearTimeout(el.hideT); el.hideT = setTimeout(function () { if (!S.open) el.sheet.hidden = true; }, 520); }
     document.documentElement.classList.toggle('mpl-open', !!on);
   }
   function paint() {
@@ -99,7 +105,8 @@
     el.sheet.querySelectorAll('.mpl-title').forEach(function (n) { if (n.textContent !== title) n.textContent = title; });
     var art = t.art && window.MX && MX.artOk && MX.artOk(t.art) ? t.art : '';
     el.mini.querySelectorAll('.mpl-art img').forEach(function (img) { if (art) { if (img.getAttribute('src') !== art) img.src = art; img.hidden = false; } else img.hidden = true; });
-    el.sheet.querySelectorAll('.mpl-cover img').forEach(function (img) { if (art) { if (img.getAttribute('src') !== art) img.src = art; img.hidden = false; } else img.hidden = true; });
+    el.sheet.querySelectorAll('.mpl-cover img, .mpx-bg img').forEach(function (img) { if (art) { if (img.getAttribute('src') !== art) img.src = art; img.hidden = false; } else img.hidden = true; });
+    el.sheet.querySelectorAll('.mpx-info .mpl-artist').forEach(function (n) { if (n.textContent !== artist) n.textContent = artist; });
     el.sheet.querySelectorAll('.mpl-noart').forEach(function (n) { n.hidden = !!art; });
     var icon = S.busy ? '&#8943;' : (S.playing ? '&#10074;&#10074;' : '&#9654;');
     el.mini.querySelectorAll('[data-a=toggle]').forEach(function (b) { b.innerHTML = icon; b.setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); });
@@ -123,11 +130,11 @@
       if (n !== S.lyrCur || el.lbody.dataset.ver !== String(lyr.ver)) {
         if (el.lbody.dataset.ver !== String(lyr.ver)) {
           el.lbody.dataset.ver = String(lyr.ver);
-          el.lbody.innerHTML = '<ol class="mpl-lines">' + lyr.lines.map(function (l, k) { return '<li data-t="' + l.t + '" data-i="' + k + '">' + (esc(l.x) || '&#9834;') + '</li>'; }).join('') + '</ol>';
+          el.lbody.innerHTML = '<ol class="mpx-lines mpl-lines">' + lyr.lines.map(function (l, k) { return '<li data-t="' + l.t + '" data-i="' + k + '">' + (esc(l.x) || '&#9834;') + '</li>'; }).join('') + '</ol>';
         }
         var items = el.lbody.querySelectorAll('li');
         S.lyrCur = n;
-        for (i = 0; i < items.length; i++) items[i].className = i === n ? 'cur' : (i === n + 1 ? 'nxt' : '');
+        for (i = 0; i < items.length; i++) items[i].className = i === n ? 'on' : '';
         var cur = items[n]; if (cur && el.sheet.classList.contains('open')) cur.scrollIntoView({ block: 'center', behavior: 'auto' });
       }
     } else if (el.lbody.dataset.ver !== String(lyr.ver)) {
