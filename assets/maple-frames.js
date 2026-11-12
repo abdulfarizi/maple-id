@@ -394,10 +394,13 @@
     for (var n = el, k = 0; n && n.nodeType === 1 && k < 8; n = n.parentElement, k++) { var o = getComputedStyle(n); if (o.display === 'none' || Number(o.opacity) < .05) return false; }
     return true;
   }
+  var lastRun = 0;
   function frameLoop(now) {
     raf = 0;
     if (!mounts.size) return;
-    if (!document.hidden) {
+    /* v36-23: animate at about 30 fps and skip while the menu is open; smoother scrolling on phones and tablets */
+    if (!document.hidden && now - lastRun >= 33 && !document.documentElement.classList.contains('sh-open')) {
+      lastRun = now;
       var t = (now - t0) / 1000;
       mounts.forEach(function (m, el) {
         if (!el.isConnected) { drop(el); return; }
