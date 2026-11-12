@@ -10,3 +10,7 @@
   .mpx-bg img, .dk-blob, .mh2-aura i, body::after { filter: none !important; }
   .dk-blob, .mh2-aura i { mix-blend-mode: normal !important; }
 }
+
+/* v36-23: the full-screen background grid on every page drifted forever (a 24 s animation over a masked, full-screen
+ * layer), so the browser repainted the whole screen on every frame. The grid stays, still. */
+.grid-bg:before { animation: none !important; }
