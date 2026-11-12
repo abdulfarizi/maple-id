@@ -167,7 +167,7 @@
     root = host; P = profile || {};
     if (!root) return;
     var mx = window.MX, html = '';
-    var hasPlayer = IN_APP && P.music !== false && (!!(P.song && P.song.audio) || !!(mx && mx.spotify(P.spotify)) || P.layout === 'star');
+    var hasPlayer = IN_APP && P.music !== false && (!!(P.song && P.song.audio) || !!(mx && mx.youtube && mx.youtube(P.spotify)) || P.layout === 'star');
     var likes = Array.isArray(P.musicLikes) ? P.musicLikes.filter(Boolean) : [];
     var animeOn = !!(mx && mx.animeOn(P)), musicOn = !!(mx && mx.musicOn(P));
     lib = IN_APP && musicOn ? likes : [];
@@ -212,7 +212,7 @@
       // any tap in the card closes menus/popovers that live in the app around it
       document.addEventListener('pointerdown', function () { try { parent.postMessage({ maple: 'tap' }, location.origin); } catch (e) {} }, { passive: true });
     }
-    if (hasPlayer) { st.key = ''; ctl('hello', { slug: P.slug, lyrics: P.lyrics !== false }); }
+    if (hasPlayer) { st.key = ''; ctl('hello', { slug: P.slug, lyrics: P.lyrics !== false, music: P.music !== false, song: P.song || null, link: P.spotify || '' }); }
     else if (IN_APP) ctl('hello', { slug: '' });
   }
   window.MXStack = { render: render };

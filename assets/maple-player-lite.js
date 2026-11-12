@@ -24,6 +24,7 @@
   var S = { track: null, engine: '', playing: false, busy: false, muted: false, err: '', pos: 0, dur: 0, open: false, shown: false, lyrCur: -1 };
   var lyr = { key: '', lines: null, plain: '', msg: '', ok: false, ver: 0 };
   var audio = null, yt = { p: null, ready: false, want: false, id: '' }, tick = 0, lyrCache = {};
+  var userPaused = false, armedTap = false;
   var el = {};
 
   /* ---------- UI ---------- */
@@ -222,7 +223,7 @@
   }
   function toggle() {
     if (!S.track) return;
-    if (S.playing) { pauseAll(); paint(); return; }
+    if (S.playing) { userPaused = true; pauseAll(); paint(); return; }
     S.err = '';
     if (S.engine === 'file') {
       var a = aud(); S.busy = true; paint();
@@ -297,7 +298,7 @@
     var ytid = ytId(track.url);
     if (!track.audio && !ytid) { if (track.url) window.open(track.url, '_blank', 'noopener'); return; }   // Spotify and other links open outside the player
     pauseAll();
-    S.track = track; S.shown = true; S.busy = true; S.pos = 0; S.dur = Number(track.durationMs || 0); S.lyrCur = -1; S.err = '';
+    S.track = track; userPaused = false; S.shown = true; S.busy = true; S.pos = 0; S.dur = Number(track.durationMs || 0); S.lyrCur = -1; S.err = '';
     if (track.audio) {
       S.engine = 'file';
       var a = aud(); a.src = track.audio; a.currentTime = 0;
@@ -341,12 +342,34 @@
     if (lyr.sent !== lyr.ver) { lyr.sent = lyr.ver; msg.lines = lyr.lines; msg.plain = lyr.plain; }
     toFrames({ maple: 'mp-state', s: msg });
   }
+  /* ---------- autoplay: opening a card starts its song ----------
+   * Browsers allow sound only after a tap, so when the start is refused the song starts on the visitor's next tap. */
+  function trackFrom(v) {
+    if (!v || v.music === false) return null;
+    var s = v.song;
+    if (s && /^https:\/\//.test(s.audio || '')) return { audio: s.audio, url: s.audio, title: s.title || 'Untitled', artist: s.artist || '', art: s.art || '', durationMs: s.durationMs || 0, slug: v.slug || '' };
+    var id = ytId(v.link);
+    return id ? { url: 'https://www.youtube.com/watch?v=' + id, title: '', artist: '', art: '', slug: v.slug || '' } : null;
+  }
+  function autoStart(v) {
+    var t = trackFrom(v); if (!t) return;
+    var same = S.track && lyrKey(S.track) === lyrKey(t);
+    if (same) { if (!S.playing && !userPaused) { armTap(); toggle(); } return; }
+    play(t); armTap();
+  }
+  function armTap() { if (armedTap) return; armedTap = true; document.addEventListener('pointerdown', tapStart, true); }
+  function tapStart(e) {
+    if (!S.track || S.playing || userPaused) return;
+    if (el.mini && (el.mini.contains(e.target) || (el.sheet && el.sheet.contains(e.target)))) return;   // the player's own buttons handle themselves
+    armedTap = false; document.removeEventListener('pointerdown', tapStart, true);
+    toggle();
+  }
   window.addEventListener('message', function (e) {
     var d = e.data; if (e.origin !== location.origin || !d) return;
     if (d.maple === 'mp-play' && d.track) { play(d.track); return; }
     if (d.maple !== 'mp-ctl') return;
     var a = d.act;
-    if (a === 'hello') { lyr.sent = -1; setTimeout(bcast, 50); }
+    if (a === 'hello') { lyr.sent = -1; setTimeout(bcast, 50); autoStart(d.v || {}); }
     else if (a === 'toggle') toggle();
     else if (a === 'back') skip(-10);
     else if (a === 'fwd') skip(10);
