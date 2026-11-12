@@ -14,3 +14,11 @@
 /* v36-23: the full-screen background grid on every page drifted forever (a 24 s animation over a masked, full-screen
  * layer), so the browser repainted the whole screen on every frame. The grid stays, still. */
 .grid-bg:before { animation: none !important; }
+
+/* v36-23: music player. The blurred cover behind the full player, the blur on the player panels and the per-line
+ * will-change on lyrics made the player repaint its whole layer every second while it played. The player keeps its
+ * cover art, lyrics and controls; the blur and the extra layers are removed. */
+.mpx-bg { display: none !important; }
+.mpx-sheet, .mpx-mini { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+.mpx-lines li, .mpx-lines { will-change: auto !important; }
+.mpx-lbody { contain: none !important; }
