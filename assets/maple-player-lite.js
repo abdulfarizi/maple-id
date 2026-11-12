@@ -178,35 +178,48 @@
     }
     loadYT.cbs = loadYT.cbs || []; loadYT.cbs.push(cb);
   }
+  /* the YouTube player is created once; a remembered profile song creates it on page load, so a tap can start it at once */
+  function createYT(id, quiet) {
+    if (!el.lbody) build();
+    yt.id = id; yt.cur = id; yt.created = id; yt.ready = false;
+    yt.p = new YT.Player('mpl-yt-in', {
+      height: '1', width: '1', videoId: id,
+      playerVars: { playsinline: 1, controls: 0, rel: 0, modestbranding: 1, origin: location.origin },
+      events: {
+        onReady: function (e) {
+          yt.ready = true; applyVol();
+          if (yt.cur !== yt.created) { try { e.target.loadVideoById(yt.cur); } catch (err) {} }
+          try { var d = e.target.getDuration(); if (d > 0) S.dur = d * 1000; } catch (err) {}
+          try { var v = e.target.getVideoData && e.target.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || v.author || ''; } } catch (err) {}
+          if (yt.want) { yt.want = false; try { e.target.unMute(); e.target.playVideo(); } catch (err) {} }
+          paint();
+        },
+        onError: function () { if (S.engine !== 'yt') return; S.busy = false; S.playing = false; S.err = 'This YouTube link cannot play here.'; stopTick(); paint(); },
+        onStateChange: function (e) {
+          if (S.engine !== 'yt') return;
+          var st = e.data;
+          if (st === 1) { S.playing = true; S.busy = false; S.err = ''; startTick(); }
+          else if (st === 3) { S.busy = true; }
+          else if (st === 2) { S.playing = false; stopTick(); }
+          else if (st === 0) { S.playing = false; S.pos = 0; stopTick(); }
+          if (st === 1 || st === 2 || st === 0) { try { var d = yt.p.getDuration(); if (d > 0) S.dur = d * 1000; } catch (err) {} }
+          paint();
+        }
+      }
+    });
+  }
   function ytPlay(id) {
-    yt.id = id; yt.ready = false; yt.want = true;
+    yt.id = id; yt.want = true;
+    if (yt.p && yt.ready) {                                             // already created: start it right here, inside the tap
+      yt.want = false;
+      if (yt.cur !== id) { yt.cur = id; try { yt.p.loadVideoById(id); } catch (e) {} }
+      return;
+    }
+    yt.ready = false;
     setTimeout(function () { if (!yt.ready && S.engine === 'yt' && S.track && ytId(S.track.url) === id) { S.busy = false; S.err = 'YouTube did not load. Check the connection and try again.'; paint(); } }, 12000);
     loadYT(function () {
-      if (yt.p) { try { yt.p.loadVideoById(id); } catch (e) {} return; }
-      yt.p = new YT.Player('mpl-yt-in', {
-        height: '1', width: '1', videoId: id,
-        playerVars: { playsinline: 1, controls: 0, rel: 0, modestbranding: 1, origin: location.origin },
-        events: {
-          onReady: function (e) {
-            yt.ready = true; applyVol();
-            try { var d = e.target.getDuration(); if (d > 0) S.dur = d * 1000; } catch (err) {}
-            try { var v = e.target.getVideoData && e.target.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || v.author || ''; } } catch (err) {}
-            if (yt.want) { yt.want = false; try { e.target.unMute(); e.target.playVideo(); } catch (err) {} }
-            paint();
-          },
-          onError: function () { if (S.engine !== 'yt') return; S.busy = false; S.playing = false; S.err = 'This YouTube link cannot play here.'; stopTick(); paint(); },
-          onStateChange: function (e) {
-            if (S.engine !== 'yt') return;
-            var st = e.data;
-            if (st === 1) { S.playing = true; S.busy = false; S.err = ''; startTick(); }
-            else if (st === 3) { S.busy = true; }
-            else if (st === 2) { S.playing = false; stopTick(); }
-            else if (st === 0) { S.playing = false; S.pos = 0; stopTick(); }
-            else if (st === 3) { try { var d = yt.p.getDuration(); if (d > 0) S.dur = d * 1000; } catch (err) {} }
-            paint();
-          }
-        }
-      });
+      if (yt.p) { yt.cur = id; return; }                                 // still loading: onReady starts yt.cur
+      createYT(id, false);
     });
   }
   function ytCall(fn) { if (yt.p && yt.ready) { try { return fn(yt.p); } catch (e) {} } return null; }
@@ -373,10 +386,11 @@
     if (window.dgPager && dgPager.layerKind && dgPager.layerKind() === 'studio') return false;
     return p === 'profile' || p === 'card';
   }
+  function rememberedSong() { try { return JSON.parse(localStorage.getItem('mpl.profileSong') || 'null'); } catch (e) { return null; } }
   /* on entering the profile the remembered song starts at once (the page switch comes from the visitor's tap, so the browser allows it) */
   function startProfileSong() {
     if (userPaused) return;
-    var t = null; try { t = JSON.parse(localStorage.getItem('mpl.profileSong') || 'null'); } catch (e) {}
+    var t = rememberedSong();
     if (!t || !(t.audio || t.url)) return;
     if (!t.audio) t = { url: t.url, title: t.title, artist: t.artist, art: t.art, durationMs: t.durationMs };
     if (S.track && lyrKey(S.track) === lyrKey(t)) { S.shown = true; if (!S.playing) toggle(); return; }
@@ -430,6 +444,11 @@
     armedTap = false; document.removeEventListener('pointerdown', tapStart, true);
     toggle();
   }
+  (function preloadRemembered() {
+    var c = rememberedSong(), id = c && ytId(c.url);
+    if (!id) return;
+    loadYT(function () { if (!yt.p) { build(); createYT(id, true); } });
+  })();
   window.addEventListener('message', function (e) {
     var d = e.data; if (e.origin !== location.origin || !d) return;
     if (d.maple === 'mp-play' && d.track) { play(d.track); return; }
