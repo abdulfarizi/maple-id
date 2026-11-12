@@ -133,3 +133,11 @@
 .mpx-main { flex: 1; min-height: 0; justify-content: space-between; gap: 14px; padding: 16px 0 6px; }
 .mpx-cover { width: min(88vw, 50vh, 420px); }
 .mpx-info { margin-top: 4px; }
+
+/* landscape (phone or tablet): the cover on the left, the song and controls on the right */
+@media (orientation: landscape) {
+  .mpx-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; justify-items: center; gap: 12px 28px; max-width: none; padding: 8px 4px 10px; }
+  .mpx-cover { grid-column: 1; grid-row: 1 / span 4; width: min(62vh, 44vw, 380px); }
+  .mpx-info, .mpx-prog, .mpx-ctrls, .mpl-vol { grid-column: 2; width: 100%; max-width: 420px; }
+  .mpx-info { margin-top: 0; }
+}
