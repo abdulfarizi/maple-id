@@ -231,6 +231,7 @@
   }
   function toggle() {
     if (!S.track) return;
+    if (S.playing && S.muted) { unmuteNow(); return; }                  // the browser started it muted: first tap turns the sound on
     if (S.playing) { userPaused = true; pauseAll(); paint(); return; }
     S.err = '';
     if (S.engine === 'file') {
@@ -395,10 +396,16 @@
   }
   function armTap() { if (armedTap) return; armedTap = true; document.addEventListener('pointerdown', tapStart, true); }
   function tapStart(e) {
-    if (!S.track || S.playing || userPaused) return;
+    if (!S.track || userPaused) return;
     if (el.mini && (el.mini.contains(e.target) || (el.sheet && el.sheet.contains(e.target)))) return;   // the player's own buttons handle themselves
+    if (S.playing && !S.muted) return;                                  // already playing with sound
     armedTap = false; document.removeEventListener('pointerdown', tapStart, true);
-    toggle();
+    toggle();                                                           // muted and playing → this turns the sound on
+  }
+  function unmuteNow() {
+    S.muted = false;
+    try { if (yt.p && yt.ready) yt.p.unMute(); } catch (e) {}
+    applyVol(); paint();
   }
   window.addEventListener('message', function (e) {
     var d = e.data; if (e.origin !== location.origin || !d) return;
