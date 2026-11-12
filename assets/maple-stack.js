@@ -212,7 +212,7 @@
       // any tap in the card closes menus/popovers that live in the app around it
       document.addEventListener('pointerdown', function () { try { parent.postMessage({ maple: 'tap' }, location.origin); } catch (e) {} }, { passive: true });
     }
-    if (hasPlayer) { st.key = ''; ctl('hello', { slug: P.slug, lyrics: P.lyrics !== false, music: P.music !== false, song: P.song || null, link: P.spotify || '' }); }
+    if (hasPlayer) { st.key = ''; ctl('hello', { slug: P.slug, lyrics: P.lyrics !== false, lyricsAuto: P.lyricsAuto !== false, lyricsFix: P.lyricsFix || null, musicAuto: P.musicAuto !== false, music: P.music !== false, song: P.song || null, link: P.spotify || '' }); }
     else if (IN_APP) ctl('hello', { slug: '' });
   }
   window.MXStack = { render: render };

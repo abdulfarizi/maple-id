@@ -288,10 +288,19 @@
     if (m && !a) { a = m[1].trim(); t = m[2].trim(); }
     return { title: t, artist: a };
   }
+  function fixFor(t) {
+    var f = t && t.lyricsFix; if (!f) return null;
+    if (!(f.syncedLyrics || f.plainLyrics || f.instrumental)) return null;
+    var same = (f.url && (f.url === t.url || f.url === t.audio)) || (ytId(f.url) && ytId(f.url) === ytId(t.url));
+    return same ? f : null;
+  }
   function loadLyrics() {
     var t = S.track; if (!t || t.lyrics === false) return;
     var key = lyrKey(t);
     if (lyr.key === key) return;
+    var f = fixFor(t);
+    if (f) { setLyrics(key, f); return; }                               // the lyrics the owner picked in Studio
+    if (t.lyricsAuto === false) { lyr = { key: key, lines: null, plain: '', msg: 'Automatic lyric search is turned off for this song.', ok: false, ver: lyr.ver + 1 }; paint(); return; }
     if (lyrCache[key]) { setLyrics(key, lyrCache[key]); return; }
     lyr = { key: key, lines: null, plain: '', msg: 'Finding lyrics…', ok: false, ver: lyr.ver + 1 }; paint();
     var c = cleanPair(t.title, t.artist);
@@ -402,7 +411,8 @@
     if (userPaused) return;
     var t = rememberedSong();
     if (!t || !(t.audio || t.url)) return;
-    if (!t.audio) t = { url: t.url, title: t.title, artist: t.artist, art: t.art, durationMs: t.durationMs };
+    if (t.musicAuto === false) return;
+    if (!t.audio) t = Object.assign({ url: t.url, title: t.title, artist: t.artist, art: t.art, durationMs: t.durationMs }, flags(t));
     if (S.track && lyrKey(S.track) === lyrKey(t)) { S.shown = true; if (!S.playing) toggle(); return; }
     play(t); armTap();
   }
@@ -433,16 +443,22 @@
   }
   /* ---------- autoplay: opening a card starts its song ----------
    * Browsers allow sound only after a tap, so when the start is refused the song starts on the visitor's next tap. */
+  /* the Studio audio settings of the profile, carried with the song */
+  function flags(v) {
+    v = v || {};
+    return { lyrics: v.lyrics !== false, lyricsAuto: v.lyricsAuto !== false, musicAuto: v.musicAuto !== false, lyricsFix: v.lyricsFix || null };
+  }
   function trackFrom(v) {
     if (!v || v.music === false) return null;
     var s = v.song;
-    if (s && /^https:\/\//.test(s.audio || '')) return { audio: s.audio, url: s.audio, title: s.title || 'Untitled', artist: s.artist || '', art: s.art || '', durationMs: s.durationMs || 0, slug: v.slug || '' };
+    if (s && /^https:\/\//.test(s.audio || '')) return Object.assign({ audio: s.audio, url: s.audio, title: s.title || 'Untitled', artist: s.artist || '', art: s.art || '', durationMs: s.durationMs || 0, slug: v.slug || '' }, flags(v));
     var id = ytId(v.link);
-    return id ? { url: 'https://www.youtube.com/watch?v=' + id, title: '', artist: '', art: '', slug: v.slug || '' } : null;
+    return id ? Object.assign({ url: 'https://www.youtube.com/watch?v=' + id, title: '', artist: '', art: '', slug: v.slug || '' }, flags(v)) : null;
   }
   function autoStart(v) {
     var t = trackFrom(v); if (!t) return;
-    if (document.body.dataset.page === 'profile') { try { localStorage.setItem('mpl.profileSong', JSON.stringify({ audio: t.audio || '', url: t.url, title: t.title, artist: t.artist, art: t.art, durationMs: t.durationMs || 0 })); } catch (e) {} }
+    if (document.body.dataset.page === 'profile') { try { localStorage.setItem('mpl.profileSong', JSON.stringify(Object.assign({ audio: t.audio || '', url: t.url, title: t.title, artist: t.artist, art: t.art, durationMs: t.durationMs || 0 }, flags(t)))); } catch (e) {} }
+    if (t.musicAuto === false) return;                                  // Studio: automatic play is off
     var same = S.track && lyrKey(S.track) === lyrKey(t);
     if (same) { S.shown = true; if (!S.playing && !userPaused) { armTap(); toggle(); } return; }
     play(t); armTap();   // if the browser refuses sound before a tap, the first tap starts it
