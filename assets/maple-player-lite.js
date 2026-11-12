@@ -11,11 +11,17 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var fmt = function (ms) { var s = Math.max(0, Math.floor((ms || 0) / 1000)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); };
   var ytId = function (u) {
-    if (!window.MX || !MX.youtube) return '';
-    var y = MX.youtube(u); return y ? y.id : '';
+    u = String(u || '').trim(); var id = '';
+    if (/^[A-Za-z0-9_-]{11}$/.test(u)) return u;
+    try {
+      var x = new URL(/^https?:\/\//i.test(u) ? u : 'https://' + u), h = x.hostname.replace(/^(www\.|m\.|music\.)/, '');
+      if (h === 'youtu.be') id = x.pathname.slice(1, 12);
+      else if (h === 'youtube.com' || h === 'youtube-nocookie.com') id = x.searchParams.get('v') || ((x.pathname.match(/^\/(?:embed|shorts|live|v)\/([A-Za-z0-9_-]{11})/) || [])[1] || '');
+    } catch (e) {}
+    return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : '';
   };
 
-  var S = { track: null, engine: '', playing: false, pos: 0, dur: 0, open: false, shown: false, lyrCur: -1 };
+  var S = { track: null, engine: '', playing: false, busy: false, muted: false, err: '', pos: 0, dur: 0, open: false, shown: false, lyrCur: -1 };
   var lyr = { key: '', lines: null, plain: '', msg: '', ok: false, ver: 0 };
   var audio = null, yt = { p: null, ready: false, want: false, id: '' }, tick = 0, lyrCache = {};
   var el = {};
@@ -36,7 +42,7 @@
     sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-label', 'Now playing');
     sheet.innerHTML = '<div class="mpl-top"><button type="button" class="mpl-btn ghost" data-a="close" aria-label="Close">&#8964;</button><span class="mpl-from">Now playing</span><span></span></div>'
       + '<div class="mpl-cover"><img alt="" hidden><span class="mpl-noart">&#9835;</span></div>'
-      + '<div class="mpl-info"><h2 class="mpl-title"></h2><p class="mpl-artist"></p></div>'
+      + '<div class="mpl-info"><h2 class="mpl-title"></h2><p class="mpl-artist"></p><p class="mpl-msg-top" hidden></p></div>'
       + '<div class="mpl-prog"><input type="range" class="mpl-seek" min="0" max="1000" value="0" aria-label="Seek"><div class="mpl-times"><span class="mpl-t0">0:00</span><span class="mpl-t1">0:00</span></div></div>'
       + '<div class="mpl-ctrls"><button type="button" class="mpl-btn" data-a="back" aria-label="Back 10 seconds">&#8630;10</button>'
       + '<button type="button" class="mpl-btn big" data-a="toggle" aria-label="Play"></button>'
@@ -88,13 +94,16 @@
     el.mini.hidden = !S.shown; el.mini.classList.toggle('playing', S.playing);
     el.mini.querySelectorAll('.mpl-title').forEach(function (n) { if (n.textContent !== title) n.textContent = title; });
     el.sheet.querySelectorAll('.mpl-title').forEach(function (n) { if (n.textContent !== title) n.textContent = title; });
-    el.sheet.querySelectorAll('.mpl-artist').forEach(function (n) { if (n.textContent !== artist) n.textContent = artist; });
     var art = t.art && window.MX && MX.artOk && MX.artOk(t.art) ? t.art : '';
     el.mini.querySelectorAll('.mpl-art img').forEach(function (img) { if (art) { if (img.getAttribute('src') !== art) img.src = art; img.hidden = false; } else img.hidden = true; });
     el.sheet.querySelectorAll('.mpl-cover img').forEach(function (img) { if (art) { if (img.getAttribute('src') !== art) img.src = art; img.hidden = false; } else img.hidden = true; });
     el.sheet.querySelectorAll('.mpl-noart').forEach(function (n) { n.hidden = !!art; });
-    el.mini.querySelectorAll('[data-a=toggle]').forEach(function (b) { b.innerHTML = S.playing ? '&#10074;&#10074;' : '&#9654;'; b.setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); });
-    el.sheet.querySelectorAll('[data-a=toggle]').forEach(function (b) { b.innerHTML = S.playing ? '&#10074;&#10074;' : '&#9654;'; b.setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); });
+    var icon = S.busy ? '&#8943;' : (S.playing ? '&#10074;&#10074;' : '&#9654;');
+    el.mini.querySelectorAll('[data-a=toggle]').forEach(function (b) { b.innerHTML = icon; b.setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); });
+    var note = S.err || (S.busy ? 'Loading…' : (S.muted ? 'Tap play to turn the sound on' : ''));
+    el.mini.querySelectorAll('.mpl-artist').forEach(function (n) { if (n.textContent !== (note || artist)) n.textContent = note || artist; n.classList.toggle('err', !!S.err); });
+    el.sheet.querySelectorAll('.mpl-msg-top').forEach(function (n) { n.textContent = note; n.hidden = !note; });
+    el.sheet.querySelectorAll('[data-a=toggle]').forEach(function (b) { b.innerHTML = icon; b.setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); });
     el.sheet.querySelector('.mpl-t0').textContent = fmt(S.pos);
     el.sheet.querySelector('.mpl-t1').textContent = S.dur ? fmt(S.dur) : '0:00';
     if (document.activeElement !== el.seek) el.seek.value = S.dur ? Math.round(S.pos / S.dur * 1000) : 0;
@@ -138,10 +147,13 @@
   function aud() {
     if (audio) return audio;
     audio = new Audio(); audio.preload = 'metadata'; audio.volume = volGet();
-    audio.addEventListener('playing', function () { if (S.engine === 'file') { S.playing = true; paint(); startTick(); } });
+    audio.addEventListener('playing', function () { if (S.engine === 'file') { S.playing = true; S.busy = false; S.err = ''; paint(); startTick(); } });
     audio.addEventListener('pause', function () { if (S.engine === 'file') { S.playing = false; paint(); stopTick(); } });
     audio.addEventListener('ended', function () { if (S.engine === 'file') { S.playing = false; S.pos = 0; paint(); stopTick(); } });
     audio.addEventListener('loadedmetadata', function () { S.dur = isFinite(audio.duration) ? audio.duration * 1000 : 0; paint(); });
+    audio.addEventListener('waiting', function () { if (S.engine === 'file') { S.busy = true; paint(); } });
+    audio.addEventListener('canplay', function () { if (S.engine === 'file') { S.busy = false; paint(); } });
+    audio.addEventListener('error', function () { if (S.engine === 'file') { S.busy = false; S.playing = false; S.err = 'This song could not be loaded.'; stopTick(); paint(); } });
     return audio;
   }
   function loadYT(cb) {
@@ -158,6 +170,7 @@
   }
   function ytPlay(id) {
     yt.id = id; yt.ready = false; yt.want = true;
+    setTimeout(function () { if (!yt.ready && S.engine === 'yt' && S.track && ytId(S.track.url) === id) { S.busy = false; S.err = 'YouTube did not load. Check the connection and try again.'; paint(); } }, 12000);
     loadYT(function () {
       if (yt.p) { try { yt.p.loadVideoById(id); } catch (e) {} return; }
       yt.p = new YT.Player('mpl-yt-in', {
@@ -168,13 +181,15 @@
             yt.ready = true; applyVol();
             try { var d = e.target.getDuration(); if (d > 0) S.dur = d * 1000; } catch (err) {}
             try { var v = e.target.getVideoData && e.target.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || v.author || ''; } } catch (err) {}
-            if (yt.want) { yt.want = false; try { e.target.playVideo(); } catch (err) {} }
+            if (yt.want) { yt.want = false; try { e.target.playVideo(); } catch (err) {} setTimeout(ytFallback, 1500); }
             paint();
           },
+          onError: function () { if (S.engine !== 'yt') return; S.busy = false; S.playing = false; S.err = 'This YouTube link cannot play here.'; stopTick(); paint(); },
           onStateChange: function (e) {
             if (S.engine !== 'yt') return;
             var st = e.data;
-            if (st === 1) { S.playing = true; startTick(); }
+            if (st === 1) { S.playing = true; S.busy = false; S.err = ''; startTick(); }
+            else if (st === 3) { S.busy = true; }
             else if (st === 2) { S.playing = false; stopTick(); }
             else if (st === 0) { S.playing = false; S.pos = 0; stopTick(); }
             else if (st === 3) { try { var d = yt.p.getDuration(); if (d > 0) S.dur = d * 1000; } catch (err) {} }
@@ -183,6 +198,11 @@
         }
       });
     });
+  }
+  /* a browser may refuse sound before a tap: start muted, and the next tap turns the sound on */
+  function ytFallback() {
+    if (S.engine !== 'yt' || S.playing || !yt.p || !yt.ready) return;
+    try { yt.p.mute(); yt.p.playVideo(); S.muted = true; S.busy = false; paint(); } catch (e) {}
   }
   function ytCall(fn) { if (yt.p && yt.ready) { try { return fn(yt.p); } catch (e) {} } return null; }
 
@@ -202,12 +222,18 @@
   function toggle() {
     if (!S.track) return;
     if (S.playing) { pauseAll(); paint(); return; }
-    if (S.engine === 'file') { var a = aud(); a.play().catch(function () { S.err = 'Tap play again to start the sound.'; paint(); }); }
-    else if (S.engine === 'yt') {
-      if (yt.p && yt.ready) { ytCall(function (p) { p.playVideo(); }); }
-      else yt.want = true;
+    S.err = '';
+    if (S.engine === 'file') {
+      var a = aud(); S.busy = true; paint();
+      var pr = a.play();
+      if (pr && pr.catch) pr.catch(function () { S.busy = false; S.err = 'Tap play again to start the sound.'; paint(); });
+    } else if (S.engine === 'yt') {
+      if (yt.p && yt.ready) {
+        if (S.muted) { try { yt.p.unMute(); } catch (e) {} S.muted = false; }
+        S.busy = true; ytCall(function (p) { p.playVideo(); }); setTimeout(ytFallback, 1500);
+      } else { yt.want = true; S.busy = true; }
     }
-    S.playing = true; startTick(); paint();
+    paint();
   }
   function skip(sec) { if (S.dur) seek(Math.min(S.dur, Math.max(0, S.pos + sec * 1000))); }
   function seek(ms) {
@@ -270,7 +296,7 @@
     var ytid = ytId(track.url);
     if (!track.audio && !ytid) { if (track.url) window.open(track.url, '_blank', 'noopener'); return; }   // Spotify and other links open outside the player
     pauseAll();
-    S.track = track; S.shown = true; S.pos = 0; S.dur = Number(track.durationMs || 0); S.lyrCur = -1; S.err = '';
+    S.track = track; S.shown = true; S.busy = true; S.pos = 0; S.dur = Number(track.durationMs || 0); S.lyrCur = -1; S.err = '';
     if (track.audio) {
       S.engine = 'file';
       var a = aud(); a.src = track.audio; a.currentTime = 0;
@@ -278,6 +304,7 @@
       S.engine = 'yt';
       ytPlay(ytid);
     }
+    S.busy = true; S.playing = false; S.muted = false;
     build(); paint(); loadLyrics();
     toggle();
   }
