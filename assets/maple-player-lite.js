@@ -192,6 +192,7 @@
           try { var d = e.target.getDuration(); if (d > 0) S.dur = d * 1000; } catch (err) {}
           try { var v = e.target.getVideoData && e.target.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || v.author || ''; } } catch (err) {}
           if (yt.want) { yt.want = false; try { e.target.unMute(); e.target.playVideo(); } catch (err) {} }
+          if (S.track && !S.track.audio) { lyr.key = ''; loadLyrics(); }
           paint();
         },
         onError: function () { if (S.engine !== 'yt') return; S.busy = false; S.playing = false; S.err = 'This YouTube link cannot play here.'; stopTick(); paint(); },
@@ -280,16 +281,24 @@
     return fetch('https://lrclib.net/api/' + path).then(function (r) { if (r.status === 404) return null; if (!r.ok) throw 0; return r.json(); })
       .catch(function () { return fetch('/api/lyrics?p=' + encodeURIComponent(path)).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); });
   }
+  function cleanPair(title, artist) {
+    var t = String(title || '').replace(/\s*[\(\[][^\)\]]*(official|video|lyrics?|audio|visuali[sz]er|hd|4k|mv|music video)[^\)\]]*[\)\]]/ig, '')
+      .replace(/\s*(official\s+(music\s+)?video|lyrics?|audio|visuali[sz]er)\s*$/i, '').trim();
+    var a = String(artist || '').trim(), m = t.match(/^(.+?)\s+[-\u2013\u2014]\s+(.+)$/);
+    if (m && !a) { a = m[1].trim(); t = m[2].trim(); }
+    return { title: t, artist: a };
+  }
   function loadLyrics() {
     var t = S.track; if (!t || t.lyrics === false) return;
     var key = lyrKey(t);
     if (lyr.key === key) return;
     if (lyrCache[key]) { setLyrics(key, lyrCache[key]); return; }
     lyr = { key: key, lines: null, plain: '', msg: 'Finding lyrics…', ok: false, ver: lyr.ver + 1 }; paint();
-    var q = 'get?track_name=' + encodeURIComponent(t.title || '') + '&artist_name=' + encodeURIComponent(t.artist || '') + (S.dur ? '&duration=' + Math.round(S.dur / 1000) : '');
+    var c = cleanPair(t.title, t.artist);
+    var q = 'get?track_name=' + encodeURIComponent(c.title) + '&artist_name=' + encodeURIComponent(c.artist) + (S.dur ? '&duration=' + Math.round(S.dur / 1000) : '');
     fetchLyrics(q).then(function (d) {
       if (d) return d;
-      return fetchLyrics('search?q=' + encodeURIComponent((t.title || '') + ' ' + (t.artist || '')).trim()).then(function (list) { return Array.isArray(list) ? (list.find(function (x) { return x.syncedLyrics; }) || list[0]) : null; });
+      return fetchLyrics('search?q=' + encodeURIComponent((c.artist + ' ' + c.title).trim())).then(function (list) { return Array.isArray(list) ? (list.find(function (x) { return x.syncedLyrics; }) || list[0]) : null; });
     }).then(function (d) {
       if (S.track && lyrKey(S.track) !== key) return;
       lyrCache[key] = d || {};
@@ -320,6 +329,7 @@
     var same = S.track && lyrKey(S.track) === lyrKey(track);
     if (same) { setOpen(true); if (!S.playing) toggle(); return; }
     var ytid = ytId(track.url);
+    if (!track.audio && ytid && !track.art) track = Object.assign({}, track, { art: 'https://i.ytimg.com/vi/' + ytid + '/hqdefault.jpg' });
     if (!track.audio && !ytid) { if (track.url) window.open(track.url, '_blank', 'noopener'); return; }   // Spotify and other links open outside the player
     pauseAll();
     S.track = track; userPaused = false; S.shown = true; S.busy = true; S.pos = 0; S.dur = Number(track.durationMs || 0); S.lyrCur = -1; S.err = '';
