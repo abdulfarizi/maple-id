@@ -89,6 +89,7 @@
     document.documentElement.classList.toggle('mpl-open', !!on);
   }
   function paint() {
+    bcast();
     if (!el.mini || !S.track) return;
     var t = S.track, title = t.title || (S.engine === 'yt' ? 'YouTube' : 'Song'), artist = t.artist || '';
     el.mini.hidden = !S.shown; el.mini.classList.toggle('playing', S.playing);
@@ -328,4 +329,29 @@
     searchLyrics: searchLyrics
   };
   window.addEventListener('pagehide', pause);
+
+  /* ---------- star cards (iframes) talk to this player with postMessage ----------
+   * The Audio Player slide inside a card sends mp-play / mp-ctl and listens for mp-state. */
+  function toFrames(msg) { document.querySelectorAll('iframe.star-frame').forEach(function (f) { try { f.contentWindow.postMessage(msg, location.origin); } catch (e) {} }); }
+  function bcast() {
+    var t = S.track || {};
+    var msg = { title: t.title || '', artist: t.artist || '', art: t.art || '', playing: S.playing, buffering: !!S.busy && !S.playing,
+      pos: S.pos, dur: S.dur || t.durationMs || 0, src: S.track ? (S.engine === 'file' ? 'file' : 'youtube') : '', engine: S.engine,
+      lyrMsg: lyr.msg, err: S.err, lyrKey: lyr.ver };
+    if (lyr.sent !== lyr.ver) { lyr.sent = lyr.ver; msg.lines = lyr.lines; msg.plain = lyr.plain; }
+    toFrames({ maple: 'mp-state', s: msg });
+  }
+  window.addEventListener('message', function (e) {
+    var d = e.data; if (e.origin !== location.origin || !d) return;
+    if (d.maple === 'mp-play' && d.track) { play(d.track); return; }
+    if (d.maple !== 'mp-ctl') return;
+    var a = d.act;
+    if (a === 'hello') { lyr.sent = -1; setTimeout(bcast, 50); }
+    else if (a === 'toggle') toggle();
+    else if (a === 'back') skip(-10);
+    else if (a === 'fwd') skip(10);
+    else if (a === 'seek' && S.dur) seek(S.dur * Math.min(1, Math.max(0, Number(d.v) || 0)));
+    else if (a === 'seekms') seek(Math.max(0, Number(d.v) || 0));
+    else if (a === 'lsearch') { if (S.track) searchLyrics(); }
+  });
 })();
