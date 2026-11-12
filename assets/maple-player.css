@@ -264,3 +264,15 @@ html.mode-swap .mpx-mini,html.mode-swap .mpx-sheet{transition:none!important}
 .mpx-vol{display:flex;align-items:center;gap:10px;margin:8px auto 0;max-width:280px;color:var(--mp-fg3);font-size:13px}
 .mpx-vol input{flex:1;accent-color:var(--accent)}
 .mpx-vol-n{min-width:38px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* v37: Dynamic Island capsule. The now-playing bar sits under the header, centred, and tucks behind it. Same bar, same parts. */
+body .mpx-mini{top:calc(var(--tb-h,64px) + 6px);bottom:auto;left:0;right:0;margin-inline:auto;width:max-content;max-width:calc(100vw - 20px);
+  min-height:0;height:auto;padding:6px 14px 6px 6px;border-radius:999px;z-index:29;transform:translate3d(0,-10px,0);transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .3s ease}
+body .mpx-mini.in{transform:none}
+body .mpx-mini.under{transform:translate3d(0,-12px,0);opacity:0}
+body .mpx-mini .mpx-art{width:34px;height:34px}
+body .mpx-mini .mpx-meta{min-width:0;max-width:44vw}
+body .mpx-mini .mpx-meta::before{display:none}
+body .mpx-mini .mpx-meta b{font-size:13px}
+body .mpx-mini .mpx-meta small{font-size:11px}
+body .mpx-mini .mpx-bar{left:20px;right:20px;bottom:0}
