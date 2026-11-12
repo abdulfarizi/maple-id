@@ -303,6 +303,8 @@
     if (document.getElementById(CSS_ID)) return;
     var s = document.createElement('style'); s.id = CSS_ID;
     s.textContent = '.mfr-layer{position:fixed;left:0;top:0;pointer-events:none;z-index:4;contain:layout style}.mfr-layer svg{display:block;overflow:visible}'
+      + '/* The menu drawer and its scrim sit in a lower stacking context, so frames would paint over them: hide frames while it is open. */'
+      + 'html.sh-open .mfr-layer{visibility:hidden}'
       + '/* Frames float outside the card; they must not change card width or push the layout down. */'
       + '.mfr-bi{position:absolute;inset:0;box-sizing:border-box;border-style:solid;border-color:transparent;pointer-events:none;transform-origin:50% 50%;animation:mfrFramePulse 4.8s ease-in-out infinite,mfrFrameBreathe 6.4s ease-in-out infinite}.mfr-art{position:absolute;max-width:none;pointer-events:none;animation:mfrFrameFloat 5.6s ease-in-out infinite,mfrFramePulse 4.8s ease-in-out infinite;transform-origin:50% 50%}'
       + '.mfr-dragon-side{position:absolute;top:9%;bottom:9%;width:clamp(12px,3.8vw,22px);background-repeat:repeat-y;background-position:center top;background-size:100% auto;opacity:.98;filter:drop-shadow(0 0 4px rgba(20,220,150,.45))}'
