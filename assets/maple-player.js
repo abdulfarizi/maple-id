@@ -74,6 +74,7 @@
       + '<div class="mpx-ctrls"><button type="button" class="mpx-ic lg" data-mpx="back" aria-label="Back 10 seconds">' + I.back + '</button>'
       + '<button type="button" class="mpx-big" data-mpx="toggle" aria-label="Play">' + I.play + '</button>'
       + '<button type="button" class="mpx-ic lg" data-mpx="fwd" aria-label="Forward 10 seconds">' + I.fwd + '</button></div>'
+      + '<label class="mpx-vol"><i class="fa-solid fa-volume-low" aria-hidden="true"></i><input type="range" class="mpx-vol-in" min="0" max="100" step="1" value="' + Math.round(volGet() * 100) + '" aria-label="Volume"><span class="mpx-vol-n">' + Math.round(volGet() * 100) + '%</span></label>'
       + '<div class="mpx-embed-wrap"><div id="mpx-embed"></div></div>'
       + '<div class="mpx-yt-wrap" hidden><div id="mpx-yt"></div></div>'
       + '<p class="mpx-note"></p></div>'
@@ -99,6 +100,8 @@
     mini.addEventListener('click', act); full.addEventListener('click', act);
     full.querySelector('.mpx-lform').addEventListener('submit', function (e) { e.preventDefault(); lyricManual(this.elements.title.value, this.elements.artist.value); });
     el.seek.addEventListener('change', function () { if (S.dur) seekMs(S.dur * el.seek.value / 1000); });
+    var vin = full.querySelector('.mpx-vol-in'), vn = full.querySelector('.mpx-vol-n');
+    if (vin) vin.addEventListener('input', function () { var v = Number(vin.value) / 100; volSet(v); vn.textContent = vin.value + '%'; volApply(); });
     el.lbody.addEventListener('wheel', function () { lyr.userAt = Date.now(); }, { passive: true });
     el.lbody.addEventListener('touchmove', function () { lyr.userAt = Date.now(); }, { passive: true });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && S.open) setOpen(false); });
@@ -219,9 +222,17 @@
 
   /* file */
   var audio = null;
+  /* v36-23: volume slider, saved on this device (localStorage). 0–1, default 0.5 */
+  function volGet() { try { var v = parseFloat(localStorage.getItem('mid.vol')); return isNaN(v) ? 0.5 : Math.min(1, Math.max(0, v)); } catch (e) { return 0.5; } }
+  function volSet(v) { try { localStorage.setItem('mid.vol', String(v)); } catch (e) {} }
+  function volApply() {
+    if (audio) audio.volume = volGet();
+    try { if (yt.p && yt.ready && yt.p.setVolume) yt.p.setVolume(Math.round(volGet() * 100)); } catch (e) {}
+    try { if (sdk.p && sdk.p.setVolume) sdk.p.setVolume(volGet()); } catch (e) {}
+  }
   function aud() {
     if (audio) return audio;
-    audio = new Audio(); audio.preload = 'metadata'; audio.volume = 0.5;   // v36-23: quieter default (was full volume)
+    audio = new Audio(); audio.preload = 'metadata'; audio.volume = volGet();
     var mine = function () { return S.engine === 'file'; };
     audio.addEventListener('playing', function () { if (!mine()) return; S.playing = true; S.buffering = false; paint(); });
     audio.addEventListener('play', function () { if (!mine()) return; S.playing = true; paint(); });
@@ -291,7 +302,7 @@
         events: {
           onReady: function () {
             yt.ready = true; yt.busy = false;
-            try { yt.p.setVolume(50); } catch (e) {}                              // v36-23: quieter default
+            volApply();
             try { var v = yt.p.getVideoData && yt.p.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || String(v.author || '').replace(/\s*-\s*Topic$/i, ''); paint(); loadLyrics(); } } catch (e) {}
             try { var d = yt.p.getDuration(); if (d > 0) S.dur = d * 1000; } catch (e) {}
             if (yt.want) { yt.want = false; try { yt.p.playVideo(); } catch (e) {} }
@@ -341,7 +352,7 @@
     sdk.initP = sdkScript().then(function () {
       return new Promise(function (res, rej) {
         var done = false, to = setTimeout(function () { if (!done) { done = true; rej(new Error('timeout')); } }, 12000);
-        var p = sdk.p = new Spotify.Player({ name: 'M-ID player', volume: 0.5, getOAuthToken: function (cb) { msp().token().then(cb, function () { sdkFail(''); }); } });
+        var p = sdk.p = new Spotify.Player({ name: 'M-ID player', volume: volGet(), getOAuthToken: function (cb) { msp().token().then(cb, function () { sdkFail(''); }); } });
         p.addListener('ready', function (e) { sdk.dev = e.device_id; if (!done) { done = true; clearTimeout(to); res(); } });
         p.addListener('not_ready', function () { sdk.dev = ''; sdk.loaded = ''; });
         p.addListener('initialization_error', function () { if (!done) { done = true; clearTimeout(to); } rej(new Error('unsupported')); sdkFail('unsupported'); });

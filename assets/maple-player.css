@@ -259,3 +259,8 @@ html.mode-swap .mpx-mini,html.mode-swap .mpx-sheet{transition:none!important}
 .mpx-main{margin-block:auto}   /* centred when there is room; when the content is taller it starts at the top and scrolls, never clipped */
 /* the blurred artwork behind the sheet is out of the layout (the general child rule above must not make it take up room) */
 .mpx-sheet>.mpx-bg{position:absolute}
+
+/* v36-23: volume slider */
+.mpx-vol{display:flex;align-items:center;gap:10px;margin:8px auto 0;max-width:280px;color:var(--mp-fg3);font-size:13px}
+.mpx-vol input{flex:1;accent-color:var(--accent)}
+.mpx-vol-n{min-width:38px;text-align:right;font-variant-numeric:tabular-nums}
