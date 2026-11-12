@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   if (window.dgFrames) return;
-  var RM = false; try { RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var RM = false; try { RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(hover: none)').matches; } catch (e) {}   /* v36-23: touch screens show the frames still */
   var NS = 'http://www.w3.org/2000/svg', HEX = /^#[0-9a-f]{6}$/i, uid = 0;
   var FRAMES = [['', 'None'], ['dragon', 'Jade dragon'], ['phoenix', 'Solar phoenix'], ['celestial', 'Celestial guardian'], ['tech', 'Tech panel'], ['cyber', 'Cyber core'], ['reactor', 'Neon reactor'], ['kitty', 'Peeking kitty'], ['cloudkitty', 'Cloud kitty'], ['starbunny', 'Star bunny'], ['mooncat', 'Moonlight cat'], ['garden', 'Jade garden'], ['neon', 'Neon edge']];
   var DECOS = [['', 'None'], ['neon', 'Neon ring'], ['holo', 'Holo spin'], ['dots', 'Dotted orbit'], ['sparkle', 'Sparkles'], ['ears', 'Cat ears'], ['halo', 'Halo'], ['wreath', 'Leaf wreath'], ['glitch', 'Glitch']];

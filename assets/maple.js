@@ -3,7 +3,8 @@
 (function () {
   var LEAF = 'M50 2L57 18L64 13L62 34L80 24L76 40L96 36L84 54L90 60L62 70L64 78L53 76L53 98L47 98L47 76L36 78L38 70L10 60L16 54L4 36L24 40L20 24L38 34L36 13L43 18Z';
   var path = new Path2D(LEAF);
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* v36-23: touch screens get a still star background (much lighter to draw); desktop keeps it moving, with fewer stars */
+  var reduce = window.matchMedia && (window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('(hover: none)').matches);
   var cv, ctx, raf = 0, parts = [], dpr = 1, W = 0, H = 0, palette = [];
 
   function readPalette() {
@@ -90,7 +91,7 @@
     document.body.insertBefore(cv, document.body.firstChild);
     ctx = cv.getContext('2d');
     readPalette(); size();
-    var n = W < 700 ? 12 : 22;
+    var n = W < 700 ? 8 : 14;
     parts = Array.from({ length: n }, function () { return spawn({}, true); });
     window.addEventListener('resize', size);
     document.addEventListener('visibilitychange', onVis);
