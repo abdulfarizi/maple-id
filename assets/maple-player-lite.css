@@ -124,3 +124,6 @@
 .mpx-lbody { min-height: 0; }
 .mpx-info h2 { font-size: clamp(18px, 5vw, 24px); }
 .mpx-big { width: 64px; height: 64px; }
+
+/* the full-screen player shows the profile part only: no lyrics panel */
+.mpx-sheet .mpx-lyrics { display: none !important; }
