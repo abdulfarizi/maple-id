@@ -141,3 +141,7 @@
   .mpx-info, .mpx-prog, .mpx-ctrls, .mpl-vol { grid-column: 2; width: 100%; max-width: 420px; }
   .mpx-info { margin-top: 0; }
 }
+
+/* the music video in the full-screen cover: a square crop of the 16:9 video, centred */
+.mpl-yt.mpl-yt-show { opacity: 1; right: auto; bottom: auto; z-index: 5001; overflow: hidden; border-radius: 22px; background: #000; }
+.mpl-yt.mpl-yt-show iframe { position: absolute; top: 0; left: -38.89%; width: 177.78%; height: 100%; border: 0; }
