@@ -24,13 +24,13 @@
   var S = { track: null, engine: '', playing: false, busy: false, muted: false, err: '', pos: 0, dur: 0, open: false, shown: false, lyrCur: -1 };
   var lyr = { key: '', lines: null, plain: '', msg: '', ok: false, ver: 0 };
   var audio = null, yt = { p: null, ready: false, want: false, id: '' }, tick = 0, lyrCache = {};
-  var userPaused = false, armedTap = false, wasOn = false;
+  var userPaused = false, armedTap = false, wasOn = false, cardCover = null;
   var el = {};
 
   /* ---------- UI ---------- */
   function build() {
     if (el.mini) return;
-    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=12';
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=13';
     document.head.appendChild(css);
 
     var mini = document.createElement('div'); mini.id = 'mpl-mini'; mini.className = 'mpl-mini'; mini.hidden = true;
@@ -90,16 +90,27 @@
     else if (a === 'fwd') skip(10);
     else if (a === 'lsearch') { el.lform.hidden = !el.lform.hidden; if (!el.lform.hidden && S.track) { el.lform.elements.title.value = S.track.title || ''; el.lform.elements.artist.value = S.track.artist || ''; } }
   }
-  /* the song's music video shows in the full-screen cover, cropped to a square: the same YouTube player plays the sound */
+  /* the song's music video shows over the full-screen cover, or over the profile card's Audio Player cover while playing.
+   The same YouTube player plays the sound. The video is zoomed so YouTube's title bar and control strip fall outside. */
   function syncVideoCover() {
-    if (!el.ytBox || !el.cover) return;
-    var on = !!(S.open && S.track && S.engine === 'yt' && yt.p && yt.ready && S.playing);   // only while playing: when paused the cover image shows, so YouTube's paused overlay never appears
-    el.ytBox.classList.toggle('mpl-yt-show', on);
-    if (!on) return;
-    var r = el.cover.getBoundingClientRect();
+    if (!el.ytBox) return;
+    var on = !!(S.track && S.engine === 'yt' && yt.p && yt.ready && S.playing), r = null, z = 25;
+    if (on && S.open && el.cover) { r = el.cover.getBoundingClientRect(); z = 5001; }
+    else if (on && cardCover && cardCover.frame && cardCover.frame.isConnected) {
+      var fr = cardCover.frame.getBoundingClientRect(), q = cardCover.r || [0, 0, 0, 0];
+      r = { left: fr.left + q[0], top: fr.top + q[1], width: q[2], height: q[3] };
+      if (r.top + r.height < 0 || r.top > innerHeight || r.width < 4) r = null;
+    }
+    if (r && r.width < 4) r = null;
+    el.ytBox.classList.toggle('mpl-yt-show', !!r);
+    if (!r) return;
+    el.ytBox.style.zIndex = z;
     el.ytBox.style.left = r.left + 'px'; el.ytBox.style.top = r.top + 'px';
     el.ytBox.style.width = r.width + 'px'; el.ytBox.style.height = r.height + 'px';
+    var ifr = el.ytBox.querySelector('iframe');
+    if (ifr) { var zh = r.height * 1.4, zw = zh * 16 / 9; ifr.style.width = zw + 'px'; ifr.style.height = zh + 'px'; ifr.style.left = ((r.width - zw) / 2) + 'px'; ifr.style.top = ((r.height - zh) / 2) + 'px'; }
   }
+  window.addEventListener('scroll', function () { syncVideoCover(); }, { passive: true });
   window.addEventListener('resize', function () { syncVideoCover(); });
   function setOpen(on) {
     build(); S.open = !!on;
@@ -490,6 +501,10 @@
   })();
   window.addEventListener('message', function (e) {
     var d = e.data; if (e.origin !== location.origin || !d) return;
+    if (d.maple === 'mp-cover') {
+      var f = null; document.querySelectorAll('iframe').forEach(function (x) { if (x.contentWindow === e.source) f = x; });
+      cardCover = { frame: f, r: d.r }; syncVideoCover(); return;
+    }
     if (d.maple === 'mp-play' && d.track) { play(d.track); return; }
     if (d.maple !== 'mp-ctl') return;
     var a = d.act;

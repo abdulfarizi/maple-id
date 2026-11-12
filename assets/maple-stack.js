@@ -11,6 +11,18 @@
   if (window.MXStack) return;
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var IN_APP = window.parent !== window;
+  /* the Audio Player cover's place on the page, sent to the app so a song's video can show over it */
+  function sendCover() {
+    try {
+      var a = document.querySelector('[data-sk-player] .sk-ap-art');
+      if (!IN_APP || !a) return;
+      var r = a.getBoundingClientRect();
+      parent.postMessage({ maple: 'mp-cover', r: [r.left, r.top, r.width, r.height] }, location.origin);
+    } catch (e) {}
+  }
+  window.addEventListener('resize', sendCover);
+  document.addEventListener('scroll', sendCover, { capture: true, passive: true });
+  setInterval(sendCover, 700);
   var REDUCE = matchMedia('(prefers-reduced-motion: reduce)');
   var lib = [], root = null, P = null, st = { lines: null, key: '', cur: -1, userAt: 0 }, last = null;
   var I = {

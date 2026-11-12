@@ -142,8 +142,7 @@
   .mpx-info { margin-top: 0; }
 }
 
-/* the music video in the full-screen cover: a square crop, zoomed so YouTube's title bar and control strip fall outside the square.
-   A transparent layer on top stops taps from reaching YouTube's own controls. */
-.mpl-yt.mpl-yt-show { opacity: 1; right: auto; bottom: auto; z-index: 5001; overflow: hidden; border-radius: 22px; background: #000; }
-.mpl-yt.mpl-yt-show iframe { position: absolute; top: -15%; left: -65.6%; width: 231.1%; height: 130%; border: 0; pointer-events: none; }
+/* the music video over a cover: the size and position are set by the script; a transparent layer stops taps reaching YouTube's controls */
+.mpl-yt.mpl-yt-show { opacity: 1; right: auto; bottom: auto; overflow: hidden; border-radius: 22px; background: #000; }
+.mpl-yt.mpl-yt-show iframe { position: absolute; border: 0; pointer-events: none; }
 .mpl-yt.mpl-yt-show::after { content: ""; position: absolute; inset: 0; background: transparent; }
