@@ -24,7 +24,7 @@
   var S = { track: null, engine: '', playing: false, busy: false, muted: false, err: '', pos: 0, dur: 0, open: false, shown: false, lyrCur: -1 };
   var lyr = { key: '', lines: null, plain: '', msg: '', ok: false, ver: 0 };
   var audio = null, yt = { p: null, ready: false, want: false, id: '' }, tick = 0, lyrCache = {};
-  var userPaused = false, armedTap = false, startMuted = false;
+  var userPaused = false, armedTap = false, wasPlaying = false;
   var el = {};
 
   /* ---------- UI ---------- */
@@ -110,7 +110,7 @@
     el.sheet.querySelectorAll('.mpl-noart').forEach(function (n) { n.hidden = !!art; });
     var icon = S.busy ? '&#8943;' : (S.playing ? '&#10074;&#10074;' : '&#9654;');
     el.mini.querySelectorAll('[data-a=toggle]').forEach(function (b) { b.innerHTML = icon; b.setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); });
-    var note = S.err || (S.busy ? 'Loading…' : (S.muted ? 'Tap play to turn the sound on' : ''));
+    var note = S.err || (S.busy ? 'Loading…' : '');
     el.mini.querySelectorAll('.mpl-artist').forEach(function (n) { if (n.textContent !== (note || artist)) n.textContent = note || artist; n.classList.toggle('err', !!S.err); });
     el.sheet.querySelectorAll('.mpl-msg-top').forEach(function (n) { n.textContent = note; n.hidden = !note; });
     el.sheet.querySelectorAll('[data-a=toggle]').forEach(function (b) { b.innerHTML = icon; b.setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); });
@@ -191,7 +191,7 @@
             yt.ready = true; applyVol();
             try { var d = e.target.getDuration(); if (d > 0) S.dur = d * 1000; } catch (err) {}
             try { var v = e.target.getVideoData && e.target.getVideoData(); if (v && S.track && !S.track.title && v.title) { S.track.title = v.title; S.track.artist = S.track.artist || v.author || ''; } } catch (err) {}
-            if (yt.want) { yt.want = false; try { if (S.muted) e.target.mute(); else e.target.unMute(); e.target.playVideo(); } catch (err) {} setTimeout(ytFallback, 1500); }
+            if (yt.want) { yt.want = false; try { e.target.unMute(); e.target.playVideo(); } catch (err) {} }
             paint();
           },
           onError: function () { if (S.engine !== 'yt') return; S.busy = false; S.playing = false; S.err = 'This YouTube link cannot play here.'; stopTick(); paint(); },
@@ -208,11 +208,6 @@
         }
       });
     });
-  }
-  /* a browser may refuse sound before a tap: start muted, and the next tap turns the sound on */
-  function ytFallback() {
-    if (S.engine !== 'yt' || S.playing || !yt.p || !yt.ready) return;
-    try { yt.p.mute(); yt.p.playVideo(); S.muted = true; S.busy = false; paint(); } catch (e) {}
   }
   function ytCall(fn) { if (yt.p && yt.ready) { try { return fn(yt.p); } catch (e) {} } return null; }
 
@@ -231,17 +226,16 @@
   }
   function toggle() {
     if (!S.track) return;
-    if (S.playing && S.muted) { unmuteNow(); return; }                  // the browser started it muted: first tap turns the sound on
     if (S.playing) { userPaused = true; pauseAll(); paint(); return; }
     S.err = '';
     if (S.engine === 'file') {
-      var a = aud(); a.muted = !!S.muted; S.busy = true; paint();
+      var a = aud(); S.busy = true; paint();
       var pr = a.play();
       if (pr && pr.catch) pr.catch(function () { S.busy = false; S.err = 'Tap play again to start the sound.'; paint(); });
     } else if (S.engine === 'yt') {
       if (yt.p && yt.ready) {
-        try { if (S.muted) yt.p.mute(); else yt.p.unMute(); } catch (e) {}
-        S.busy = true; ytCall(function (p) { p.playVideo(); }); setTimeout(ytFallback, 1500);
+        try { yt.p.unMute(); } catch (e) {}
+        S.busy = true; ytCall(function (p) { p.playVideo(); });
       } else { yt.want = true; S.busy = true; }
     }
     paint();
@@ -323,8 +317,7 @@
       S.engine = 'yt';
       ytPlay(ytid);
     }
-    var m = startMuted; startMuted = false;
-    S.busy = true; S.playing = false; S.muted = m;
+    S.busy = true; S.playing = false;
     build(); paint();
     if (track.audio) loadLyrics(); else ytMeta(track);
     toggle();
@@ -359,6 +352,11 @@
       'body.tb-auto-hidden .topbar{transform:translateY(-110%)}' +
       'body.tb-auto-hidden .mpl-mini{transform:translate(-50%,calc(-1 * (var(--tb-h,64px) + 60px)))}';
     document.head.appendChild(st);
+    /* the pill sits under the header's real height (it can include the phone's status bar) */
+    var tb = document.querySelector('.topbar');
+    var setTb = function () { if (tb) document.documentElement.style.setProperty('--tb-h', tb.offsetHeight + 'px'); };
+    setTb(); window.addEventListener('resize', setTb);
+    if (window.ResizeObserver && tb) new ResizeObserver(setTb).observe(tb);
     var last = window.scrollY || 0;
     window.addEventListener('scroll', function () {
       var y = window.scrollY || 0, d = y - last; last = y;
@@ -376,9 +374,13 @@
     return p === 'profile' || p === 'card';
   }
   function pageCheck() {
-    if (onProfile()) return;
+    if (onProfile()) {
+      if (wasPlaying && S.track && !userPaused) { wasPlaying = false; S.shown = true; toggle(); }   // back on the profile: resume
+      return;
+    }
     if (S.open) setOpen(false);
-    if (S.shown || S.playing || S.busy) { pauseAll(); S.shown = false; S.busy = false; paint(); }
+    if (S.playing || S.busy) { wasPlaying = true; pauseAll(); S.busy = false; }
+    if (S.shown) { S.shown = false; paint(); }
   }
   new MutationObserver(pageCheck).observe(document.body, { attributes: true, attributeFilter: ['data-page'] });
   window.addEventListener('popstate', pageCheck);
@@ -408,22 +410,14 @@
     var t = trackFrom(v); if (!t) return;
     var same = S.track && lyrKey(S.track) === lyrKey(t);
     if (same) { S.shown = true; if (!S.playing && !userPaused) { armTap(); toggle(); } return; }
-    startMuted = true; play(t); armTap();   // browsers always allow muted sound: it starts muted, the first tap turns it on
+    play(t); armTap();   // if the browser refuses sound before a tap, the first tap starts it
   }
   function armTap() { if (armedTap) return; armedTap = true; document.addEventListener('pointerdown', tapStart, true); }
   function tapStart(e) {
-    if (!S.track || userPaused) return;
+    if (!S.track || S.playing || userPaused) return;
     if (el.mini && (el.mini.contains(e.target) || (el.sheet && el.sheet.contains(e.target)))) return;   // the player's own buttons handle themselves
-    if (!S.muted && S.playing) return;                                  // already playing with sound
     armedTap = false; document.removeEventListener('pointerdown', tapStart, true);
-    if (S.muted) { unmuteNow(); if (!S.playing && !S.busy) toggle(); return; }
     toggle();
-  }
-  function unmuteNow() {
-    S.muted = false;
-    try { if (audio) audio.muted = false; } catch (e) {}
-    try { if (yt.p && yt.ready) yt.p.unMute(); } catch (e) {}
-    applyVol(); paint();
   }
   window.addEventListener('message', function (e) {
     var d = e.data; if (e.origin !== location.origin || !d) return;
