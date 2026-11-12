@@ -112,3 +112,15 @@
 .mpl-msg, .mpl-plain { color: rgba(255,255,255,.7); text-align: center; white-space: normal; line-height: 1.6; padding: 20px 10px; }
 .mpl-plain { text-align: left; font-size: 16px; color: rgba(255,255,255,.85); }
 .mpl-yt-hide { display: none; }
+
+/* ---- full-screen player: fits the phone, no sideways slide ---- */
+.mpx-sheet { overflow-x: hidden; touch-action: pan-y; overscroll-behavior: none; }
+.mpx-bg { inset: 0; overflow: hidden; }
+.mpx-bg img { transform: none; }
+.mpx-body { grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 4px 18px 14px; overflow-x: hidden; }
+.mpx-main { min-width: 0; width: 100%; gap: 12px; }
+.mpx-cover { width: min(64vw, 34vh, 300px); }
+.mpx-lyrics { min-height: 170px; max-height: 36vh; }
+.mpx-lbody { min-height: 0; }
+.mpx-info h2 { font-size: clamp(18px, 5vw, 24px); }
+.mpx-big { width: 64px; height: 64px; }
