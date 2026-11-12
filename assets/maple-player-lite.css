@@ -2,10 +2,10 @@
 .mpl-mini[hidden], .mpl-sheet[hidden] { display: none !important; }
 .mpl-yt { position: fixed; right: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; overflow: hidden; }
 
-/* Dynamic Island: a small pill at the top centre. Tap the title to open the full player. */
+/* Dynamic Island: a small pill just under the top header (z 29, so the header covers it). Tap the title to open the full player. */
 .mpl-mini {
   position: fixed; left: 50%; transform: translateX(-50%);
-  top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 90;
+  top: calc(var(--tb-h, 64px) + 6px); z-index: 29; transition: transform .3s ease;
   max-width: min(calc(100vw - 24px), 360px); display: flex; align-items: center; gap: 8px;
   padding: 4px 4px 4px 4px; border-radius: 999px;
   background: #000; color: #fff; box-shadow: 0 4px 14px -6px #000;

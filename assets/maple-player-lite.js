@@ -30,14 +30,15 @@
   /* ---------- UI ---------- */
   function build() {
     if (el.mini) return;
-    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=2';
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=3';
     document.head.appendChild(css);
 
     var mini = document.createElement('div'); mini.id = 'mpl-mini'; mini.className = 'mpl-mini'; mini.hidden = true;
     mini.innerHTML = '<button type="button" class="mpl-mini-open" data-a="open" aria-label="Open the player">'
       + '<span class="mpl-art"><img alt="" hidden></span><span class="mpl-mini-txt"><b class="mpl-title"></b><small class="mpl-artist"></small></span></button>'
       + '<button type="button" class="mpl-btn" data-a="toggle" aria-label="Play"></button>';
-    document.body.appendChild(mini);
+    var tb = document.querySelector('.topbar');
+    (tb && tb.parentNode ? tb.parentNode : document.body).insertBefore(mini, tb ? tb.nextSibling : null);   // same stacking context as the header, so it tucks behind it
 
     var sheet = document.createElement('div'); sheet.id = 'mpl-sheet'; sheet.className = 'mpl-sheet'; sheet.hidden = true;
     sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-label', 'Now playing');
@@ -339,6 +340,25 @@
     searchLyrics: searchLyrics
   };
   window.addEventListener('pagehide', pause);
+
+  /* ---------- header auto-hide: scrolling down slides the header up, and the music pill slides up behind it.
+   * Scrolling up (or being near the top, or with the menu open) brings them back. */
+  function hdrHide() {
+    if (document.getElementById('mpl-hdr-css')) return;
+    var st = document.createElement('style'); st.id = 'mpl-hdr-css';
+    st.textContent = '.topbar{transition:transform .3s ease}' +
+      'body.tb-auto-hidden .topbar{transform:translateY(-110%)}' +
+      'body.tb-auto-hidden .mpl-mini{transform:translate(-50%,calc(-1 * (var(--tb-h,64px) + 60px)))}';
+    document.head.appendChild(st);
+    var last = window.scrollY || 0;
+    window.addEventListener('scroll', function () {
+      var y = window.scrollY || 0, d = y - last; last = y;
+      if (document.documentElement.classList.contains('sh-open') || y < 80) document.body.classList.remove('tb-auto-hidden');
+      else if (d > 6) document.body.classList.add('tb-auto-hidden');
+      else if (d < -6) document.body.classList.remove('tb-auto-hidden');
+    }, { passive: true });
+  }
+  hdrHide();
 
   /* ---------- star cards (iframes) talk to this player with postMessage ----------
    * The Audio Player slide inside a card sends mp-play / mp-ctl and listens for mp-state. */
