@@ -127,3 +127,9 @@
 
 /* the full-screen player shows the profile part only: no lyrics panel */
 .mpx-sheet .mpx-lyrics { display: none !important; }
+
+/* the full-screen player fills the phone: the cover, title and controls are centred in the space, no empty band at the bottom */
+.mpx-body { display: flex; flex-direction: column; padding: 4px 18px calc(env(safe-area-inset-bottom, 0px) + 8px); }
+.mpx-main { flex: 1; min-height: 0; justify-content: space-between; gap: 14px; padding: 16px 0 6px; }
+.mpx-cover { width: min(88vw, 50vh, 420px); }
+.mpx-info { margin-top: 4px; }

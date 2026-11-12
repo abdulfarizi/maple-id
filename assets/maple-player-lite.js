@@ -30,7 +30,7 @@
   /* ---------- UI ---------- */
   function build() {
     if (el.mini) return;
-    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=6';
+    var css = document.createElement('link'); css.rel = 'stylesheet'; css.href = '/assets/maple-player-lite.css?v=9';
     document.head.appendChild(css);
 
     var mini = document.createElement('div'); mini.id = 'mpl-mini'; mini.className = 'mpl-mini'; mini.hidden = true;
