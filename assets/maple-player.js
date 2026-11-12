@@ -145,7 +145,12 @@
     [el.mini, el.sheet].forEach(function (root) {
       root.querySelectorAll('.mpx-title').forEach(function (n) { if (n.textContent !== title) n.textContent = title; });
       root.querySelectorAll('.mpx-artist').forEach(function (n) { if (n.textContent !== artist) n.textContent = artist; if (n.hidden !== !artist) n.hidden = !artist; });
-      root.querySelectorAll('.mpx-art img,.mpx-cover img,.mpx-bg img').forEach(function (img) { if (art) { if (img.getAttribute('src') !== art) img.src = art; img.hidden = false; } else { img.removeAttribute('src'); img.hidden = true; } });
+      var key = t.url || t.title || '';
+      root.querySelectorAll('.mpx-art img,.mpx-cover img,.mpx-bg img').forEach(function (img) {
+        // v36-23: a repaint that finds no art must not wipe the cover that is already showing for this track
+        if (art) { if (img.getAttribute('src') !== art) img.src = art; img.hidden = false; img.dataset.trk = key; }
+        else if (img.dataset.trk !== key) { img.removeAttribute('src'); img.hidden = true; }
+      });
       root.querySelectorAll('[data-mpx=toggle]').forEach(function (b) { if (b.__p !== S.playing) { b.__p = S.playing; b.innerHTML = S.playing ? I.pause : I.play; } b.setAttribute('aria-label', S.playing ? 'Pause' : 'Play'); b.classList.toggle('busy', S.buffering); });
     });
     el.mini.classList.toggle('playing', S.playing); el.sheet.classList.toggle('playing', S.playing);
